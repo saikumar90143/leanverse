@@ -1,8 +1,15 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { ExternalLink } from 'lucide-react';
+import { useAuth } from '../layout/AuthProvider';
+
+declare global {
+  interface Window {
+    adsbygoogle: any[];
+  }
+}
 
 interface AdContainerProps {
   slot?: string;
@@ -24,36 +31,48 @@ export default function AdContainer({ slot = 'default', format = 'horizontal', c
     }
   };
 
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user?.tier === 'premium' || user?.tier === 'pro') return;
+    try {
+      if (typeof window !== 'undefined') {
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      }
+    } catch (err) {
+      console.error('AdSense error:', err);
+    }
+  }, [user?.tier]);
+
+  // Premium users don't see ads
+  if (user?.tier === 'premium' || user?.tier === 'pro') {
+    return null;
+  }
+
   return (
     <div className={`mx-auto my-6 flex flex-col items-center justify-center ${className} no-print`}>
       <span className="text-[10px] uppercase tracking-wider text-slate-400 font-extrabold mb-1">
         Sponsored Advertisement
       </span>
-      <div className={`glass relative border border-slate-200/10 rounded-2xl flex flex-col items-center justify-center overflow-hidden bg-slate-100/30 dark:bg-white/5 ${getFormatClasses()}`}>
-        {/* Mock AdSense Content */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center z-10">
+      <div className={`relative flex flex-col items-center justify-center overflow-hidden ${getFormatClasses()}`}>
+        {/* Real AdSense Component */}
+        <ins 
+          className="adsbygoogle"
+          style={{ display: 'block', width: '100%', height: '100%' }}
+          data-ad-client={process.env.NEXT_PUBLIC_ADSENSE_ID || 'ca-pub-0000000000000000'}
+          data-ad-slot={slot}
+          data-ad-format={format === 'horizontal' ? 'horizontal' : format === 'vertical' ? 'vertical' : 'rectangle'}
+          data-full-width-responsive="true"
+        />
+
+        {/* Fallback styling for when ad is empty or blocked */}
+        <div className="absolute inset-0 -z-10 glass border border-slate-200/10 rounded-2xl bg-slate-100/30 dark:bg-white/5 flex flex-col items-center justify-center text-center p-4">
           <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
-            {format === 'horizontal' ? 'Get 30% Off Optimum Nutrition Whey Gold' : 'Build Muscle Fast'}
+            Ad Space
           </span>
           <p className="text-[10px] text-slate-500 max-w-[250px] mt-1 leading-snug">
-            {format === 'horizontal' 
-              ? 'Premium high-quality standard whey protein isolates.' 
-              : 'Try the world\'s most popular creatine monohydrate today.'}
+            Support LeanVerse by disabling your ad blocker.
           </p>
-          <Link
-            href="/store"
-            className="mt-2.5 flex items-center space-x-1 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500 hover:text-white text-[10px] font-bold transition-all"
-          >
-            <span>Learn More</span>
-            <ExternalLink className="w-2.5 h-2.5" />
-          </Link>
-        </div>
-
-        {/* Abstract background grids to look like a real dynamic ad */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
-          <div className="absolute -top-10 -left-10 w-24 h-24 rounded-full bg-emerald-500 blur-xl" />
-          <div className="absolute -bottom-10 -right-10 w-24 h-24 rounded-full bg-cyan-500 blur-xl" />
-          <div className="w-full h-full bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:14px_24px]" />
         </div>
 
         {/* Premium Upgrade Badge */}
