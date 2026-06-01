@@ -737,6 +737,43 @@ Built with LeanVerse AI`;
               <span className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1">Step 3: Home Foods Picker</span>
               <p className="text-xs text-slate-500 mb-4">Select items you currently have in your kitchen. Categorize them into meals to customize your generated plan.</p>
               
+              <div className="flex space-x-3 mb-6">
+                <button
+                  type="button"
+                  onClick={() => setStep(2)}
+                  className="flex-1 py-3 bg-slate-200/50 dark:bg-white/5 text-slate-600 dark:text-slate-350 rounded-2xl font-bold transition-all cursor-pointer"
+                >
+                  Back
+                </button>
+                <button
+                  type="button"
+                  onClick={handleGenerate}
+                  disabled={generating || selectedFoods.length < 5}
+                  className={`flex-1 py-3 font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center space-x-1 ${
+                    generating || selectedFoods.length < 5 
+                      ? 'bg-slate-200/80 dark:bg-zinc-800 text-slate-400 cursor-not-allowed border border-slate-300/10' 
+                      : 'bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white cursor-pointer'
+                  }`}
+                >
+                  {generating ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin mr-1" />
+                      <span>Synthesizing...</span>
+                    </>
+                  ) : selectedFoods.length < 5 ? (
+                    <>
+                      <AlertTriangle className="w-4 h-4 mr-1 opacity-50" />
+                      <span>Select {5 - selectedFoods.length} more item{5 - selectedFoods.length !== 1 ? 's' : ''}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 fill-current mr-1 text-amber-300" />
+                      <span>Generate Plan</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
               <div className="flex space-x-2 overflow-x-auto no-scrollbar pb-2 mb-4">
                  {['breakfast', 'lunch', 'pre-workout', 'post-workout', 'dinner'].map(meal => (
                     <button key={meal} type="button" onClick={() => setActiveMealTab(meal)} className={`px-4 py-2 rounded-xl font-bold text-xs capitalize transition-colors ${activeMealTab === meal ? 'bg-emerald-500 text-white shadow-md' : 'bg-slate-200/50 dark:bg-white/5 text-slate-500 hover:bg-slate-300/50 dark:hover:bg-white/10'}`}>
@@ -809,34 +846,6 @@ Built with LeanVerse AI`;
                   )}
                 </div>
               )}
-
-              <div className="flex space-x-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setStep(2)}
-                  className="flex-1 py-3 bg-slate-200/50 dark:bg-white/5 text-slate-600 dark:text-slate-350 rounded-2xl font-bold transition-all cursor-pointer"
-                >
-                  Back
-                </button>
-                <button
-                  type="button"
-                  onClick={handleGenerate}
-                  disabled={generating}
-                  className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center space-x-1 cursor-pointer"
-                >
-                  {generating ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin mr-1" />
-                      <span>Synthesizing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4 fill-current mr-1 text-amber-300" />
-                      <span>Generate Plan</span>
-                    </>
-                  )}
-                </button>
-              </div>
             </div>
           )}
         </div>

@@ -49,12 +49,6 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="LeanVerse" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-        <Script
-          async
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_ID || 'ca-pub-0000000000000000'}`}
-          crossOrigin="anonymous"
-          strategy="lazyOnload"
-        />
       </head>
       <body suppressHydrationWarning className="min-h-full flex flex-col bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 transition-colors duration-300 overflow-x-hidden">
         <ThemeProvider>
@@ -74,6 +68,12 @@ export default function RootLayout({
             <PWARegister />
           </AuthProvider>
         </ThemeProvider>
+        <Script
+          id="adsbygoogle-init"
+          strategy="afterInteractive"
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_ID || 'ca-pub-0000000000000000'}`}
+          crossOrigin="anonymous"
+        />
       </body>
     </html>
   );

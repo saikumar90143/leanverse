@@ -19,6 +19,11 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [calcDropdownOpen, setCalcDropdownOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -54,6 +59,10 @@ export default function Navbar() {
   ];
 
   const isActive = (path: string) => pathname === path;
+
+  if (!isMounted) {
+    return <header className="h-20 bg-transparent fixed top-0 w-full z-50"></header>;
+  }
 
   return (
     <header suppressHydrationWarning className={`fixed top-0 left-0 right-0 z-50 transition-all duration-350 ${

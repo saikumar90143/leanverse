@@ -24,7 +24,9 @@ export default function AIWorkoutPlanner() {
   const [experience, setExperience] = useState('intermediate');
   const [duration, setDuration] = useState(60);
   const [goal, setGoal] = useState('muscle');
+  const [daysPerWeek, setDaysPerWeek] = useState(3);
   const [equipment, setEquipment] = useState<string[]>(['dumbbells']);
+  const [weeklyRoutine, setWeeklyRoutine] = useState<any[]>([]);
 
   const [generated, setGenerated] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -43,17 +45,24 @@ export default function AIWorkoutPlanner() {
 
   // Smart Exercise Swapping
   const [swaps, setSwaps] = useState<Record<string, number>>({
-    BenchPress: 0,
-    OHP: 0,
-    LateralRaises: 0,
-    TricepExtension: 0,
+    BenchPress: 0, OHP: 0, LateralRaises: 0, TricepExtension: 0,
+    Pullups: 0, BarbellRow: 0, FacePulls: 0, BicepCurls: 0,
+    Squats: 0, RDLs: 0, LegExtensions: 0, CalfRaises: 0
   });
 
   const alternatives = {
-    BenchPress: ['1. Barbell Flat Bench Press', '1. Dumbbell Flat Bench Press', '1. Machine Chest Press'],
-    OHP: ['2. Standing Barbell Overhead Press (OHP)', '2. Seated Dumbbell Shoulder Press', '2. Machine Shoulder Press'],
-    LateralRaises: ['3. Standing Dumbbell Lateral Raises', '3. Cable Lateral Raises', '3. Machine Lateral Raises'],
-    TricepExtension: ['4. Cable Tricep Overhead Extension', '4. EZ Bar Skullcrushers', '4. Tricep Rope Pushdowns']
+    BenchPress: ['Barbell Flat Bench Press', 'Dumbbell Flat Bench Press', 'Machine Chest Press', 'Push-ups'],
+    OHP: ['Standing Barbell Overhead Press (OHP)', 'Seated Dumbbell Shoulder Press', 'Machine Shoulder Press', 'Pike Push-ups'],
+    LateralRaises: ['Dumbbell Lateral Raises', 'Cable Lateral Raises', 'Machine Lateral Raises', 'Resistance Band Raises'],
+    TricepExtension: ['Cable Tricep Overhead Extension', 'EZ Bar Skullcrushers', 'Dumbbell Kickbacks', 'Diamond Push-ups'],
+    Pullups: ['Pull-ups', 'Lat Pulldown', 'Assisted Pull-ups', 'Resistance Band Pulldowns'],
+    BarbellRow: ['Barbell Row', 'Seated Cable Row', 'Dumbbell Row', 'Bodyweight Inverted Row'],
+    FacePulls: ['Face Pulls', 'Rear Delt Flyes', 'Reverse Pec Deck', 'Band Face Pulls'],
+    BicepCurls: ['Barbell Bicep Curls', 'Dumbbell Bicep Curls', 'Cable Curls', 'Resistance Band Curls'],
+    Squats: ['Barbell Back Squats', 'Leg Press', 'Dumbbell Goblet Squats', 'Bodyweight Squats'],
+    RDLs: ['Romanian Deadlifts (RDL)', 'Hamstring Curls', 'Dumbbell RDLs', 'Glute Bridges'],
+    LegExtensions: ['Leg Extensions', 'Bulgarian Split Squats', 'Walking Lunges', 'Bodyweight Lunges'],
+    Calves: ['Standing Calf Raises', 'Seated Calf Raises', 'Leg Press Calf Raises', 'Bodyweight Calf Raises']
   };
 
   const handleSwap = (slot: keyof typeof alternatives) => {
@@ -99,9 +108,94 @@ export default function AIWorkoutPlanner() {
     );
   };
 
+  const getBestVariationIndex = (key: keyof typeof alternatives) => {
+    const list = alternatives[key];
+    const isBodyweight = equipment.length === 1 && equipment.includes('bodyweight');
+    if (isBodyweight) {
+      const idx = list.findIndex(name => name.toLowerCase().includes('bodyweight') || name.toLowerCase().includes('push-up') || name.toLowerCase().includes('pull-up') || name.toLowerCase().includes('bridge') || name.toLowerCase().includes('lunges'));
+      if (idx !== -1) return idx;
+    }
+    if (equipment.includes('dumbbells')) {
+      const idx = list.findIndex(name => name.toLowerCase().includes('dumbbell') || name.toLowerCase().includes('goblet'));
+      if (idx !== -1) return idx;
+    }
+    if (equipment.includes('barbell')) {
+      const idx = list.findIndex(name => name.toLowerCase().includes('barbell'));
+      if (idx !== -1) return idx;
+    }
+    if (equipment.includes('cables') || equipment.includes('resistance_bands')) {
+      const idx = list.findIndex(name => name.toLowerCase().includes('cable') || name.toLowerCase().includes('band') || name.toLowerCase().includes('machine'));
+      if (idx !== -1) return idx;
+    }
+    return 0; // fallback to the first option
+  };
+
+  const generateRoutine = () => {
+    // Smart Defaults based on equipment
+    const initialSwaps: Record<string, number> = {};
+    (Object.keys(alternatives) as Array<keyof typeof alternatives>).forEach(key => {
+      initialSwaps[key] = getBestVariationIndex(key);
+    });
+    setSwaps(initialSwaps);
+
+    const pushExercises = [
+      { key: 'BenchPress', target: 'Pectoralis Major', sets: '4 Sets x 8-10 Reps' },
+      { key: 'OHP', target: 'Anterior Deltoids', sets: '3 Sets x 8-10 Reps' },
+      { key: 'LateralRaises', target: 'Lateral Deltoids', sets: '4 Sets x 12-15 Reps' },
+      { key: 'TricepExtension', target: 'Triceps Long Head', sets: '3 Sets x 10-12 Reps' },
+    ];
+    const pullExercises = [
+      { key: 'Pullups', target: 'Latissimus Dorsi', sets: '4 Sets x 8-12 Reps' },
+      { key: 'BarbellRow', target: 'Rhomboids & Mid Back', sets: '3 Sets x 8-10 Reps' },
+      { key: 'FacePulls', target: 'Rear Deltoids', sets: '3 Sets x 12-15 Reps' },
+      { key: 'BicepCurls', target: 'Biceps Brachii', sets: '4 Sets x 10-12 Reps' },
+    ];
+    const legExercises = [
+      { key: 'Squats', target: 'Quadriceps & Glutes', sets: '4 Sets x 6-8 Reps' },
+      { key: 'RDLs', target: 'Hamstrings', sets: '3 Sets x 8-10 Reps' },
+      { key: 'LegExtensions', target: 'Quadriceps', sets: '3 Sets x 12-15 Reps' },
+      { key: 'CalfRaises', target: 'Calves', sets: '4 Sets x 15-20 Reps' },
+    ];
+    
+    // Derived Days
+    const upperExercises = [pushExercises[0], pullExercises[0], pushExercises[1], pullExercises[1], pushExercises[2], pullExercises[3]];
+    const lowerExercises = legExercises;
+    const fullBodyExercises = [legExercises[0], pushExercises[0], pullExercises[1], pushExercises[1], legExercises[1], pullExercises[3]];
+
+    const pushDay = { dayType: "Push Day", exercises: pushExercises, isRest: false };
+    const pullDay = { dayType: "Pull Day", exercises: pullExercises, isRest: false };
+    const legDay = { dayType: "Leg Day", exercises: legExercises, isRest: false };
+    const upperDay = { dayType: "Upper Body", exercises: upperExercises, isRest: false };
+    const lowerDay = { dayType: "Lower Body", exercises: lowerExercises, isRest: false };
+    const fullBodyDay = { dayType: "Full Body", exercises: fullBodyExercises, isRest: false };
+    const restDay = { dayType: "Rest Day", exercises: [], isRest: true };
+
+    const routine: Array<{ dayType: string, exercises: any[], isRest: boolean }> = [];
+    if (daysPerWeek === 2) {
+      routine.push(fullBodyDay, restDay, restDay, fullBodyDay, restDay, restDay, restDay);
+    } else if (daysPerWeek === 3) {
+      routine.push(pushDay, restDay, pullDay, restDay, legDay, restDay, restDay);
+    } else if (daysPerWeek === 4) {
+      routine.push(upperDay, lowerDay, restDay, upperDay, lowerDay, restDay, restDay);
+    } else if (daysPerWeek === 5) {
+      routine.push(upperDay, lowerDay, restDay, pushDay, pullDay, legDay, restDay);
+    } else if (daysPerWeek === 6) {
+      routine.push(pushDay, pullDay, legDay, pushDay, pullDay, legDay, restDay);
+    }
+
+    const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    return routine.map((r, i) => ({
+      day: `${daysOfWeek[i]} - ${r.dayType}`,
+      burn: r.isRest ? "0 kcal (Recovery)" : `~ ${r.exercises.length * 110} kcal Burned`,
+      exercises: r.exercises,
+      isRest: r.isRest
+    }));
+  };
+
   const handleGenerate = () => {
     setLoading(true);
     setTimeout(async () => {
+      setWeeklyRoutine(generateRoutine());
       setLoading(false);
       setGenerated(true);
       const confetti = (await import('canvas-confetti')).default;
@@ -136,31 +230,22 @@ export default function AIWorkoutPlanner() {
       return;
     }
 
+    const firstActiveDay = weeklyRoutine.find(d => !d.isRest);
+    if (!firstActiveDay) return;
+
     const workoutToSave = {
-      name: 'Push Day (Chest & Tris)',
+      name: firstActiveDay.day.split(' - ')[1] || firstActiveDay.day,
       date: new Date().toISOString().split('T')[0],
-      exercises: [
-        {
+      exercises: firstActiveDay.exercises.map((ex: any) => ({
+        id: crypto.randomUUID(),
+        name: alternatives[ex.key as keyof typeof alternatives][swaps[ex.key]],
+        sets: Array.from({ length: parseInt(ex.sets.charAt(0)) || 3 }).map(() => ({
           id: crypto.randomUUID(),
-          name: 'Barbell Flat Bench Press',
-          sets: Array.from({ length: 4 }).map(() => ({ id: crypto.randomUUID(), weight: '', reps: 10, completed: false }))
-        },
-        {
-          id: crypto.randomUUID(),
-          name: 'Standing Barbell Overhead Press (OHP)',
-          sets: Array.from({ length: 3 }).map(() => ({ id: crypto.randomUUID(), weight: '', reps: 10, completed: false }))
-        },
-        {
-          id: crypto.randomUUID(),
-          name: 'Standing Dumbbell Lateral Raises',
-          sets: Array.from({ length: 4 }).map(() => ({ id: crypto.randomUUID(), weight: '', reps: 15, completed: false }))
-        },
-        {
-          id: crypto.randomUUID(),
-          name: 'Cable Tricep Overhead Extension',
-          sets: Array.from({ length: 3 }).map(() => ({ id: crypto.randomUUID(), weight: '', reps: 12, completed: false }))
-        }
-      ]
+          weight: overloadLog[ex.key]?.weight || '',
+          reps: overloadLog[ex.key]?.reps || parseInt(ex.sets.split('x ')[1]?.split('-')[0]) || 10,
+          completed: false
+        }))
+      }))
     };
 
     localStorage.setItem(getUserStorageKey('leanverse_workout_tracker'), JSON.stringify(workoutToSave));
@@ -174,6 +259,8 @@ export default function AIWorkoutPlanner() {
     { id: 'resistance_bands', name: 'Resistance Bands' },
     { id: 'bodyweight', name: 'Bodyweight Only' },
   ];
+
+
 
   if (!isMounted) return null;
 
@@ -247,7 +334,7 @@ export default function AIWorkoutPlanner() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-1">
                   <span className="text-xs font-bold text-slate-400 block ml-1">Experience Level</span>
                   <select
@@ -272,6 +359,21 @@ export default function AIWorkoutPlanner() {
                     <option value="45">45 minutes</option>
                     <option value="60">60 minutes</option>
                     <option value="90">90 minutes</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="text-xs font-bold text-slate-400 block ml-1">Days Per Week</span>
+                  <select
+                    value={daysPerWeek}
+                    onChange={(e) => setDaysPerWeek(parseInt(e.target.value))}
+                    className="w-full bg-slate-100/50 dark:bg-zinc-900 border border-slate-300/20 dark:border-white/10 rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:border-emerald-500"
+                  >
+                    <option value="2">2 Days (Full Body)</option>
+                    <option value="3">3 Days (Push/Pull/Legs)</option>
+                    <option value="4">4 Days (Upper/Lower Split)</option>
+                    <option value="5">5 Days (Upper/Lower/PPL)</option>
+                    <option value="6">6 Days (PPL x 2)</option>
                   </select>
                 </div>
               </div>
@@ -387,125 +489,67 @@ export default function AIWorkoutPlanner() {
             <div className="lg:col-span-8 space-y-6 print-card">
               <span className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1">Day Split Exercises & logs</span>
               
-              {/* Day 1 Card */}
-              <div className="glass p-6 rounded-3xl border border-slate-200/10 space-y-5">
-                <div className="pb-3 border-b border-slate-200/10 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                  <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-lg">Monday - Push Day (Chest & Tris)</h3>
-                  <span className="text-xs text-emerald-500 font-extrabold uppercase">~ 480 kcal Burned</span>
+              {/* Weekly Plan Cards */}
+              {weeklyRoutine.map((dayPlan, idx) => (
+                <div key={idx} className={`glass p-6 rounded-3xl border ${dayPlan.isRest ? 'border-slate-200/5 opacity-70' : 'border-slate-200/10'} space-y-5`}>
+                  <div className="pb-3 border-b border-slate-200/10 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                    <h3 className={`font-extrabold text-lg ${dayPlan.isRest ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}`}>{dayPlan.day}</h3>
+                    <span className="text-xs text-emerald-500 font-extrabold uppercase">{dayPlan.burn}</span>
+                  </div>
+
+                  {!dayPlan.isRest ? (
+                    <div className="space-y-4">
+                      {dayPlan.exercises.map((ex: any) => (
+                        <div key={ex.key} className="p-4 bg-slate-100/40 dark:bg-white/5 rounded-2xl border border-slate-300/5 space-y-3">
+                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                            <div className="flex-1">
+                              <span className="font-black text-slate-800 dark:text-slate-200 text-sm block">
+                                {ex?.key && alternatives[ex.key as keyof typeof alternatives] 
+                                  ? alternatives[ex.key as keyof typeof alternatives][swaps[ex.key] || 0] 
+                                  : "Unknown Exercise"}
+                              </span>
+                              <span className="text-[10px] text-slate-400 block mt-0.5">Primary Target: {ex?.target || "Unknown"}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <button onClick={() => ex?.key && handleSwap(ex.key as keyof typeof alternatives)} className="text-[10px] px-2 py-1 bg-slate-200/50 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 rounded-md font-bold transition-all text-slate-500 cursor-pointer">
+                                Swap 🔄
+                              </button>
+                              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{ex?.sets || "Unknown"}</span>
+                            </div>
+                          </div>
+                          {/* Log block */}
+                          <div className="flex flex-col sm:flex-row sm:justify-between gap-3 pt-2.5 border-t border-slate-300/10 text-xs">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-slate-400 font-bold">Log weight:</span>
+                              <input
+                                type="text"
+                                placeholder="e.g. 80 kg"
+                                value={ex?.key ? overloadLog[ex.key]?.weight || '' : ''}
+                                onChange={(e) => ex?.key && handleLogChange(ex.key, 'weight', e.target.value)}
+                                className="w-20 bg-white dark:bg-zinc-900 border border-slate-300/20 dark:border-white/10 rounded-lg px-2 py-1 text-center font-bold text-slate-800 dark:text-slate-150"
+                              />
+                            </div>
+                            <div className="flex items-center space-x-2 justify-end">
+                              <span className="text-slate-400 font-bold">Reps Done:</span>
+                              <input
+                                type="text"
+                                placeholder="e.g. 9"
+                                value={ex?.key ? overloadLog[ex.key]?.reps || '' : ''}
+                                onChange={(e) => ex?.key && handleLogChange(ex.key, 'reps', e.target.value)}
+                                className="w-14 bg-white dark:bg-zinc-900 border border-slate-300/20 dark:border-white/10 rounded-lg px-2 py-1 text-center font-bold text-slate-800 dark:text-slate-150"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4">
+                      <p className="text-sm text-slate-500 font-bold">Active Recovery & Rest</p>
+                    </div>
+                  )}
                 </div>
-
-                <div className="space-y-4">
-                  {/* Bench Press */}
-                  <div className="p-4 bg-slate-100/40 dark:bg-white/5 rounded-2xl border border-slate-300/5 space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                      <div className="flex-1">
-                        <span className="font-black text-slate-800 dark:text-slate-200 text-sm block">{alternatives['BenchPress'][swaps['BenchPress']]}</span>
-                        <span className="text-[10px] text-slate-400 block mt-0.5">Primary Target: Pectoralis Major</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <button onClick={() => handleSwap('BenchPress')} className="text-[10px] px-2 py-1 bg-slate-200/50 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 rounded-md font-bold transition-all text-slate-500 cursor-pointer">
-                          Swap 🔄
-                        </button>
-                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">4 Sets x 8-10 Reps</span>
-                      </div>
-                    </div>
-                    {/* Log block */}
-                    <div className="flex flex-col sm:flex-row sm:justify-between gap-3 pt-2.5 border-t border-slate-300/10 text-xs">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-slate-400 font-bold">Log weight:</span>
-                        <input
-                          type="text"
-                          placeholder="e.g. 80 kg"
-                          value={overloadLog['BenchPress']?.weight || ''}
-                          onChange={(e) => handleLogChange('BenchPress', 'weight', e.target.value)}
-                          className="w-20 bg-white dark:bg-zinc-900 border border-slate-300/20 dark:border-white/10 rounded-lg px-2 py-1 text-center font-bold text-slate-800 dark:text-slate-150"
-                        />
-                      </div>
-                      <div className="flex items-center space-x-2 justify-end">
-                        <span className="text-slate-400 font-bold">Reps Done:</span>
-                        <input
-                          type="text"
-                          placeholder="e.g. 9"
-                          value={overloadLog['BenchPress']?.reps || ''}
-                          onChange={(e) => handleLogChange('BenchPress', 'reps', e.target.value)}
-                          className="w-14 bg-white dark:bg-zinc-900 border border-slate-300/20 dark:border-white/10 rounded-lg px-2 py-1 text-center font-bold text-slate-800 dark:text-slate-150"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Overhead Press */}
-                  <div className="p-4 bg-slate-100/40 dark:bg-white/5 rounded-2xl border border-slate-300/5 space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                      <div className="flex-1">
-                        <span className="font-black text-slate-800 dark:text-slate-200 text-sm block">{alternatives['OHP'][swaps['OHP']]}</span>
-                        <span className="text-[10px] text-slate-400 block mt-0.5">Primary Target: Anterior Deltoids</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <button onClick={() => handleSwap('OHP')} className="text-[10px] px-2 py-1 bg-slate-200/50 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 rounded-md font-bold transition-all text-slate-500 cursor-pointer">
-                          Swap 🔄
-                        </button>
-                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">3 Sets x 8-10 Reps</span>
-                      </div>
-                    </div>
-                    {/* Log block */}
-                    <div className="flex flex-col sm:flex-row sm:justify-between gap-3 pt-2.5 border-t border-slate-300/10 text-xs">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-slate-400 font-bold">Log weight:</span>
-                        <input
-                          type="text"
-                          placeholder="e.g. 45 kg"
-                          value={overloadLog['OHP']?.weight || ''}
-                          onChange={(e) => handleLogChange('OHP', 'weight', e.target.value)}
-                          className="w-20 bg-white dark:bg-zinc-900 border border-slate-300/20 dark:border-white/10 rounded-lg px-2 py-1 text-center font-bold text-slate-800 dark:text-slate-150"
-                        />
-                      </div>
-                      <div className="flex items-center space-x-2 justify-end">
-                        <span className="text-slate-400 font-bold">Reps Done:</span>
-                        <input
-                          type="text"
-                          placeholder="e.g. 8"
-                          value={overloadLog['OHP']?.reps || ''}
-                          onChange={(e) => handleLogChange('OHP', 'reps', e.target.value)}
-                          className="w-14 bg-white dark:bg-zinc-900 border border-slate-300/20 dark:border-white/10 rounded-lg px-2 py-1 text-center font-bold text-slate-800 dark:text-slate-150"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Dumbbell Lateral Raises */}
-                  <div className="p-4 bg-slate-100/40 dark:bg-white/5 rounded-2xl border border-slate-300/5 space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                      <div className="flex-1">
-                        <span className="font-black text-slate-800 dark:text-slate-200 text-sm block">{alternatives['LateralRaises'][swaps['LateralRaises']]}</span>
-                        <span className="text-[10px] text-slate-400 block mt-0.5">Primary Target: Lateral Deltoids</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <button onClick={() => handleSwap('LateralRaises')} className="text-[10px] px-2 py-1 bg-slate-200/50 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 rounded-md font-bold transition-all text-slate-500 cursor-pointer">
-                          Swap 🔄
-                        </button>
-                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">4 Sets x 12-15 Reps</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Cable Tricep Pushdowns */}
-                  <div className="p-4 bg-slate-100/40 dark:bg-white/5 rounded-2xl border border-slate-300/5 space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                      <div className="flex-1">
-                        <span className="font-black text-slate-800 dark:text-slate-200 text-sm block">{alternatives['TricepExtension'][swaps['TricepExtension']]}</span>
-                        <span className="text-[10px] text-slate-400 block mt-0.5">Primary Target: Triceps Long Head</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <button onClick={() => handleSwap('TricepExtension')} className="text-[10px] px-2 py-1 bg-slate-200/50 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 rounded-md font-bold transition-all text-slate-500 cursor-pointer">
-                          Swap 🔄
-                        </button>
-                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">3 Sets x 10-12 Reps</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
 
             {/* Workout countdown timer & progressive explanation widgets */}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ExternalLink } from 'lucide-react';
 import { useAuth } from '../layout/AuthProvider';
@@ -18,6 +18,13 @@ interface AdContainerProps {
 }
 
 export default function AdContainer({ slot = 'default', format = 'horizontal', className = '' }: AdContainerProps) {
+  const [isMounted, setIsMounted] = useState(false);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   // Return different heights and shapes to satisfy CLS optimization and exact sizes
   const getFormatClasses = () => {
     switch (format) {
@@ -31,22 +38,51 @@ export default function AdContainer({ slot = 'default', format = 'horizontal', c
     }
   };
 
-  const { user } = useAuth();
-
   useEffect(() => {
+    if (!isMounted) return;
     if (user?.tier === 'premium' || user?.tier === 'pro') return;
-    try {
-      if (typeof window !== 'undefined') {
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
+    
+    const timeout = setTimeout(() => {
+      try {
+        if (typeof window !== 'undefined') {
+          // Find if there is any 'ins' tag without 'data-adsbygoogle-status'
+          const ads = document.querySelectorAll('.adsbygoogle:not([data-adsbygoogle-status])');
+          if (ads.length > 0) {
+            (window.adsbygoogle = window.adsbygoogle || []).push({});
+          }
+        }
+      } catch (err) {
+        console.error('AdSense error:', err);
       }
-    } catch (err) {
-      console.error('AdSense error:', err);
-    }
-  }, [user?.tier]);
+    }, 150);
+
+    return () => clearTimeout(timeout);
+  }, [user?.tier, isMounted]);
 
   // Premium users don't see ads
   if (user?.tier === 'premium' || user?.tier === 'pro') {
     return null;
+  }
+
+  // To prevent hydration mismatch, render a placeholder on the server and first client render
+  if (!isMounted) {
+    return (
+      <div className={`mx-auto my-6 flex flex-col items-center justify-center ${className} no-print`}>
+        <span className="text-[10px] uppercase tracking-wider text-slate-400 font-extrabold mb-1 opacity-0">
+          Sponsored Advertisement
+        </span>
+        <div className={`relative flex flex-col items-center justify-center overflow-hidden ${getFormatClasses()}`}>
+          <div className="absolute inset-0 -z-10 glass border border-slate-200/10 rounded-2xl bg-slate-100/30 dark:bg-white/5 flex flex-col items-center justify-center text-center p-4">
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
+              Ad Space
+            </span>
+            <p className="text-[10px] text-slate-500 max-w-[250px] mt-1 leading-snug">
+              Support LeanVerse by disabling your ad blocker.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
