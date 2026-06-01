@@ -144,6 +144,30 @@ export default function UserDashboard() {
     { name: 'Hydration Master', desc: 'Completed daily water cups goal.', unlocked: waterCups >= 8 },
   ];
 
+  const handleClearData = () => {
+    if (window.confirm("Are you sure you want to clear all local data? This cannot be undone.")) {
+      localStorage.clear();
+      window.location.reload();
+    }
+  };
+
+  const handleExportData = () => {
+    const data: Record<string, string> = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('leanverse_')) {
+        data[key] = localStorage.getItem(key) || '';
+      }
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `leanverse_data_export_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (!user) {
     return (
       <div className="max-w-md mx-auto py-16 px-4 text-center space-y-6">
@@ -333,35 +357,55 @@ export default function UserDashboard() {
           </div>
 
           <div className="space-y-4">
-            <div className="p-4 bg-slate-100/40 dark:bg-white/5 border border-slate-300/5 rounded-2xl flex items-center justify-between group hover:bg-slate-100 dark:hover:bg-white/10 transition-colors">
-              <div className="flex items-center space-x-3">
-                <div className={`p-3 rounded-2xl ${hasDietPlan ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-200/50 dark:bg-white/5 text-slate-400'}`}>
+            {hasDietPlan ? (
+              <div className="p-4 bg-slate-100/40 dark:bg-white/5 border border-slate-300/5 rounded-2xl flex items-center justify-between group hover:bg-slate-100 dark:hover:bg-white/10 transition-colors">
+                <div className="flex items-center space-x-3">
+                  <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-500">
+                    <Apple className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <span className="font-black text-slate-800 dark:text-slate-100 text-sm block">{dietPlanTitle}</span>
+                    <span className="text-xs font-bold text-slate-400 block mt-0.5">{dietPlanDetails}</span>
+                  </div>
+                </div>
+                <Link href="/diet-planner" className="p-2 bg-slate-200/50 dark:bg-white/5 group-hover:bg-emerald-500/10 rounded-xl group-hover:text-emerald-500 transition-all text-slate-400">
+                  <ChevronRight className="w-5 h-5" />
+                </Link>
+              </div>
+            ) : (
+              <Link href="/diet-planner" className="p-6 bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/20 rounded-3xl flex flex-col items-center justify-center text-center transition-all group cursor-pointer shadow-sm">
+                <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-500 mb-3 group-hover:scale-110 transition-transform">
                   <Apple className="w-6 h-6" />
                 </div>
-                <div>
-                  <span className="font-black text-slate-800 dark:text-slate-100 text-sm block">{dietPlanTitle}</span>
-                  <span className="text-xs font-bold text-slate-400 block mt-0.5">{dietPlanDetails}</span>
-                </div>
-              </div>
-              <Link href="/diet-planner" className="p-2 bg-slate-200/50 dark:bg-white/5 group-hover:bg-emerald-500/10 rounded-xl group-hover:text-emerald-500 transition-all text-slate-400">
-                <ChevronRight className="w-5 h-5" />
+                <span className="font-black text-emerald-600 dark:text-emerald-400 text-sm">Generate Diet Blueprint</span>
+                <span className="text-xs font-bold text-slate-500 mt-1">Setup your personalized meal splits</span>
               </Link>
-            </div>
+            )}
 
-            <div className="p-4 bg-slate-100/40 dark:bg-white/5 border border-slate-300/5 rounded-2xl flex items-center justify-between group hover:bg-slate-100 dark:hover:bg-white/10 transition-colors">
-              <div className="flex items-center space-x-3">
-                <div className={`p-3 rounded-2xl ${hasWorkout ? 'bg-cyan-500/10 text-cyan-500' : 'bg-slate-200/50 dark:bg-white/5 text-slate-400'}`}>
+            {hasWorkout ? (
+              <div className="p-4 bg-slate-100/40 dark:bg-white/5 border border-slate-300/5 rounded-2xl flex items-center justify-between group hover:bg-slate-100 dark:hover:bg-white/10 transition-colors">
+                <div className="flex items-center space-x-3">
+                  <div className="p-3 rounded-2xl bg-cyan-500/10 text-cyan-500">
+                    <Dumbbell className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <span className="font-black text-slate-800 dark:text-slate-100 text-sm block">{lastWorkoutName}</span>
+                    <span className="text-xs font-bold text-slate-400 block mt-0.5">{lastWorkoutDetails}</span>
+                  </div>
+                </div>
+                <Link href="/workout-tracker" className="p-2 bg-slate-200/50 dark:bg-white/5 group-hover:bg-cyan-500/10 rounded-xl group-hover:text-cyan-500 transition-all text-slate-400">
+                  <ChevronRight className="w-5 h-5" />
+                </Link>
+              </div>
+            ) : (
+              <Link href="/workout-planner" className="p-6 bg-cyan-500/5 hover:bg-cyan-500/10 border border-cyan-500/20 rounded-3xl flex flex-col items-center justify-center text-center transition-all group cursor-pointer shadow-sm">
+                <div className="w-12 h-12 bg-cyan-500/10 rounded-full flex items-center justify-center text-cyan-500 mb-3 group-hover:scale-110 transition-transform">
                   <Dumbbell className="w-6 h-6" />
                 </div>
-                <div>
-                  <span className="font-black text-slate-800 dark:text-slate-100 text-sm block">{lastWorkoutName}</span>
-                  <span className="text-xs font-bold text-slate-400 block mt-0.5">{lastWorkoutDetails}</span>
-                </div>
-              </div>
-              <Link href="/workout-tracker" className="p-2 bg-slate-200/50 dark:bg-white/5 group-hover:bg-cyan-500/10 rounded-xl group-hover:text-cyan-500 transition-all text-slate-400">
-                <ChevronRight className="w-5 h-5" />
+                <span className="font-black text-cyan-600 dark:text-cyan-400 text-sm">Create Workout Split</span>
+                <span className="text-xs font-bold text-slate-500 mt-1">Design your structural muscle plan</span>
               </Link>
-            </div>
+            )}
           </div>
         </div>
 
@@ -388,6 +432,25 @@ export default function UserDashboard() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Local Data Management */}
+      <div className="glass rounded-3xl p-6 border border-slate-200/10 space-y-4">
+        <div className="flex items-center space-x-2 border-b border-slate-200/10 pb-4">
+          <Target className="w-5 h-5 text-indigo-500" />
+          <h3 className="font-extrabold text-slate-850 dark:text-slate-100 text-base">Local Data Management</h3>
+        </div>
+        <p className="text-xs font-bold text-slate-500">
+          Manage your locally saved plans, diets, and workouts.
+        </p>
+        <div className="flex flex-wrap gap-4">
+          <button onClick={handleExportData} className="px-4 py-2 bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500 hover:text-white font-bold rounded-xl text-xs transition-all border border-indigo-500/20">
+            Export Data (JSON)
+          </button>
+          <button onClick={handleClearData} className="px-4 py-2 bg-red-500/10 hover:bg-red-500 hover:text-white text-red-500 font-bold rounded-xl text-xs transition-all border border-red-500/20">
+            Clear Local Data
+          </button>
         </div>
       </div>
     </div>

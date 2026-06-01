@@ -2,12 +2,15 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/components/layout/AuthProvider';
 import { 
   ArrowLeft, Plus, Check, Trash2, Timer, Flame, Dumbbell, 
   Play, Pause, RotateCcw, Search, X
 } from 'lucide-react';
 import StreakBadge from '@/components/shared/StreakBadge';
 import { playSetComplete, playTimerEnd } from '@/lib/sounds';
+import confetti from 'canvas-confetti';
 
 // ── Exercise Library ──────────────────────────────────────────────────────────
 const EXERCISE_LIBRARY: { name: string; muscle: string; category: string; emoji: string }[] = [
@@ -174,6 +177,15 @@ function getExerciseHistory(name: string, currentDate: string): ExerciseHistory[
 }
 
 export default function WorkoutTracker() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/login');
+    }
+  }, [user, loading, router]);
+
   const [workout, setWorkout] = useState<WorkoutState>({
     name: 'My Daily Workout',
     date: new Date().toISOString().split('T')[0],
@@ -190,6 +202,7 @@ export default function WorkoutTracker() {
   });
 
   const [mounted, setMounted] = useState(false);
+  const [hasFiredConfetti, setHasFiredConfetti] = useState(false);
   const [timer, setTimer] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [timerDuration, setTimerDuration] = useState(90);
@@ -436,6 +449,40 @@ export default function WorkoutTracker() {
     }));
   };
 
+  useEffect(() => {
+    if (!mounted || workout.exercises.length === 0) return;
+    
+    let allCompleted = true;
+    let hasSets = false;
+    
+    workout.exercises.forEach(ex => {
+      if (ex.sets.length > 0) hasSets = true;
+      ex.sets.forEach(s => {
+        if (!s.completed || typeof s.weight !== 'number' || typeof s.reps !== 'number') {
+          allCompleted = false;
+        }
+      });
+    });
+
+    if (hasSets && allCompleted && !hasFiredConfetti) {
+      setHasFiredConfetti(true);
+      try {
+        confetti({
+          particleCount: 150,
+          spread: 80,
+          origin: { y: 0.6 },
+          colors: ['#10b981', '#06b6d4', '#f59e0b'],
+          zIndex: 9999
+        });
+      } catch (e) {
+        console.error('Confetti failed to trigger', e);
+      }
+    } else if (!allCompleted && hasFiredConfetti) {
+      // Reset if user unmarks a set so they can get confetti again if they re-complete it
+      setHasFiredConfetti(false);
+    }
+  }, [workout, mounted, hasFiredConfetti]);
+
   const removeSet = (exId: string, setId: string) => {
     setWorkout(prev => ({
       ...prev,
@@ -552,17 +599,16 @@ export default function WorkoutTracker() {
 
           <div className="w-px h-6 bg-slate-300 dark:bg-slate-700 mx-1" />
 
-          {/* Controls */}
           {isTimerRunning ? (
-            <button onClick={stopTimer} className="p-2 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20">
+            <button aria-label="Pause timer" onClick={stopTimer} className="p-2 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20">
               <Pause className="w-4 h-4" />
             </button>
           ) : (
-            <button onClick={() => startTimer(timerDuration)} className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20">
+            <button aria-label="Start timer" onClick={() => startTimer(timerDuration)} className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20">
               <Play className="w-4 h-4" />
             </button>
           )}
-          <button onClick={() => { stopTimer(); setTimer(0); }} className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <button aria-label="Reset timer" onClick={() => { stopTimer(); setTimer(0); }} className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
             <RotateCcw className="w-4 h-4" />
           </button>
         </div>
@@ -587,6 +633,7 @@ export default function WorkoutTracker() {
                 />
               </div>
               <button 
+                aria-label="Remove exercise"
                 onClick={() => removeExercise(exercise.id)}
                 className="opacity-0 group-hover:opacity-100 transition-opacity p-2 text-slate-400 hover:text-red-500"
                 title="Remove Exercise"
@@ -687,6 +734,7 @@ export default function WorkoutTracker() {
 
                   <div className="col-span-2 flex items-center justify-center sm:justify-center relative">
                     <button
+                      aria-label={set.completed ? "Mark set incomplete" : "Mark set complete"}
                       onClick={() => toggleSetCompletion(exercise.id, set.id)}
                       className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all shadow-sm ${
                         set.completed 
@@ -699,6 +747,7 @@ export default function WorkoutTracker() {
                     
                     {/* Delete Set Button - visible on hover */}
                     <button 
+                      aria-label="Delete set"
                       onClick={() => removeSet(exercise.id, set.id)}
                       className="absolute -right-8 opacity-0 group-hover/set:opacity-100 transition-opacity p-2 text-slate-400 hover:text-red-500 hidden sm:block"
                     >
@@ -742,6 +791,7 @@ export default function WorkoutTracker() {
                   </div>
                 </div>
                 <button
+                  aria-label="Close search"
                   onClick={() => { setShowExerciseSearch(false); setExerciseSearch(''); setMuscleFilter('All'); }}
                   className="p-2 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
                 >
@@ -764,6 +814,7 @@ export default function WorkoutTracker() {
                   />
                   {exerciseSearch && (
                     <button
+                      aria-label="Clear search"
                       onClick={() => setExerciseSearch('')}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                     >

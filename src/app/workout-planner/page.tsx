@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Dumbbell, Sparkles, Play, Pause, RotateCcw, Trash, Plus, CheckCircle2, ChevronRight, Activity, Clock, Flame } from 'lucide-react';
+import { Dumbbell, Sparkles, Play, Pause, RotateCcw, Trash, Plus, CheckCircle2, ChevronRight, Activity, Clock, Flame, Share2, MessageCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/layout/AuthProvider';
 interface Exercise {
@@ -35,6 +35,10 @@ export default function AIWorkoutPlanner() {
 
   // Progressive Overload logging
   const [overloadLog, setOverloadLog] = useState<Record<string, { weight: string; reps: string }>>({});
+
+  const shareText = encodeURIComponent("I just generated my AI Workout Split on LeanVerse! 💪");
+  const shareWhatsapp = `https://wa.me/?text=${shareText}`;
+  const shareX = `https://twitter.com/intent/tweet?text=${shareText}`;
 
   // Smart Exercise Swapping
   const [swaps, setSwaps] = useState<Record<string, number>>({
@@ -564,6 +568,35 @@ export default function AIWorkoutPlanner() {
                   </li>
                 </ul>
               </div>
+            </div>
+          </div>
+
+          {/* Actions Bar */}
+          <div className="flex flex-col sm:flex-row gap-4 mt-8 print-hide">
+            <button 
+              onClick={() => { setGenerated(false); setStep(1); }}
+              className="flex-1 py-4 bg-slate-200/50 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 rounded-2xl font-bold text-sm flex items-center justify-center space-x-2 transition-all border border-slate-300/10 cursor-pointer"
+            >
+              <span>Modify Parameters</span>
+            </button>
+            
+            <div className="flex gap-4">
+              <a 
+                href={shareWhatsapp}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-4 bg-slate-200/50 hover:bg-[#25D366]/10 text-slate-600 hover:text-[#25D366] dark:bg-white/5 dark:text-slate-300 dark:hover:bg-[#25D366]/20 border border-slate-300/10 rounded-2xl font-bold flex items-center justify-center transition-all cursor-pointer"
+              >
+                <MessageCircle className="w-5 h-5" />
+              </a>
+              <a 
+                href={shareX}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-4 bg-slate-200/50 hover:bg-[#1DA1F2]/10 text-slate-600 hover:text-[#1DA1F2] dark:bg-white/5 dark:text-slate-300 dark:hover:bg-[#1DA1F2]/20 border border-slate-300/10 rounded-2xl font-bold flex items-center justify-center transition-all cursor-pointer"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true" className="w-5 h-5 fill-current"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.008 5.925H5.022z"></path></svg>
+              </a>
             </div>
           </div>
         </div>

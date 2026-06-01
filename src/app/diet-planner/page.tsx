@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Apple, AlertTriangle, Printer, Sparkles, RefreshCw, CheckCircle2, ChevronRight, ChevronLeft, CalendarDays, Camera } from 'lucide-react';
+import { Apple, AlertTriangle, Printer, Sparkles, RefreshCw, CheckCircle2, ChevronRight, ChevronLeft, CalendarDays, Camera, Copy, Check, Share2, MessageCircle } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import MacroRings from '@/components/shared/MacroRings';
 
@@ -80,7 +80,35 @@ export default function AIDietPlanner() {
   
   // Date Navigation State
   const [viewDateOffset, setViewDateOffset] = useState(0);
-  
+  const getDisplayDate = (offset: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + offset);
+    return d.toISOString().split('T')[0];
+  };
+
+  const [copiedGrocery, setCopiedGrocery] = useState(false);
+  const handleCopyGrocery = async () => {
+    const text = `LeanVerse Weekly Grocery List:
+- Steel-cut Oats (500g)
+- Lean Chicken Breast (1kg) or Low-fat Tofu
+- High-Fiber brown rice (1kg)
+- Organic Eggs (2 dozen)
+- Broccoli, Zucchini, and Spinach (fresh)
+- Whey Protein Isolate (1 tub)
+
+Built with LeanVerse AI`;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedGrocery(true);
+      setTimeout(() => setCopiedGrocery(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy", err);
+    }
+  };
+
+  const shareText = encodeURIComponent("I just built my custom AI Diet Plan on LeanVerse! 🔥");
+  const shareWhatsapp = `https://wa.me/?text=${shareText}`;
+  const shareX = `https://twitter.com/intent/tweet?text=${shareText}`;
   const getActiveDateStr = (offset: number) => {
     return new Date(Date.now() + offset * 86400000).toISOString().split('T')[0];
   };
@@ -840,11 +868,11 @@ export default function AIDietPlanner() {
                 <span>Modify Data</span>
               </button>
               <button
-                onClick={() => window.print()}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-bold transition-all shadow-md flex items-center space-x-1.5 text-sm cursor-pointer active:scale-95"
+                onClick={handleCopyGrocery}
+                className="px-4 py-2.5 rounded-xl border border-slate-300/10 bg-slate-100/50 dark:bg-white/5 hover:bg-emerald-500/10 text-slate-500 dark:text-slate-300 hover:text-emerald-500 font-bold transition-all cursor-pointer flex items-center space-x-1 text-sm"
               >
-                <Printer className="w-4 h-4" />
-                <span>Print PDF Blueprint</span>
+                {copiedGrocery ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                <span>{copiedGrocery ? 'Copied' : 'Grocery List'}</span>
               </button>
             </div>
           </div>
@@ -901,6 +929,7 @@ export default function AIDietPlanner() {
                 
                 <div className="flex items-center space-x-3 bg-slate-100/50 dark:bg-white/5 p-1 rounded-full border border-slate-200/50 dark:border-white/10 self-start sm:self-center">
                   <button 
+                    aria-label="Previous Day"
                     onClick={() => changeDate(-1)} 
                     className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white dark:hover:bg-zinc-800 text-slate-400 hover:text-emerald-500 transition-colors shadow-sm cursor-pointer"
                     title="Previous Day"
@@ -916,6 +945,7 @@ export default function AIDietPlanner() {
                   </div>
                   
                   <button 
+                    aria-label="Next Day"
                     onClick={() => changeDate(1)} 
                     disabled={viewDateOffset >= 0}
                     className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors shadow-sm ${
@@ -1032,6 +1062,7 @@ export default function AIDietPlanner() {
                               }`}>
                                 {/* Eaten checkbox */}
                                 <button
+                                  aria-label={eaten ? "Mark as not eaten" : "Mark as eaten"}
                                   onClick={() => toggleEaten(item)}
                                   className={`w-6 h-6 shrink-0 rounded-full border-2 flex items-center justify-center mr-3 transition-all cursor-pointer ${
                                     eaten
@@ -1048,9 +1079,9 @@ export default function AIDietPlanner() {
                                   <div className="min-w-0">
                                     <span className={`font-bold block leading-tight truncate ${eaten ? 'line-through text-slate-400' : 'text-slate-800 dark:text-slate-100'}`}>{baseFood.toUpperCase()}</span>
                                     <div className="flex items-center space-x-1.5 mt-1">
-                                      <button onClick={() => adjustQty(-stepSize)} className="w-5 h-5 flex items-center justify-center rounded-md bg-slate-200/80 dark:bg-white/10 text-slate-500 hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors cursor-pointer leading-none font-black text-sm">-</button>
+                                      <button aria-label="Decrease quantity" onClick={() => adjustQty(-stepSize)} className="w-5 h-5 flex items-center justify-center rounded-md bg-slate-200/80 dark:bg-white/10 text-slate-500 hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors cursor-pointer leading-none font-black text-sm">-</button>
                                       <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest min-w-[45px] text-center">{exactQty} {fData.unit}</span>
-                                      <button onClick={() => adjustQty(stepSize)} className="w-5 h-5 flex items-center justify-center rounded-md bg-slate-200/80 dark:bg-white/10 text-slate-500 hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors cursor-pointer leading-none font-black text-sm">+</button>
+                                      <button aria-label="Increase quantity" onClick={() => adjustQty(stepSize)} className="w-5 h-5 flex items-center justify-center rounded-md bg-slate-200/80 dark:bg-white/10 text-slate-500 hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors cursor-pointer leading-none font-black text-sm">+</button>
                                     </div>
                                   </div>
                                 </div>
@@ -1111,8 +1142,17 @@ export default function AIDietPlanner() {
               </div>
 
               {/* Grocery list */}
-              <div className="glass p-6 rounded-3xl border border-slate-200/10 space-y-4">
-                <span className="text-xs font-black text-slate-400 uppercase tracking-widest block">Weekly Grocery List</span>
+              <div className="glass p-6 rounded-3xl border border-slate-200/10 space-y-4 relative">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-slate-400 uppercase tracking-widest block">Weekly Grocery List</span>
+                  <button
+                    onClick={handleCopyGrocery}
+                    className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 transition-colors text-xs font-bold"
+                  >
+                    {copiedGrocery ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedGrocery ? 'Copied!' : 'Copy List'}</span>
+                  </button>
+                </div>
                 <ul className="space-y-2 text-xs font-semibold text-slate-600 dark:text-slate-350">
                   <li className="flex items-center space-x-2">
                     <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
@@ -1165,6 +1205,35 @@ export default function AIDietPlanner() {
                   </li>
                 </ul>
               </div>
+            </div>
+          </div>
+
+          {/* Actions Bar */}
+          <div className="flex flex-col sm:flex-row gap-4 mt-8 print-hide">
+            <button 
+              onClick={() => { setPlanGenerated(false); setStep(3); }}
+              className="flex-1 py-4 bg-slate-200/50 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 rounded-2xl font-bold text-sm flex items-center justify-center space-x-2 transition-all border border-slate-300/10 cursor-pointer"
+            >
+              <span>Modify Parameters</span>
+            </button>
+            
+            <div className="flex gap-4">
+              <a 
+                href={shareWhatsapp}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-4 bg-slate-200/50 hover:bg-[#25D366]/10 text-slate-600 hover:text-[#25D366] dark:bg-white/5 dark:text-slate-300 dark:hover:bg-[#25D366]/20 border border-slate-300/10 rounded-2xl font-bold flex items-center justify-center transition-all cursor-pointer"
+              >
+                <MessageCircle className="w-5 h-5" />
+              </a>
+              <a 
+                href={shareX}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-4 bg-slate-200/50 hover:bg-[#1DA1F2]/10 text-slate-600 hover:text-[#1DA1F2] dark:bg-white/5 dark:text-slate-300 dark:hover:bg-[#1DA1F2]/20 border border-slate-300/10 rounded-2xl font-bold flex items-center justify-center transition-all cursor-pointer"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true" className="w-5 h-5 fill-current"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.008 5.925H5.022z"></path></svg>
+              </a>
             </div>
           </div>
         </div>
