@@ -197,12 +197,14 @@ export default function Navbar() {
             <button
               onClick={toggleTheme}
               className="p-2 rounded-full glass text-slate-700 dark:text-slate-300"
+              aria-label="Toggle Theme"
             >
               {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
             </button>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-full glass text-slate-700 dark:text-slate-300"
+              aria-label="Toggle Mobile Menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>

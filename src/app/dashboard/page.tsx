@@ -8,7 +8,9 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { getTodayWorkoutSummary } from '@/lib/gamification';
+import { getUserStorageKey, getUserId } from '@/lib/storage';
 import MacroRings from '@/components/shared/MacroRings';
+import WorkoutHeatmap from '@/components/dashboard/WorkoutHeatmap';
 
 export default function UserDashboard() {
   const { user, updateUserSession } = useAuth();
@@ -37,7 +39,7 @@ export default function UserDashboard() {
   React.useEffect(() => {
     try {
       // Load Diet Plan
-      const dietRaw = localStorage.getItem('leanverse_diet_plan');
+      const dietRaw = localStorage.getItem(getUserStorageKey('leanverse_diet_plan'));
       if (dietRaw) {
         const diet = JSON.parse(dietRaw);
         if (diet.planGenerated) {
@@ -63,7 +65,7 @@ export default function UserDashboard() {
       }
 
       // Load Workouts DB
-      const workoutsRaw = localStorage.getItem('leanverse_workouts_db');
+      const workoutsRaw = localStorage.getItem(getUserStorageKey('leanverse_workouts_db'));
       if (workoutsRaw) {
         const db = JSON.parse(workoutsRaw);
         const dates = Object.keys(db).sort((a, b) => b.localeCompare(a));
@@ -81,19 +83,19 @@ export default function UserDashboard() {
 
       // Load Today Diet Eaten Cals & Macros
       const today = new Date().toISOString().split('T')[0];
-      const eatenCalsRaw = localStorage.getItem(`leanverse_eaten_cals_${today}`);
-      const quickCalsRaw = localStorage.getItem(`leanverse_quick_cals_${today}`);
+      const eatenCalsRaw = localStorage.getItem(getUserStorageKey(`leanverse_eaten_cals_${today}`));
+      const quickCalsRaw = localStorage.getItem(getUserStorageKey(`leanverse_quick_cals_${today}`));
       const eatenCals = eatenCalsRaw ? parseInt(eatenCalsRaw, 10) : 0;
       const quickCals = quickCalsRaw ? parseInt(quickCalsRaw, 10) : 0;
       setCaloriesLogged(eatenCals + quickCals);
       
-      const eatenMacrosRaw = localStorage.getItem(`leanverse_eaten_macros_${today}`);
+      const eatenMacrosRaw = localStorage.getItem(getUserStorageKey(`leanverse_eaten_macros_${today}`));
       if (eatenMacrosRaw) {
         setEatenMacros(JSON.parse(eatenMacrosRaw));
       }
 
       // Load Plan Targets (overrides theoretical TDEE)
-      const planTargetsRaw = localStorage.getItem(`leanverse_plan_targets_${today}`);
+      const planTargetsRaw = localStorage.getItem(getUserStorageKey(`leanverse_plan_targets_${today}`));
       if (planTargetsRaw) {
         const targets = JSON.parse(planTargetsRaw);
         setActiveCalorieGoal(targets.calories);
@@ -145,17 +147,24 @@ export default function UserDashboard() {
   ];
 
   const handleClearData = () => {
-    if (window.confirm("Are you sure you want to clear all local data? This cannot be undone.")) {
-      localStorage.clear();
+    if (window.confirm("Are you sure you want to clear all your local LeanVerse data? This cannot be undone.")) {
+      const currentUserId = getUserId();
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('leanverse_') && key.endsWith(`_${currentUserId}`)) {
+          localStorage.removeItem(key);
+        }
+      }
       window.location.reload();
     }
   };
 
   const handleExportData = () => {
     const data: Record<string, string> = {};
+    const currentUserId = getUserId();
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && key.startsWith('leanverse_')) {
+      if (key && key.startsWith('leanverse_') && key.endsWith(`_${currentUserId}`)) {
         data[key] = localStorage.getItem(key) || '';
       }
     }
@@ -167,6 +176,37 @@ export default function UserDashboard() {
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const handleImportData = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target?.result as string);
+        const currentUserId = getUserId();
+        const knownBaseKeys = ['leanverse_workouts_db', 'leanverse_diet_plan', 'leanverse_workout_tracker', 'leanverse_custom_foods'];
+        
+        Object.keys(data).forEach((key) => {
+          if (!key.startsWith('leanverse_')) return;
+          let newKey = key;
+          // Upgrade old un-namespaced keys to the current user's namespace
+          if (knownBaseKeys.includes(key)) {
+             newKey = `${key}_${currentUserId}`;
+          }
+          localStorage.setItem(newKey, data[key]);
+        });
+        alert('Data imported successfully! Reloading...');
+        window.location.reload();
+      } catch (err) {
+        alert("Failed to parse JSON backup.");
+      }
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
 
   if (!user) {
     return (
@@ -185,7 +225,7 @@ export default function UserDashboard() {
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
       {/* Welcome banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass rounded-3xl p-6 sm:p-8 border border-emerald-500/20 shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-2xl -z-10 animate-pulse" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-2xl -z-10" />
 
         <div className="flex items-center space-x-4">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white flex items-center justify-center shadow-lg font-black text-xl">
@@ -196,7 +236,7 @@ export default function UserDashboard() {
               Welcome back, {user.name}!
               <Sparkles className="w-5 h-5 ml-1.5 text-amber-400 animate-bounce" />
             </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-500 dark:text-slate-400 mt-0.5">
               Account status: <span className="font-extrabold uppercase text-emerald-500">{user.tier} membership</span>
             </p>
           </div>
@@ -223,7 +263,7 @@ export default function UserDashboard() {
         <div className="glass rounded-3xl p-6 border border-slate-200/10 flex flex-col justify-between items-center text-center group hover:border-emerald-500/20 transition-all shadow-sm">
           <div className="flex items-center space-x-1.5 mb-2 w-full justify-center">
             <Apple className="w-4 h-4 text-emerald-500" />
-            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Today Eat Progress</span>
+            <span className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Today Eat Progress</span>
           </div>
           
           <div className="w-full flex justify-center scale-90 -my-2 transform origin-center">
@@ -244,7 +284,7 @@ export default function UserDashboard() {
         <div className="glass rounded-3xl p-6 border border-slate-200/10 flex flex-col justify-between items-center text-center group hover:border-cyan-500/20 transition-all shadow-sm">
           <div className="flex items-center space-x-1.5 mb-4 w-full justify-center">
             <Dumbbell className="w-4 h-4 text-cyan-500" />
-            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Workout Progress</span>
+            <span className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Workout Progress</span>
           </div>
           
           <div className="relative flex items-center justify-center mb-4">
@@ -277,7 +317,7 @@ export default function UserDashboard() {
           <div className="flex justify-between items-start mb-4">
             <div className="flex items-center space-x-2">
               <Droplet className="w-5 h-5 text-cyan-500" />
-              <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Daily Water log</span>
+              <span className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Daily Water log</span>
             </div>
             <span className="text-xs font-bold text-slate-500">{waterCups} / 8 Cups</span>
           </div>
@@ -309,7 +349,7 @@ export default function UserDashboard() {
           <div className="flex justify-between items-start mb-2">
             <div className="flex items-center space-x-2">
               <Scale className="w-5 h-5 text-cyan-500 animate-pulse" />
-              <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Weight scale log</span>
+              <span className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Weight scale log</span>
             </div>
             <span className="text-xs font-bold text-slate-500">Current: {loggedWeight[loggedWeight.length - 1]} kg</span>
           </div>
@@ -347,6 +387,11 @@ export default function UserDashboard() {
         </div>
       </div>
 
+      {/* Workout Heatmap Full Width */}
+      <div className="md:col-span-2 lg:col-span-4 mt-2">
+        <WorkoutHeatmap />
+      </div>
+
       {/* Saved Blueprints & Badges section */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
         {/* Saved blueprints list */}
@@ -365,10 +410,10 @@ export default function UserDashboard() {
                   </div>
                   <div>
                     <span className="font-black text-slate-800 dark:text-slate-100 text-sm block">{dietPlanTitle}</span>
-                    <span className="text-xs font-bold text-slate-400 block mt-0.5">{dietPlanDetails}</span>
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mt-0.5">{dietPlanDetails}</span>
                   </div>
                 </div>
-                <Link href="/diet-planner" className="p-2 bg-slate-200/50 dark:bg-white/5 group-hover:bg-emerald-500/10 rounded-xl group-hover:text-emerald-500 transition-all text-slate-400">
+                <Link href="/diet-planner" className="p-2 bg-slate-200/50 dark:bg-white/5 group-hover:bg-emerald-500/10 rounded-xl group-hover:text-emerald-500 transition-all text-slate-500 dark:text-slate-400">
                   <ChevronRight className="w-5 h-5" />
                 </Link>
               </div>
@@ -390,10 +435,10 @@ export default function UserDashboard() {
                   </div>
                   <div>
                     <span className="font-black text-slate-800 dark:text-slate-100 text-sm block">{lastWorkoutName}</span>
-                    <span className="text-xs font-bold text-slate-400 block mt-0.5">{lastWorkoutDetails}</span>
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mt-0.5">{lastWorkoutDetails}</span>
                   </div>
                 </div>
-                <Link href="/workout-tracker" className="p-2 bg-slate-200/50 dark:bg-white/5 group-hover:bg-cyan-500/10 rounded-xl group-hover:text-cyan-500 transition-all text-slate-400">
+                <Link href="/workout-tracker" className="p-2 bg-slate-200/50 dark:bg-white/5 group-hover:bg-cyan-500/10 rounded-xl group-hover:text-cyan-500 transition-all text-slate-500 dark:text-slate-400">
                   <ChevronRight className="w-5 h-5" />
                 </Link>
               </div>
@@ -423,12 +468,12 @@ export default function UserDashboard() {
                 className={`p-3 rounded-2xl border text-center space-y-1 transition-all ${
                   badge.unlocked 
                     ? 'border-amber-500/20 bg-amber-500/10 text-amber-500' 
-                    : 'border-slate-300/10 bg-slate-100/10 text-slate-400 opacity-40'
+                    : 'border-slate-300/10 bg-slate-100/10 text-slate-500 dark:text-slate-400 opacity-40'
                 }`}
               >
                 <Trophy className="w-6 h-6 mx-auto mb-1 shrink-0" />
                 <span className="text-xs font-black block">{badge.name}</span>
-                <span className="text-[9px] block leading-tight font-bold text-slate-500 dark:text-slate-400">{badge.desc}</span>
+                <span className="text-[9px] block leading-tight font-bold text-slate-500 dark:text-slate-500 dark:text-slate-400">{badge.desc}</span>
               </div>
             ))}
           </div>
@@ -447,6 +492,16 @@ export default function UserDashboard() {
         <div className="flex flex-wrap gap-4">
           <button onClick={handleExportData} className="px-4 py-2 bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500 hover:text-white font-bold rounded-xl text-xs transition-all border border-indigo-500/20">
             Export Data (JSON)
+          </button>
+          <input 
+            type="file" 
+            accept=".json" 
+            ref={fileInputRef} 
+            onChange={handleImportData} 
+            className="hidden" 
+          />
+          <button onClick={() => fileInputRef.current?.click()} className="px-4 py-2 bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500 hover:text-white font-bold rounded-xl text-xs transition-all border border-indigo-500/20">
+            Import Data
           </button>
           <button onClick={handleClearData} className="px-4 py-2 bg-red-500/10 hover:bg-red-500 hover:text-white text-red-500 font-bold rounded-xl text-xs transition-all border border-red-500/20">
             Clear Local Data

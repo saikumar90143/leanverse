@@ -4,6 +4,7 @@
  * All functions read directly from localStorage and are safe to call on the server
  * (they guard with typeof window check).
  */
+import { getUserStorageKey } from './storage';
 
 export interface Level {
   name: string;
@@ -22,18 +23,30 @@ export const LEVELS: Level[] = [
   { name: 'Elite',        emoji: '⚡', color: 'text-emerald-400', bgColor: 'bg-emerald-400/10', borderColor: 'border-emerald-400/30', minVolume: 15001, maxVolume: null },
 ];
 
+let memoryCache: Record<string, unknown> | null = null;
+let cacheTime = 0;
+
 /**
- * Safely parse the workouts DB from localStorage.
+ * Safely parse the workouts DB from localStorage with a 2-second in-memory cache.
  * Returns an empty object if unavailable, invalid JSON, or on the server.
  */
 function getWorkoutsDb(): Record<string, unknown> {
   if (typeof window === 'undefined') return {};
+  
+  // Cache for 2 seconds to prevent massive main-thread blocking on page loads
+  if (memoryCache && Date.now() - cacheTime < 2000) {
+    return memoryCache;
+  }
+
   try {
-    const raw = localStorage.getItem('leanverse_workouts_db');
+    const raw = localStorage.getItem(getUserStorageKey('leanverse_workouts_db'));
     if (!raw) return {};
     const parsed = JSON.parse(raw);
     if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return {};
-    return parsed as Record<string, unknown>;
+    
+    memoryCache = parsed as Record<string, unknown>;
+    cacheTime = Date.now();
+    return memoryCache;
   } catch {
     return {};
   }

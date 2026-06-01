@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Apple, AlertTriangle, Printer, Sparkles, RefreshCw, CheckCircle2, ChevronRight, ChevronLeft, CalendarDays, Camera, Copy, Check, Share2, MessageCircle } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import MacroRings from '@/components/shared/MacroRings';
+import { getUserStorageKey } from '@/lib/storage';
 
 const BarcodeScanner = dynamic(() => import('@/components/shared/BarcodeScanner'), { ssr: false });
 interface FoodItem {
@@ -118,7 +119,7 @@ Built with LeanVerse AI`;
   const [eatenMeals, setEatenMeals] = useState<Record<string, boolean>>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const saved = localStorage.getItem(`leanverse_eaten_${activeDateStr}`);
+        const saved = localStorage.getItem(getUserStorageKey(`leanverse_eaten_${activeDateStr}`));
         if (saved) {
           const parsed = JSON.parse(saved);
           const migrated: Record<string, boolean> = {};
@@ -140,7 +141,7 @@ Built with LeanVerse AI`;
     setViewDateOffset(newOffset);
     
     try {
-      const saved = localStorage.getItem(`leanverse_eaten_${newDateStr}`);
+      const saved = localStorage.getItem(getUserStorageKey(`leanverse_eaten_${newDateStr}`));
       if (saved) {
         const parsed = JSON.parse(saved);
         const migrated: Record<string, boolean> = {};
@@ -160,7 +161,7 @@ Built with LeanVerse AI`;
   const [customFoodsDatabase, setCustomFoodsDatabase] = useState<Record<string, { cals: number; protein: number; carbs: number; fat: number; alternative: string; warning?: string; icon: string; category: string; unit: string; baseQty: number }>>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const saved = localStorage.getItem('leanverse_custom_foods');
+        const saved = localStorage.getItem(getUserStorageKey('leanverse_custom_foods'));
         if (saved) return JSON.parse(saved);
       } catch {}
     }
@@ -169,7 +170,7 @@ Built with LeanVerse AI`;
 
   useEffect(() => {
     try {
-      localStorage.setItem('leanverse_custom_foods', JSON.stringify(customFoodsDatabase));
+      localStorage.setItem(getUserStorageKey('leanverse_custom_foods'), JSON.stringify(customFoodsDatabase));
     } catch {}
   }, [customFoodsDatabase]);
 
@@ -213,7 +214,7 @@ Built with LeanVerse AI`;
   const [cfFats, setCfFats] = useState('');
   const [cfMeal, setCfMeal] = useState('lunch');
 
-  const DIET_PLAN_KEY = 'leanverse_diet_plan';
+  const DIET_PLAN_KEY = getUserStorageKey('leanverse_diet_plan');
 
   // Restore full saved plan on mount
   useEffect(() => {
@@ -275,7 +276,7 @@ Built with LeanVerse AI`;
     setEatenMeals(prev => {
       const next = { ...prev, [item]: !prev[item] };
       try {
-        localStorage.setItem(`leanverse_eaten_${activeDateStr}`, JSON.stringify(next));
+        localStorage.setItem(getUserStorageKey(`leanverse_eaten_${activeDateStr}`), JSON.stringify(next));
       } catch {}
       return next;
     });
@@ -540,13 +541,13 @@ Built with LeanVerse AI`;
   useEffect(() => {
     if (planGenerated) {
       try {
-        localStorage.setItem(`leanverse_eaten_cals_${activeDateStr}`, eatenCals.toString());
-        localStorage.setItem(`leanverse_eaten_macros_${activeDateStr}`, JSON.stringify({
+        localStorage.setItem(getUserStorageKey(`leanverse_eaten_cals_${activeDateStr}`), eatenCals.toString());
+        localStorage.setItem(getUserStorageKey(`leanverse_eaten_macros_${activeDateStr}`), JSON.stringify({
           protein: eatenProtein,
           carbs: eatenCarbs,
           fats: eatenFats
         }));
-        localStorage.setItem(`leanverse_plan_targets_${activeDateStr}`, JSON.stringify({
+        localStorage.setItem(getUserStorageKey(`leanverse_plan_targets_${activeDateStr}`), JSON.stringify({
           calories: actualCals,
           protein: actualProtein,
           carbs: actualCarbs,

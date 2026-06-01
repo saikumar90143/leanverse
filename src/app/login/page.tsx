@@ -115,7 +115,7 @@ function LoginForm() {
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 relative">
       {/* Background glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] max-w-[100vw] h-[400px] bg-emerald-500/10 dark:bg-emerald-500/20 rounded-full blur-[80px] -z-10 pointer-events-none animate-pulse overflow-hidden" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] max-w-[100vw] h-[400px] bg-emerald-500/10 dark:bg-emerald-500/20 rounded-full blur-[80px] -z-10 pointer-events-none overflow-hidden" />
 
       <div className="w-full max-w-md glass rounded-3xl p-8 shadow-2xl border border-slate-200/20 dark:border-white/10">
 

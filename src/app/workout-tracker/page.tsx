@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import StreakBadge from '@/components/shared/StreakBadge';
 import { playSetComplete, playTimerEnd } from '@/lib/sounds';
-import confetti from 'canvas-confetti';
+import { getUserStorageKey } from '@/lib/storage';
 
 // ── Exercise Library ──────────────────────────────────────────────────────────
 const EXERCISE_LIBRARY: { name: string; muscle: string; category: string; emoji: string }[] = [
@@ -119,7 +119,7 @@ function getExerciseHistory(name: string, currentDate: string): ExerciseHistory[
   if (trimmed.length < 2) return [];
 
   try {
-    const raw = localStorage.getItem('leanverse_workouts_db');
+    const raw = localStorage.getItem(getUserStorageKey('leanverse_workouts_db'));
     if (!raw) return [];
     const db = JSON.parse(raw);
     if (typeof db !== 'object' || db === null) return [];
@@ -220,12 +220,12 @@ export default function WorkoutTracker() {
     setMounted(true);
     
     // Check if there is an imported workout from the AI Planner
-    const importedWorkoutStr = localStorage.getItem('leanverse_workout_tracker');
+    const importedWorkoutStr = localStorage.getItem(getUserStorageKey('leanverse_workout_tracker'));
     if (importedWorkoutStr) {
       try {
         const imported = JSON.parse(importedWorkoutStr);
         setWorkout(imported);
-        localStorage.removeItem('leanverse_workout_tracker'); // Clear import flag
+        localStorage.removeItem(getUserStorageKey('leanverse_workout_tracker')); // Clear import flag
         return;
       } catch (e) {
         console.error('Failed to load imported workout data', e);
@@ -234,7 +234,7 @@ export default function WorkoutTracker() {
 
     // Normal load: Check DB for today's workout
     const today = new Date().toISOString().split('T')[0];
-    const savedDb = localStorage.getItem('leanverse_workouts_db');
+    const savedDb = localStorage.getItem(getUserStorageKey('leanverse_workouts_db'));
     if (savedDb) {
       try {
         const db = JSON.parse(savedDb);
@@ -260,16 +260,16 @@ export default function WorkoutTracker() {
   // Save to local DB on every change
   useEffect(() => {
     if (mounted) {
-      const savedDb = localStorage.getItem('leanverse_workouts_db');
+      const savedDb = localStorage.getItem(getUserStorageKey('leanverse_workouts_db'));
       const db = savedDb ? JSON.parse(savedDb) : {};
       db[workout.date] = workout;
-      localStorage.setItem('leanverse_workouts_db', JSON.stringify(db));
+      localStorage.setItem(getUserStorageKey('leanverse_workouts_db'), JSON.stringify(db));
     }
   }, [workout, mounted]);
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newDate = e.target.value;
-    const savedDb = localStorage.getItem('leanverse_workouts_db');
+    const savedDb = localStorage.getItem(getUserStorageKey('leanverse_workouts_db'));
     const db = savedDb ? JSON.parse(savedDb) : {};
     
     if (db[newDate]) {
@@ -466,17 +466,20 @@ export default function WorkoutTracker() {
 
     if (hasSets && allCompleted && !hasFiredConfetti) {
       setHasFiredConfetti(true);
-      try {
-        confetti({
-          particleCount: 150,
-          spread: 80,
-          origin: { y: 0.6 },
-          colors: ['#10b981', '#06b6d4', '#f59e0b'],
-          zIndex: 9999
-        });
-      } catch (e) {
-        console.error('Confetti failed to trigger', e);
-      }
+      (async () => {
+        try {
+          const confetti = (await import('canvas-confetti')).default;
+          confetti({
+            particleCount: 150,
+            spread: 80,
+            origin: { y: 0.6 },
+            colors: ['#10b981', '#06b6d4', '#f59e0b'],
+            zIndex: 9999
+          });
+        } catch (e) {
+          console.error('Confetti failed to trigger', e);
+        }
+      })();
     } else if (!allCompleted && hasFiredConfetti) {
       // Reset if user unmarks a set so they can get confetti again if they re-complete it
       setHasFiredConfetti(false);

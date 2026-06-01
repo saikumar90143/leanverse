@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Dumbbell, Sparkles, Play, Pause, RotateCcw, Trash, Plus, CheckCircle2, ChevronRight, Activity, Clock, Flame, Share2, MessageCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/layout/AuthProvider';
+import { getUserStorageKey } from '@/lib/storage';
 interface Exercise {
   name: string;
   sets: number;
@@ -162,7 +163,7 @@ export default function AIWorkoutPlanner() {
       ]
     };
 
-    localStorage.setItem('leanverse_workout_tracker', JSON.stringify(workoutToSave));
+    localStorage.setItem(getUserStorageKey('leanverse_workout_tracker'), JSON.stringify(workoutToSave));
     router.push('/workout-tracker');
   };
 
