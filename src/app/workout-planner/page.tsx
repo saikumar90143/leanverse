@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Dumbbell, Sparkles, Play, Pause, RotateCcw, Trash, Plus, CheckCircle2, ChevronRight, Activity, Clock, Flame } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/components/layout/AuthProvider';
 interface Exercise {
   name: string;
   sets: number;
@@ -16,6 +17,7 @@ export default function AIWorkoutPlanner() {
   useEffect(() => setIsMounted(true), []);
 
   const router = useRouter();
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [location, setLocation] = useState<'gym' | 'home'>('gym');
   const [experience, setExperience] = useState('intermediate');
@@ -123,6 +125,12 @@ export default function AIWorkoutPlanner() {
   };
 
   const handleSendToTracker = () => {
+    if (!user) {
+      alert('Please log in first to track and save your workouts.');
+      router.push('/login');
+      return;
+    }
+
     const workoutToSave = {
       name: 'Push Day (Chest & Tris)',
       date: new Date().toISOString().split('T')[0],

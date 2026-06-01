@@ -21,8 +21,12 @@ export async function POST(req: Request) {
     const today = new Date();
     const lastActive = new Date(user.lastActive);
     
-    const diffTime = Math.abs(today.getTime() - lastActive.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    // Normalize to midnight to calculate true calendar day difference
+    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const lastActiveDate = new Date(lastActive.getFullYear(), lastActive.getMonth(), lastActive.getDate());
+    
+    const diffTime = todayDate.getTime() - lastActiveDate.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
     let nextStreak = user.streak || 0;
     if (diffDays === 1) {

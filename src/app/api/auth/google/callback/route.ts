@@ -88,9 +88,11 @@ export async function GET(req: NextRequest) {
       // Update streak
       const today = new Date();
       const lastActive = new Date(user.lastActive);
-      const diffDays = Math.ceil(
-        Math.abs(today.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24)
-      );
+      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const lastActiveDate = new Date(lastActive.getFullYear(), lastActive.getMonth(), lastActive.getDate());
+      
+      const diffTime = todayDate.getTime() - lastActiveDate.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
       if (diffDays === 1) user.streak = (user.streak || 0) + 1;
       else if (diffDays > 1) user.streak = 1;
       else if (!user.streak) user.streak = 1;
