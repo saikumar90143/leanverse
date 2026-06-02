@@ -47,6 +47,20 @@ export default function AIWorkoutPlanner() {
 
   useEffect(() => {
     setIsMounted(true);
+    
+    // Check if we arrived here from the Quick Start wizard on the home page
+    try {
+      const pendingStr = localStorage.getItem('leanverse_pending_wizard');
+      if (pendingStr) {
+        const pending = JSON.parse(pendingStr);
+        if (pending.goal) setGoal(pending.goal as Goal);
+        if (pending.location) setLocation(pending.location as WorkoutLocation);
+        if (pending.experience) setExperience(pending.experience as ExperienceLevel);
+        if (pending.timelineDays) setTimelineDays(pending.timelineDays as 30|60|90|120);
+        localStorage.removeItem('leanverse_pending_wizard');
+      }
+    } catch {}
+
     if (!user) return; // Don't load guest state if we are about to redirect
     
     // Load state from local storage

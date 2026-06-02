@@ -291,7 +291,7 @@ export default function HomePage() {
               { days: 30, title: 'Kickstarter', diff: 'Beginner', success: '94%' },
               { days: 60, title: 'Momentum', diff: 'Intermediate', success: '88%' },
               { days: 90, title: 'Transformation', diff: 'Advanced', success: '91%', highlight: true },
-              { days: 180, title: 'Evolution', diff: 'Elite', success: '85%' }
+              { days: 120, title: 'Evolution', diff: 'Elite', success: '85%' }
             ].map(prog => (
               <div key={prog.days} className={`glass p-6 rounded-3xl border transition-all hover:-translate-y-2 flex flex-col ${prog.highlight ? 'border-emerald-500/50 shadow-2xl shadow-emerald-500/10' : 'border-slate-200/50 dark:border-white/5'}`}>
                 {prog.highlight && (
@@ -348,7 +348,7 @@ export default function HomePage() {
               ))}
             </div>
             <div className="pt-4">
-              <Link href="/diet-planner#blueprint-card" className="px-8 py-4 rounded-2xl bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-900 font-black text-sm transition-all flex items-center justify-center space-x-2 inline-flex">
+              <Link href="/diet-planner" className="px-8 py-4 rounded-2xl bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-900 font-black text-sm transition-all flex items-center justify-center space-x-2 inline-flex">
                 <span>Generate Diet Plan</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>

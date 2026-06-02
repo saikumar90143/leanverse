@@ -17,7 +17,7 @@ export interface UserProfile {
   experience: ExperienceLevel;
   daysPerWeek: 3 | 4 | 5 | 6 | 7;
   sessionDuration: 20 | 30 | 45 | 60 | 90;
-  timelineDays: number; // 30, 60, 90, 120, 180, etc.
+  timelineDays: number; // 30, 60, 90, 120, etc.
   injuries: string[];
   equipment: string[];
 }
