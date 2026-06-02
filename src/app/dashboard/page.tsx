@@ -624,34 +624,7 @@ export default function UserDashboard() {
         </div>
       </div>
 
-      {/* Local Data Management */}
-      <div className="glass rounded-3xl p-6 border border-slate-200/10 space-y-4">
-        <div className="flex items-center space-x-2 border-b border-slate-200/10 pb-4">
-          <Target className="w-5 h-5 text-indigo-500" />
-          <h3 className="font-extrabold text-slate-850 dark:text-slate-100 text-base">Local Data Management</h3>
-        </div>
-        <p className="text-xs font-bold text-slate-500">
-          Manage your locally saved plans, diets, and workouts.
-        </p>
-        <div className="flex flex-wrap gap-4">
-          <button onClick={handleExportData} className="px-4 py-2 bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500 hover:text-white font-bold rounded-xl text-xs transition-all border border-indigo-500/20">
-            Export Data (JSON)
-          </button>
-          <input 
-            type="file" 
-            accept=".json" 
-            ref={fileInputRef} 
-            onChange={handleImportData} 
-            className="hidden" 
-          />
-          <button onClick={() => fileInputRef.current?.click()} className="px-4 py-2 bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500 hover:text-white font-bold rounded-xl text-xs transition-all border border-indigo-500/20">
-            Import Data
-          </button>
-          <button onClick={handleClearData} className="px-4 py-2 bg-red-500/10 hover:bg-red-500 hover:text-white text-red-500 font-bold rounded-xl text-xs transition-all border border-red-500/20">
-            Clear Local Data
-          </button>
-        </div>
-      </div>
+    
     </div>
   );
 }

@@ -12,9 +12,11 @@ import {
 } from 'lucide-react';
 import AdContainer from '@/components/ads/AdContainer';
 import { getStreak, getLifetimeVolume, getLevelProgress } from '@/lib/gamification';
+import { useAuth } from '@/components/layout/AuthProvider';
 
 export default function HomePage() {
   const router = useRouter();
+  const { user } = useAuth();
 
   // Quick Start Wizard State
   const [qsGoal, setQsGoal] = useState('muscle');
@@ -45,11 +47,11 @@ export default function HomePage() {
     try {
       const vol = getLifetimeVolume();
       setDynamicStats({
-        streak: getStreak(),
+        streak: user?.streak ?? getStreak(),
         progress: Math.round(getLevelProgress(vol) * 100)
       });
     } catch {}
-  }, []);
+  }, [user]);
 
   return (
     <div className="space-y-0 pb-20">

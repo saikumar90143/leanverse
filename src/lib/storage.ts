@@ -16,8 +16,10 @@ export function getUserStorageKey(baseKey: string): string {
 }
 
 export function formatLocalDate(d: Date = new Date()): string {
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
+  // Offset by 5 hours so that "next day" starts at 5 AM instead of Midnight
+  const offsetDate = new Date(d.getTime() - 5 * 60 * 60 * 1000);
+  const year = offsetDate.getFullYear();
+  const month = String(offsetDate.getMonth() + 1).padStart(2, '0');
+  const day = String(offsetDate.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
