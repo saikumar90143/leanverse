@@ -762,13 +762,13 @@ Built with LeanVerse AI`;
                     </>
                   ) : selectedFoods.length < 5 ? (
                     <>
-                      <AlertTriangle className="w-4 h-4 mr-1 opacity-50" />
-                      <span>Select {5 - selectedFoods.length} more item{5 - selectedFoods.length !== 1 ? 's' : ''}</span>
+                      <AlertTriangle className="w-4 h-4 mr-1 opacity-50 shrink-0" />
+                      <span className="text-[11px] sm:text-sm whitespace-nowrap">Pick {5 - selectedFoods.length} more</span>
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-4 h-4 fill-current mr-1 text-amber-300" />
-                      <span>Generate Plan</span>
+                      <Sparkles className="w-4 h-4 fill-current mr-1 text-amber-300 shrink-0" />
+                      <span className="text-sm sm:text-base whitespace-nowrap">Generate Plan</span>
                     </>
                   )}
                 </button>
@@ -987,16 +987,16 @@ Built with LeanVerse AI`;
                   
                   return (
                     <div key={mealStr} className="glass p-6 rounded-3xl border border-slate-200/10 space-y-4">
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 pb-3.5 border-b border-slate-200/10">
-                        <div className="flex flex-wrap items-center gap-2 sm:space-x-3 sm:gap-0">
-                          <span className="px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-full text-[10px] sm:text-xs font-bold font-mono">
+                      <div className="flex flex-row justify-between items-center gap-2 pb-3.5 border-b border-slate-200/10">
+                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                          <span className="px-2 sm:px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-full text-[9px] sm:text-xs font-bold font-mono">
                             {mealStr === 'breakfast' ? '08:00 AM' : mealStr === 'lunch' ? '01:30 PM' : mealStr === 'pre-workout' ? '04:30 PM' : mealStr === 'post-workout' ? '07:00 PM' : '08:30 PM'}
                           </span>
-                          <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-base sm:text-lg capitalize">{mealStr.replace('-', ' ')} Split</h3>
+                          <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm sm:text-lg capitalize">{mealStr.replace('-', ' ')} Split</h3>
                         </div>
-                        <button onClick={() => { setShowCustomForm(mealStr); setCfMeal(mealStr); }} className="flex items-center justify-center space-x-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white rounded-full transition-all cursor-pointer group border border-emerald-500/20 hover:border-emerald-500 self-start sm:self-center" title="Add Custom Food">
-                          <span className="text-xs font-bold">Add Item</span>
-                          <span className="text-sm font-black leading-none pb-0.5">+</span>
+                        <button onClick={() => { setShowCustomForm(mealStr); setCfMeal(mealStr); }} className="flex items-center justify-center space-x-1 px-2.5 sm:px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white rounded-full transition-all cursor-pointer group border border-emerald-500/20 hover:border-emerald-500 shrink-0" title="Add Custom Food">
+                          <span className="text-[10px] sm:text-xs font-bold">Add Item</span>
+                          <span className="text-xs sm:text-sm font-black leading-none pb-0.5">+</span>
                         </button>
                       </div>
 

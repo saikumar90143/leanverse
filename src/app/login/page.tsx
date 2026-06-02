@@ -250,12 +250,7 @@ function LoginForm() {
           </button>
         </form>
 
-        {/* Demo Credentials */}
-        <div className="mt-8 pt-6 border-t border-slate-200/10 dark:border-white/5 text-center text-[10px] text-slate-500 space-y-1">
-          <span className="font-extrabold uppercase text-slate-400 block">Sandbox Demo Credentials</span>
-          <p className="font-mono text-emerald-500">Admin: admin@leanverse.com / admin123</p>
-          <p className="font-mono text-emerald-500">User: user@leanverse.com / user123</p>
-        </div>
+       
       </div>
     </div>
   );
