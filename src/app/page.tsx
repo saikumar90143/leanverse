@@ -11,6 +11,7 @@ import {
   CheckCircle2, Zap, Trophy, Play, X
 } from 'lucide-react';
 import AdContainer from '@/components/ads/AdContainer';
+import { getStreak, getLifetimeVolume, getLevelProgress } from '@/lib/gamification';
 
 export default function HomePage() {
   const router = useRouter();
@@ -20,14 +21,14 @@ export default function HomePage() {
   const [qsLocation, setQsLocation] = useState('gym');
   const [qsExperience, setQsExperience] = useState('beginner');
 
-  const handleQuickStart = () => {
+  const handleQuickStart = (overrides?: { goal?: string, location?: string, experience?: string, timelineDays?: number }) => {
     // Store pending configuration in localStorage to be picked up by the planner after login
     try {
       localStorage.setItem('leanverse_pending_wizard', JSON.stringify({
-        goal: qsGoal,
-        location: qsLocation,
-        experience: qsExperience,
-        timelineDays: 90
+        goal: overrides?.goal || qsGoal,
+        location: overrides?.location || qsLocation,
+        experience: overrides?.experience || qsExperience,
+        timelineDays: overrides?.timelineDays || 90
       }));
     } catch {}
     // The workout planner route is protected, so this will ultimately force a login
@@ -37,7 +38,18 @@ export default function HomePage() {
 
   // Gamification Mock Data for Hero Visual
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const [dynamicStats, setDynamicStats] = useState({ streak: 0, progress: 0 });
+  
+  useEffect(() => {
+    setMounted(true);
+    try {
+      const vol = getLifetimeVolume();
+      setDynamicStats({
+        streak: getStreak(),
+        progress: Math.round(getLevelProgress(vol) * 100)
+      });
+    } catch {}
+  }, []);
 
   return (
     <div className="space-y-0 pb-20">
@@ -95,7 +107,7 @@ export default function HomePage() {
 
             <div className="flex flex-col sm:flex-row gap-4 pt-2">
               <button 
-                onClick={handleQuickStart}
+                onClick={() => handleQuickStart()}
                 className="px-8 py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-black text-lg transition-all shadow-xl shadow-emerald-500/25 flex items-center justify-center space-x-2"
               >
                 <span>Generate Free Plan</span>
@@ -162,33 +174,38 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <button onClick={handleQuickStart} className="w-full mt-4 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-black text-lg rounded-xl shadow-lg transition-transform active:scale-95 flex justify-center items-center gap-2">
+                <button onClick={() => handleQuickStart()} className="w-full mt-4 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-black text-lg rounded-xl shadow-lg transition-transform active:scale-95 flex justify-center items-center gap-2">
                   <Sparkles className="w-5 h-5" />
                   Generate AI Transformation
                 </button>
               </div>
             </div>
 
-            {/* Decorative Floating Mock Stats */}
-            <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} className="absolute -top-6 -right-6 z-20 glass bg-white/90 dark:bg-slate-800/90 p-4 rounded-2xl shadow-xl border border-slate-200 dark:border-white/10 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-500/20 flex items-center justify-center text-orange-500">
-                <Flame className="w-5 h-5 fill-current" />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">12 Day Streak</p>
-                <p className="text-sm font-black text-slate-800 dark:text-slate-100 leading-none">Unstoppable!</p>
-              </div>
-            </motion.div>
+            {/* Dynamic Floating Mock Stats */}
+            {mounted && (
+              <>
+                <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} className="absolute -top-6 -right-6 z-20 glass bg-white/90 dark:bg-slate-800/90 p-4 rounded-2xl shadow-xl border border-slate-200 dark:border-white/10 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-500/20 flex items-center justify-center text-orange-500">
+                    <Flame className="w-5 h-5 fill-current" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{dynamicStats.streak} Day Streak</p>
+                    <p className="text-sm font-black text-slate-800 dark:text-slate-100 leading-none">{dynamicStats.streak > 0 ? 'Unstoppable!' : 'Start Today!'}</p>
+                  </div>
+                </motion.div>
 
-            <motion.div animate={{ y: [0, 10, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }} className="absolute -bottom-8 -left-6 z-20 glass bg-white/90 dark:bg-slate-800/90 p-4 rounded-2xl shadow-xl border border-slate-200 dark:border-white/10 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-500">
-                <Target className="w-5 h-5 fill-current" />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Transformation</p>
-                <p className="text-sm font-black text-emerald-500 leading-none">24% Completed</p>
-              </div>
-            </motion.div>
+                <motion.div animate={{ y: [0, 10, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }} className="absolute -bottom-8 -left-6 z-20 glass bg-white/90 dark:bg-slate-800/90 p-4 rounded-2xl shadow-xl border border-slate-200 dark:border-white/10 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-500">
+                    <Target className="w-5 h-5 fill-current" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Level Progress</p>
+                    <p className="text-sm font-black text-emerald-500 leading-none">{dynamicStats.progress}% Completed</p>
+                  </div>
+                </motion.div>
+              </>
+            )}
+
           </motion.div>
         </div>
       </section>
@@ -302,7 +319,11 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <button onClick={() => { setQsGoal('muscle'); setQsExperience('intermediate'); handleQuickStart(); }} className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${prog.highlight ? 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg' : 'bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-900 dark:text-white'}`}>
+                <button onClick={() => handleQuickStart({ 
+                  timelineDays: prog.days, 
+                  goal: 'muscle', 
+                  experience: prog.diff === 'Beginner' ? 'beginner' : prog.diff === 'Elite' ? 'advanced' : 'intermediate' 
+                })} className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${prog.highlight ? 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg' : 'bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-900 dark:text-white'}`}>
                   Start Program
                 </button>
               </div>
@@ -327,7 +348,7 @@ export default function HomePage() {
               ))}
             </div>
             <div className="pt-4">
-              <Link href="/diet-planner" className="px-8 py-4 rounded-2xl bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-900 font-black text-sm transition-all flex items-center justify-center space-x-2 inline-flex">
+              <Link href="/diet-planner#blueprint-card" className="px-8 py-4 rounded-2xl bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-900 font-black text-sm transition-all flex items-center justify-center space-x-2 inline-flex">
                 <span>Generate Diet Plan</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
@@ -393,7 +414,7 @@ export default function HomePage() {
               <li className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-cyan-500" /> Warmup & Cooldown Protocols</li>
             </ul>
             <div className="pt-4">
-              <button onClick={handleQuickStart} className="px-8 py-4 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-white font-black text-sm transition-all shadow-lg shadow-cyan-500/20 inline-flex items-center space-x-2">
+              <button onClick={() => handleQuickStart()} className="px-8 py-4 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-white font-black text-sm transition-all shadow-lg shadow-cyan-500/20 inline-flex items-center space-x-2">
                 <span>Build Workout Plan</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
@@ -534,7 +555,7 @@ export default function HomePage() {
               <li className="flex items-center gap-3 text-sm font-bold text-slate-400 dark:text-slate-600"><X className="w-5 h-5" /> Detailed Analytics</li>
               <li className="flex items-center gap-3 text-sm font-bold text-slate-400 dark:text-slate-600"><X className="w-5 h-5" /> Priority AI Coach</li>
             </ul>
-            <button onClick={handleQuickStart} className="w-full py-4 rounded-xl font-bold bg-slate-900 dark:bg-white text-white dark:text-slate-900">Start Free</button>
+            <button onClick={() => handleQuickStart()} className="w-full py-4 rounded-xl font-bold bg-slate-900 dark:bg-white text-white dark:text-slate-900">Start Free</button>
           </div>
 
           <div className="glass p-8 rounded-3xl border-2 border-emerald-500 shadow-2xl shadow-emerald-500/20 text-center flex flex-col relative overflow-hidden">
@@ -564,7 +585,7 @@ export default function HomePage() {
           <h2 className="text-4xl md:text-6xl font-black text-white leading-tight">Your Transformation <br/>Starts Today</h2>
           <p className="text-lg text-slate-400 font-medium">Join thousands of users following personalized fitness plans built specifically for their unique goals, diets, and environments.</p>
           <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
-            <button onClick={handleQuickStart} className="px-8 py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-black text-lg transition-all shadow-xl shadow-emerald-500/25">Generate Free Plan</button>
+            <button onClick={() => handleQuickStart()} className="px-8 py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-black text-lg transition-all shadow-xl shadow-emerald-500/25">Generate Free Plan</button>
             <Link href="/calculators/maintenance" className="px-8 py-4 rounded-2xl glass bg-white/5 hover:bg-white/10 text-white font-bold text-lg transition-all border border-white/10 flex items-center justify-center">Calculate Calories</Link>
           </div>
         </div>

@@ -566,7 +566,7 @@ Built with LeanVerse AI`;
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       {!planGenerated ? (
-        <div className="glass rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200/20 dark:border-white/10 max-w-2xl mx-auto">
+        <div id="blueprint-card" className="glass rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200/20 dark:border-white/10 max-w-2xl mx-auto scroll-mt-24">
           {/* Header */}
           <div className="flex items-center space-x-3 mb-6">
             <div className="p-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white">

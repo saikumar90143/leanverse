@@ -5,18 +5,22 @@ import { Calculator, Heart, Info, ArrowLeft, Zap } from 'lucide-react';
 import Link from 'next/link';
 
 export default function MaintenanceCaloriesCalculator() {
-  const [age, setAge] = useState(25);
+  const [age, setAge] = useState<number | ''>(25);
   const [gender, setGender] = useState<'male' | 'female'>('male');
-  const [weight, setWeight] = useState(70); // kg
-  const [height, setHeight] = useState(170); // cm
+  const [weight, setWeight] = useState<number | ''>(70); // kg
+  const [height, setHeight] = useState<number | ''>(170); // cm
   const [activity, setActivity] = useState<string>('1.375'); // Lightly Active default
 
   const [bmr, setBmr] = useState(1630);
   const [tdee, setTdee] = useState(2240);
 
   useEffect(() => {
+    const ageNum = Number(age) || 0;
+    const weightNum = Number(weight) || 0;
+    const heightNum = Number(height) || 0;
+
     // Mifflin-St Jeor Equation
-    let bmrVal = 10 * weight + 6.25 * height - 5 * age;
+    let bmrVal = 10 * weightNum + 6.25 * heightNum - 5 * ageNum;
     if (gender === 'male') {
       bmrVal += 5;
     } else {
@@ -97,7 +101,7 @@ export default function MaintenanceCaloriesCalculator() {
                 <input
                   type="number" min="0"
                   value={age}
-                  onChange={(e) => setAge(Math.max(1, parseInt(e.target.value) || 0))}
+                  onChange={(e) => setAge(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
                   className="w-full bg-slate-100/50 dark:bg-white/5 border border-slate-300/20 dark:border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
                 />
               </div>
@@ -107,7 +111,7 @@ export default function MaintenanceCaloriesCalculator() {
                 <input
                   type="number" min="0"
                   value={height}
-                  onChange={(e) => setHeight(Math.max(1, parseInt(e.target.value) || 0))}
+                  onChange={(e) => setHeight(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
                   className="w-full bg-slate-100/50 dark:bg-white/5 border border-slate-300/20 dark:border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
                 />
               </div>
@@ -117,7 +121,7 @@ export default function MaintenanceCaloriesCalculator() {
                 <input
                   type="number" min="0"
                   value={weight}
-                  onChange={(e) => setWeight(Math.max(1, parseInt(e.target.value) || 0))}
+                  onChange={(e) => setWeight(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
                   className="w-full bg-slate-100/50 dark:bg-white/5 border border-slate-300/20 dark:border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
                 />
               </div>
