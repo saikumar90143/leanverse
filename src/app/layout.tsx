@@ -20,8 +20,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'LeanVerse - Premium AI Health & Fitness Ecosystem',
-  description: 'Generate customized AI diet plans, fitness split maps, track calorie deficits, calculate macros, and discover premium supplements at LeanVerse.',
+  title: 'LeanVerse | AI Nutrition & Workout Planner',
+  description: 'AI-powered personal fitness tracking, diet planning, and gamified leveling system.',
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
+  },
   keywords: ['AI diet planner', 'fitness tracker', 'TDEE calculator', 'macro breakdown', 'custom gym plans', 'Indian diet plans', 'Lean bulk planner'],
   manifest: '/manifest.json',
   openGraph: {

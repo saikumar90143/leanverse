@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" rx="112" fill="#0f172a" />
+  
+  <defs>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+    <linearGradient id="g2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+  </defs>
+
+  <!-- Central Dumbbell Bar -->
+  <rect x="176" y="236" width="160" height="40" rx="12" fill="url(#g1)" />
+  
+  <!-- Left Weight Plates -->
+  <rect x="130" y="166" width="36" height="180" rx="16" fill="url(#g2)" />
+  <rect x="94" y="196" width="26" height="120" rx="10" fill="url(#g1)" />
+  
+  <!-- Right Weight Plates -->
+  <rect x="346" y="166" width="36" height="180" rx="16" fill="url(#g2)" />
+  <rect x="392" y="196" width="26" height="120" rx="10" fill="url(#g1)" />
+  
+  <!-- Sparkle Accent in the Middle -->
+  <path d="M 256 120 C 265 160 285 180 300 180 C 285 190 265 210 256 250 C 247 210 227 190 212 180 C 227 180 247 160 256 120 Z" fill="#f59e0b" />
+</svg>

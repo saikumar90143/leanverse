@@ -1,10 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Apple, AlertTriangle, Printer, Sparkles, RefreshCw, CheckCircle2, ChevronRight, ChevronLeft, CalendarDays, Camera, Copy, Check, Share2, MessageCircle } from 'lucide-react';
+import { Apple, AlertTriangle, Printer, Sparkles, RefreshCw, CheckCircle2, ChevronRight, ChevronLeft, CalendarDays, Camera, Copy, Check, Share2, MessageCircle, User, Search, Plus, X } from 'lucide-react';
+import { useAuth } from '@/components/layout/AuthProvider';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import MacroRings from '@/components/shared/MacroRings';
 import { getUserStorageKey } from '@/lib/storage';
+import { foodDatabase } from '@/lib/foodDatabase';
 
 const BarcodeScanner = dynamic(() => import('@/components/shared/BarcodeScanner'), { ssr: false });
 interface FoodItem {
@@ -19,6 +22,9 @@ interface FoodItem {
 
 export default function AIDietPlanner() {
   const [isMounted, setIsMounted] = useState(false);
+  const { user } = useAuth();
+  const router = useRouter();
+
   useEffect(() => setIsMounted(true), []);
 
   // Input states
@@ -75,6 +81,46 @@ export default function AIDietPlanner() {
   // Generated Plan State
   const [planGenerated, setPlanGenerated] = useState(false);
   const [generating, setGenerating] = useState(false);
+
+  // ── Macro Search State ────────────────────────────────────────────────────
+  const [macroQuery, setMacroQuery] = useState('');
+  const [macroLoading, setMacroLoading] = useState(false);
+  const [macroError, setMacroError] = useState('');
+  const [macroResult, setMacroResult] = useState<{
+    calories: number; protein: number; carbs: number; fats: number;
+    ingredients: string[];
+  } | null>(null);
+  const [macroAddedKey, setMacroAddedKey] = useState('');
+
+  const searchMacros = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!macroQuery.trim()) return;
+    setMacroLoading(true);
+    setMacroError('');
+    setMacroResult(null);
+    setMacroAddedKey('');
+    try {
+      const res = await fetch(`/api/food-search?q=${encodeURIComponent(macroQuery)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Food not found');
+      setMacroResult(data);
+    } catch (err: any) {
+      setMacroError(err.message);
+    } finally {
+      setMacroLoading(false);
+    }
+  };
+
+  const addMacroResultToPlan = (mealSlot: string) => {
+    if (!macroResult) return;
+    // Build a custom food key: name|mealSlot|custom
+    const key = `${macroQuery.toLowerCase().trim()}|${mealSlot}|custom`;
+    if (!selectedFoods.includes(key)) {
+      setSelectedFoods(prev => [...prev, key]);
+      setCustomQty(prev => ({ ...prev, [key]: 1 }));
+    }
+    setMacroAddedKey(mealSlot);
+  };
   const [customQty, setCustomQty] = useState<Record<string, number>>({});
   const [mealAssignments, setMealAssignments] = useState<Record<string, string>>({});
   const [activeMealTab, setActiveMealTab] = useState('breakfast');
@@ -181,9 +227,9 @@ Built with LeanVerse AI`;
     setShowScanner(false);
     // Mock barcode database mapping for premium demo
     const mockDb: Record<string, any> = {
-      '0123456789': { cals: 190, protein: 21, carbs: 22, fat: 8, alternative: 'MusclePharm Combat Crunch', icon: '🍫', category: 'protein', unit: 'bar', baseQty: 1 },
-      '8901030911': { cals: 100, protein: 15, carbs: 10, fat: 0, alternative: 'Chobani Zero Sugar', icon: '🥣', category: 'dairy', unit: 'cup', baseQty: 1 },
-      'DEFAULT': { cals: 250, protein: 10, carbs: 30, fat: 10, alternative: 'Healthy Snack', icon: '📦', category: 'snack', unit: 'serving', baseQty: 1 }
+      '0123456789': { cals: 190, protein: 21, carbs: 22, fat: 8, alternative: 'MusclePharm Combat Crunch', icon: '🍫', category: 'post-workout', unit: 'bar', baseQty: 1 },
+      '8901030911': { cals: 100, protein: 15, carbs: 10, fat: 0, alternative: 'Chobani Zero Sugar', icon: '🥣', category: 'breakfast', unit: 'cup', baseQty: 1 },
+      'DEFAULT': { cals: 250, protein: 10, carbs: 30, fat: 10, alternative: 'Healthy Snack', icon: '📦', category: 'pre-workout', unit: 'serving', baseQty: 1 }
     };
     
     const scannedName = mockDb[decodedText] ? (decodedText === '0123456789' ? 'Quest Protein Bar' : 'Greek Yogurt (Oikos)') : `Scanned Item (${decodedText.slice(-4)})`;
@@ -282,59 +328,8 @@ Built with LeanVerse AI`;
     });
   };
 
-  // Common food data database
-  const commonFoods: Record<string, { cals: number; protein: number; carbs: number; fat: number; alternative: string; warning?: string; icon: string; category: string; unit: string; baseQty: number }> = {
-    // Grains & Carbs
-    rice: { cals: 130, protein: 2.7, carbs: 28, fat: 0.3, alternative: 'Brown Rice / Quinoa', warning: 'White rice has high glycemic indexes.', icon: '🍚', category: 'lunch', unit: 'g', baseQty: 100 },
-    'brown rice': { cals: 111, protein: 2.6, carbs: 23, fat: 0.9, alternative: 'Quinoa', icon: '🍛', category: 'lunch', unit: 'g', baseQty: 100 },
-    roti: { cals: 120, protein: 3.8, carbs: 17, fat: 3.7, alternative: 'Multigrain Roti', icon: '🫓', category: 'dinner', unit: 'rotis', baseQty: 1 },
-    oats: { cals: 389, protein: 16.9, carbs: 66, fat: 6.9, alternative: 'Steel-Cut Oats', icon: '🥣', category: 'breakfast', unit: 'g', baseQty: 100 },
-    sweetpotato: { cals: 86, protein: 1.6, carbs: 20, fat: 0.1, alternative: 'Yam', icon: '🍠', category: 'lunch', unit: 'g', baseQty: 100 },
-    'brown bread': { cals: 250, protein: 10, carbs: 43, fat: 4, alternative: 'Sourdough', icon: '🍞', category: 'breakfast', unit: 'slices', baseQty: 3 },
-    ricecake: { cals: 35, protein: 0.7, carbs: 7.3, fat: 0.3, alternative: 'Makhana', icon: '🍘', category: 'pre-workout', unit: 'cakes', baseQty: 1 },
-
-    // Proteins (Animal & Dairy)
-    chicken: { cals: 165, protein: 31, carbs: 0, fat: 3.6, alternative: 'Turkey / Lean Beef', icon: '🍗', category: 'lunch', unit: 'g', baseQty: 100 },
-    fish: { cals: 206, protein: 22, carbs: 0, fat: 12, alternative: 'Tuna / Tilapia', icon: '🐟', category: 'dinner', unit: 'g', baseQty: 100 },
-    eggs: { cals: 155, protein: 13, carbs: 1.1, fat: 11, alternative: 'Egg Whites', icon: '🥚', category: 'breakfast', unit: 'large eggs', baseQty: 2 },
-    paneer: { cals: 265, protein: 18, carbs: 1.2, fat: 20, alternative: 'Low-Fat Paneer / Tofu', warning: 'High fat load.', icon: '🧀', category: 'dinner', unit: 'g', baseQty: 100 },
-    wheyprotein: { cals: 120, protein: 24, carbs: 3, fat: 1.5, alternative: 'Plant Protein Blend', icon: '🥤', category: 'post-workout', unit: 'scoops', baseQty: 1 },
-    milk: { cals: 60, protein: 3.2, carbs: 4.8, fat: 3.3, alternative: 'Almond Milk', icon: '🥛', category: 'breakfast', unit: 'ml', baseQty: 100 },
-    curd: { cals: 98, protein: 11, carbs: 3.4, fat: 4.3, alternative: 'Greek Yogurt', icon: '🥣', category: 'pre-workout', unit: 'g', baseQty: 100 },
-    yogurt: { cals: 59, protein: 10, carbs: 3.6, fat: 0.4, alternative: 'Kefir', icon: '🍦', category: 'pre-workout', unit: 'g', baseQty: 100 },
-
-    // Legumes & Pulses
-    dal: { cals: 340, protein: 24, carbs: 60, fat: 1, alternative: 'Sprouted Moong Dal', icon: '🍲', category: 'lunch', unit: 'g (uncooked)', baseQty: 100 },
-    rajma: { cals: 333, protein: 24, carbs: 60, fat: 0.8, alternative: 'Lobia / Chole', icon: '🍛', category: 'lunch', unit: 'g (uncooked)', baseQty: 100 },
-    chana: { cals: 364, protein: 19, carbs: 61, fat: 6, alternative: 'Roasted Makhana', icon: '🧆', category: 'pre-workout', unit: 'g', baseQty: 100 },
-
-    // Fats & Nuts
-    'peanut butter': { cals: 588, protein: 25, carbs: 20, fat: 50, alternative: 'Almond Butter', warning: 'Extremely calorie dense.', icon: '🥜', category: 'breakfast', unit: 'tbsp', baseQty: 6 },
-    badam: { cals: 579, protein: 21, carbs: 22, fat: 50, alternative: 'Walnuts', icon: '🌰', category: 'pre-workout', unit: 'g', baseQty: 100 },
-    cashew: { cals: 553, protein: 18, carbs: 30, fat: 44, alternative: 'Pistachios', icon: '🥜', category: 'pre-workout', unit: 'g', baseQty: 100 },
-    pista: { cals: 562, protein: 20, carbs: 28, fat: 45, alternative: 'Pumpkin Seeds', icon: '🟢', category: 'pre-workout', unit: 'g', baseQty: 100 },
-
-    // Fruits
-    banana: { cals: 89, protein: 1.1, carbs: 23, fat: 0.3, alternative: 'Apple / Berries', icon: '🍌', category: 'breakfast', unit: 'medium bananas', baseQty: 1 },
-    apple: { cals: 52, protein: 0.3, carbs: 14, fat: 0.2, alternative: 'Pear', icon: '🍎', category: 'pre-workout', unit: 'g', baseQty: 100 },
-    orange: { cals: 47, protein: 0.9, carbs: 12, fat: 0.1, alternative: 'Grapefruit', icon: '🍊', category: 'pre-workout', unit: 'g', baseQty: 100 },
-    watermelon: { cals: 30, protein: 0.6, carbs: 7.6, fat: 0.2, alternative: 'Muskmelon', icon: '🍉', category: 'pre-workout', unit: 'g', baseQty: 100 },
-    papaya: { cals: 43, protein: 0.5, carbs: 11, fat: 0.3, alternative: 'Pineapple', icon: '🥭', category: 'breakfast', unit: 'g', baseQty: 100 },
-    dates: { cals: 282, protein: 2.5, carbs: 75, fat: 0.4, alternative: 'Raisins', warning: 'High sugar density.', icon: '🌴', category: 'pre-workout', unit: 'dates', baseQty: 10 },
-
-    // Vegetables
-    broccoli: { cals: 34, protein: 2.8, carbs: 6.6, fat: 0.4, alternative: 'Cauliflower', icon: '🥦', category: 'lunch', unit: 'g', baseQty: 100 },
-    spinach: { cals: 23, protein: 2.9, carbs: 3.6, fat: 0.4, alternative: 'Kale', icon: '🥬', category: 'dinner', unit: 'g', baseQty: 100 },
-    carrot: { cals: 41, protein: 0.9, carbs: 10, fat: 0.2, alternative: 'Beetroot', icon: '🥕', category: 'lunch', unit: 'g', baseQty: 100 },
-    tomato: { cals: 18, protein: 0.9, carbs: 3.9, fat: 0.2, alternative: 'Bell Pepper', icon: '🍅', category: 'lunch', unit: 'g', baseQty: 100 },
-    potato: { cals: 77, protein: 2, carbs: 17, fat: 0.1, alternative: 'Sweet Potato', icon: '🥔', category: 'dinner', unit: 'g', baseQty: 100 },
-    cucumber: { cals: 15, protein: 0.7, carbs: 3.6, fat: 0.1, alternative: 'Zucchini', icon: '🥒', category: 'lunch', unit: 'g', baseQty: 100 },
-    onion: { cals: 40, protein: 1.1, carbs: 9.3, fat: 0.1, alternative: 'Garlic', icon: '🧅', category: 'lunch', unit: 'g', baseQty: 100 },
-
-    // Breakfast Extras
-    dosa: { cals: 168, protein: 3.9, carbs: 29, fat: 3.7, alternative: 'Oats Dosa', icon: '🥞', category: 'breakfast', unit: 'dosas', baseQty: 1 },
-    idli: { cals: 58, protein: 1.6, carbs: 12, fat: 0.2, alternative: 'Oats Idli', icon: '🥟', category: 'breakfast', unit: 'idlis', baseQty: 1 },
-  };
+  // Common food data database — sourced from centralized lib/foodDatabase.ts
+  const commonFoods = foodDatabase;
 
   const allFoods = { ...commonFoods, ...customFoodsDatabase };
 
@@ -427,6 +422,10 @@ Built with LeanVerse AI`;
   };
 
   const handleGenerate = () => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
     setGenerating(true);
     setCustomQty({}); // reset custom adjustments on new generation
     setEatenMeals({}); // reset eaten state on new generation
@@ -734,8 +733,8 @@ Built with LeanVerse AI`;
           {/* Step 3: Raw Foods Available & Immediate Warn Logic */}
           {step === 3 && (
             <div className="space-y-5 animate-fade-in">
-              <span className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1">Step 3: Home Foods Picker</span>
-              <p className="text-xs text-slate-500 mb-4">Select items you currently have in your kitchen. Categorize them into meals to customize your generated plan.</p>
+              <span className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1">Step 3: Your Food Preferences</span>
+              <p className="text-xs text-slate-500 mb-4">We are creating a highly-customized diet plan specifically for you. Select the exact foods you want to eat for each meal below, and our AI will calculate the perfect portions to hit your goals!</p>
               
               <div className="flex space-x-3 mb-6">
                 <button
@@ -764,6 +763,11 @@ Built with LeanVerse AI`;
                     <>
                       <AlertTriangle className="w-4 h-4 mr-1 opacity-50 shrink-0" />
                       <span className="text-[11px] sm:text-sm whitespace-nowrap">Pick {5 - selectedFoods.length} more</span>
+                    </>
+                  ) : !user ? (
+                    <>
+                      <User className="w-4 h-4 mr-1 shrink-0" />
+                      <span className="text-sm sm:text-base whitespace-nowrap">Login to Generate</span>
                     </>
                   ) : (
                     <>
@@ -802,7 +806,14 @@ Built with LeanVerse AI`;
 
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 max-h-[300px] overflow-y-auto pr-1 no-scrollbar">
                 {Object.keys(allFoods)
-                  .filter((food) => food.includes(searchFood.toLowerCase()))
+                  .filter((food) => {
+                    const matchesSearch = food.includes(searchFood.toLowerCase().trim());
+                    const matchesTab = allFoods[food].category === activeMealTab;
+                    // If the user is actively searching, show all matches regardless of category
+                    if (searchFood.trim() !== '') return matchesSearch;
+                    // Otherwise, only show foods belonging to the active meal tab
+                    return matchesTab;
+                  })
                   .map((food) => {
                   const compositeKey = `${food}|${activeMealTab}`;
                   return (
@@ -885,6 +896,98 @@ Built with LeanVerse AI`;
                 <span>{copiedGrocery ? 'Copied' : 'Grocery List'}</span>
               </button>
             </div>
+          </div>
+
+          {/* ── AI Macro Search Widget ──────────────────────────────────── */}
+          <div className="glass rounded-3xl p-6 border border-slate-200/10 space-y-5 relative overflow-hidden no-print">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/5 rounded-full blur-[60px] -z-10" />
+
+            <div className="flex items-center space-x-2">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-lg shadow-emerald-500/20">
+                <Search className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm">AI Macro Search</h3>
+                <p className="text-[10px] text-slate-400">Search any food and add it directly to your meal plan</p>
+              </div>
+            </div>
+
+            <form onSubmit={searchMacros} className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder='Try "shawarma", "peanut butter", "biryani"…'
+                  value={macroQuery}
+                  onChange={(e) => setMacroQuery(e.target.value)}
+                  className="w-full pl-9 pr-4 py-3 rounded-2xl bg-slate-100/60 dark:bg-white/5 border border-slate-200/30 dark:border-white/10 text-sm font-semibold text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={macroLoading || !macroQuery.trim()}
+                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 disabled:opacity-40 text-white font-black text-sm shadow-lg transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+              >
+                {macroLoading ? (
+                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin block" />
+                ) : 'Search'}
+              </button>
+            </form>
+
+            {macroError && (
+              <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs font-bold text-red-500">
+                <X className="w-4 h-4 shrink-0" />
+                {macroError}
+              </div>
+            )}
+
+            {macroResult && (
+              <div className="space-y-4 animate-fade-in">
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { label: 'Calories', value: macroResult.calories, unit: 'kcal', color: 'text-emerald-500' },
+                    { label: 'Protein',  value: macroResult.protein,  unit: 'g',    color: 'text-blue-500' },
+                    { label: 'Carbs',    value: macroResult.carbs,    unit: 'g',    color: 'text-amber-500' },
+                    { label: 'Fats',     value: macroResult.fats,     unit: 'g',    color: 'text-rose-500' },
+                  ].map(({ label, value, unit, color }) => (
+                    <div key={label} className="bg-slate-100/60 dark:bg-white/5 rounded-2xl p-3 text-center border border-slate-200/20 dark:border-white/5">
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-1">{label}</span>
+                      <span className={`text-lg font-black ${color} block leading-none`}>{value}</span>
+                      <span className="text-[9px] text-slate-400 font-bold">{unit}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {macroResult.ingredients.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {macroResult.ingredients.map((item, i) => (
+                      <span key={i} className="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold rounded-full border border-emerald-500/15">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Add to Meal Slot:</span>
+                  <div className="flex flex-wrap gap-2">
+                    {['breakfast', 'lunch', 'pre-workout', 'post-workout', 'dinner'].map((slot) => (
+                      <button
+                        key={slot}
+                        onClick={() => addMacroResultToPlan(slot)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all capitalize cursor-pointer border ${
+                          macroAddedKey === slot
+                            ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm'
+                            : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 border-slate-200/30 dark:border-white/10 hover:border-emerald-500/40 hover:text-emerald-500'
+                        }`}
+                      >
+                        {macroAddedKey === slot ? '✓ Added' : `+ ${slot.replace('-', ' ')}`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Macro Breakdown cards */}
@@ -1216,6 +1319,101 @@ Built with LeanVerse AI`;
                 </ul>
               </div>
             </div>
+          </div>
+
+          {/* ── AI Macro Search Widget ──────────────────────────────────── */}
+          <div className="glass rounded-3xl p-6 border border-slate-200/10 space-y-5 relative overflow-hidden no-print">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/5 rounded-full blur-[60px] -z-10" />
+
+            <div className="flex items-center space-x-2">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-lg shadow-emerald-500/20">
+                <Search className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm">AI Macro Search</h3>
+                <p className="text-[10px] text-slate-400">Search any food and add it directly to your meal plan</p>
+              </div>
+            </div>
+
+            <form onSubmit={searchMacros} className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder='Try "shawarma", "peanut butter", "biryani"…'
+                  value={macroQuery}
+                  onChange={(e) => setMacroQuery(e.target.value)}
+                  className="w-full pl-9 pr-4 py-3 rounded-2xl bg-slate-100/60 dark:bg-white/5 border border-slate-200/30 dark:border-white/10 text-sm font-semibold text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={macroLoading || !macroQuery.trim()}
+                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 disabled:opacity-40 text-white font-black text-sm shadow-lg transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+              >
+                {macroLoading ? (
+                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin block" />
+                ) : 'Search'}
+              </button>
+            </form>
+
+            {macroError && (
+              <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs font-bold text-red-500">
+                <X className="w-4 h-4 shrink-0" />
+                {macroError}
+              </div>
+            )}
+
+            {macroResult && (
+              <div className="space-y-4 animate-fade-in">
+                {/* Macro cards */}
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { label: 'Calories', value: macroResult.calories, unit: 'kcal', color: 'text-emerald-500' },
+                    { label: 'Protein',  value: macroResult.protein,  unit: 'g',    color: 'text-blue-500' },
+                    { label: 'Carbs',    value: macroResult.carbs,    unit: 'g',    color: 'text-amber-500' },
+                    { label: 'Fats',     value: macroResult.fats,     unit: 'g',    color: 'text-rose-500' },
+                  ].map(({ label, value, unit, color }) => (
+                    <div key={label} className="bg-slate-100/60 dark:bg-white/5 rounded-2xl p-3 text-center border border-slate-200/20 dark:border-white/5">
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-1">{label}</span>
+                      <span className={`text-lg font-black ${color} block leading-none`}>{value}</span>
+                      <span className="text-[9px] text-slate-400 font-bold">{unit}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Detected Items */}
+                {macroResult.ingredients.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {macroResult.ingredients.map((item, i) => (
+                      <span key={i} className="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold rounded-full border border-emerald-500/15">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Add to Meal Plan */}
+                <div className="space-y-2">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Add to Meal Slot:</span>
+                  <div className="flex flex-wrap gap-2">
+                    {['breakfast', 'lunch', 'pre-workout', 'post-workout', 'dinner'].map((slot) => (
+                      <button
+                        key={slot}
+                        onClick={() => addMacroResultToPlan(slot)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all capitalize cursor-pointer border ${
+                          macroAddedKey === slot
+                            ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm'
+                            : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 border-slate-200/30 dark:border-white/10 hover:border-emerald-500/40 hover:text-emerald-500'
+                        }`}
+                      >
+                        {macroAddedKey === slot ? '✓ Added' : `+ ${slot.replace('-', ' ')}`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Actions Bar */}

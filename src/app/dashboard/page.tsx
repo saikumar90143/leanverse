@@ -4,14 +4,12 @@ import React, { useState } from 'react';
 import { useAuth } from '@/components/layout/AuthProvider';
 import { 
   Flame, Trophy, Apple, Dumbbell, Droplet, Scale, Sparkles, 
-  Plus, CheckCircle2, ChevronRight, LayoutDashboard, Bookmark, Target
+  Plus, CheckCircle2, ChevronRight, LayoutDashboard, Bookmark, Target, Search
 } from 'lucide-react';
 import Link from 'next/link';
 import { getTodayWorkoutSummary } from '@/lib/gamification';
 import { getUserStorageKey, getUserId } from '@/lib/storage';
 import MacroRings from '@/components/shared/MacroRings';
-import WorkoutHeatmap from '@/components/dashboard/WorkoutHeatmap';
-
 export default function UserDashboard() {
   const { user, updateUserSession } = useAuth();
   
@@ -35,6 +33,61 @@ export default function UserDashboard() {
   const [lastWorkoutDetails, setLastWorkoutDetails] = useState('Track a workout to see it here');
   const [hasDietPlan, setHasDietPlan] = useState(false);
   const [hasWorkout, setHasWorkout] = useState(false);
+
+  // Macro Search State
+  const [macroQuery, setMacroQuery] = useState('');
+  const [macroLoading, setMacroLoading] = useState(false);
+  const [macroError, setMacroError] = useState('');
+  const [macroResult, setMacroResult] = useState<{ calories: number; protein: number; carbs: number; fats: number; fiber: number; ingredients: string[] } | null>(null);
+
+  const [macroLogged, setMacroLogged] = useState(false);
+
+  const searchMacros = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!macroQuery.trim()) return;
+    
+    setMacroLoading(true);
+    setMacroError('');
+    setMacroResult(null);
+    setMacroLogged(false);
+
+    try {
+      const res = await fetch(`/api/food-search?q=${encodeURIComponent(macroQuery)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to fetch macros');
+      setMacroResult(data);
+    } catch (err: any) {
+      setMacroError(err.message);
+    } finally {
+      setMacroLoading(false);
+    }
+  };
+
+  const logMacrosToTracker = () => {
+    if (!macroResult) return;
+    const today = new Date().toISOString().split('T')[0];
+
+    // Update calories in localStorage (additive)
+    const prevCalsRaw = localStorage.getItem(getUserStorageKey(`leanverse_quick_cals_${today}`));
+    const prevCals = prevCalsRaw ? parseInt(prevCalsRaw, 10) : 0;
+    const newCals = prevCals + macroResult.calories;
+    localStorage.setItem(getUserStorageKey(`leanverse_quick_cals_${today}`), String(newCals));
+
+    // Update macros in localStorage (additive)
+    const prevMacrosRaw = localStorage.getItem(getUserStorageKey(`leanverse_eaten_macros_${today}`));
+    const prevMacros = prevMacrosRaw ? JSON.parse(prevMacrosRaw) : { protein: 0, carbs: 0, fats: 0 };
+    const newMacros = {
+      protein: (prevMacros.protein || 0) + macroResult.protein,
+      carbs:   (prevMacros.carbs   || 0) + macroResult.carbs,
+      fats:    (prevMacros.fats    || 0) + macroResult.fats,
+    };
+    localStorage.setItem(getUserStorageKey(`leanverse_eaten_macros_${today}`), JSON.stringify(newMacros));
+
+    // Update live UI state instantly
+    setCaloriesLogged(prev => prev + macroResult.calories);
+    setEatenMacros(newMacros);
+    setMacroLogged(true);
+  };
 
   React.useEffect(() => {
     try {
@@ -387,9 +440,100 @@ export default function UserDashboard() {
         </div>
       </div>
 
-      {/* Workout Heatmap Full Width */}
-      <div className="md:col-span-2 lg:col-span-4 mt-2">
-        <WorkoutHeatmap />
+
+      {/* Macro Search Widget */}
+      <div className="glass rounded-3xl p-6 border border-slate-200/10 mb-8 shadow-sm relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-[80px] -z-10" />
+        <div className="flex items-center space-x-2 mb-4">
+          <Sparkles className="w-5 h-5 text-emerald-500" />
+          <h3 className="font-extrabold text-slate-850 dark:text-slate-100 text-base">AI Macro Search</h3>
+        </div>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 max-w-lg leading-relaxed">
+          Powered by Edamam Natural Language AI. Type any food or meal (e.g., "1 large chicken shawarma and a diet coke") to instantly calculate its macronutrient profile.
+        </p>
+
+        <form onSubmit={searchMacros} className="flex flex-col sm:flex-row gap-3 mb-6">
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-slate-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="E.g., 2 slices pepperoni pizza"
+              value={macroQuery}
+              onChange={(e) => setMacroQuery(e.target.value)}
+              className="w-full bg-slate-100/50 dark:bg-white/5 border border-slate-350/20 dark:border-white/10 rounded-2xl pl-10 pr-4 py-3.5 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-bold text-slate-800 dark:text-slate-150 transition-all"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={macroLoading || !macroQuery.trim()}
+            className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 disabled:opacity-50 text-white rounded-2xl py-3.5 px-6 font-black text-sm flex items-center justify-center transition-all shadow-md active:scale-95 cursor-pointer whitespace-nowrap"
+          >
+            {macroLoading ? (
+              <span className="flex items-center space-x-2">
+                <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                <span>Searching...</span>
+              </span>
+            ) : (
+              'Analyze Food'
+            )}
+          </button>
+        </form>
+
+        {macroError && (
+          <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-xs font-bold mb-4">
+            {macroError}
+          </div>
+        )}
+
+        {macroResult && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bg-slate-100/50 dark:bg-white/5 border border-slate-200/50 dark:border-white/5 rounded-2xl p-4 text-center">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Calories</span>
+                <span className="text-2xl font-black text-emerald-500">{macroResult.calories}</span>
+              </div>
+              <div className="bg-slate-100/50 dark:bg-white/5 border border-slate-200/50 dark:border-white/5 rounded-2xl p-4 text-center">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Protein</span>
+                <span className="text-xl font-black text-slate-800 dark:text-slate-100">{macroResult.protein}g</span>
+              </div>
+              <div className="bg-slate-100/50 dark:bg-white/5 border border-slate-200/50 dark:border-white/5 rounded-2xl p-4 text-center">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Carbs</span>
+                <span className="text-xl font-black text-slate-800 dark:text-slate-100">{macroResult.carbs}g</span>
+              </div>
+              <div className="bg-slate-100/50 dark:bg-white/5 border border-slate-200/50 dark:border-white/5 rounded-2xl p-4 text-center">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Fats</span>
+                <span className="text-xl font-black text-slate-800 dark:text-slate-100">{macroResult.fats}g</span>
+              </div>
+            </div>
+            
+            {macroResult.ingredients && macroResult.ingredients.length > 0 && (
+              <div className="p-3 bg-emerald-500/5 rounded-xl border border-emerald-500/10">
+                <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block mb-1">Detected Items</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {macroResult.ingredients.map((ing, i) => (
+                    <span key={i} className="px-2 py-1 bg-white dark:bg-slate-800 rounded-md text-[10px] font-bold text-slate-600 dark:text-slate-300 shadow-sm border border-slate-100 dark:border-slate-700">
+                      {ing}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            <button 
+              onClick={logMacrosToTracker}
+              disabled={macroLogged}
+              className={`w-full py-3 text-xs font-black rounded-xl transition-all mt-2 ${
+                macroLogged
+                  ? 'bg-emerald-500 text-white cursor-default'
+                  : 'bg-slate-800 hover:bg-slate-700 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 cursor-pointer active:scale-95'
+              }`}
+            >
+              {macroLogged ? '✅ Logged! Check Calorie Ring Above ↑' : '+ Log to Today\'s Tracker'}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Saved Blueprints & Badges section */}

@@ -5,6 +5,7 @@
  * (they guard with typeof window check).
  */
 import { getUserStorageKey } from './storage';
+import { exerciseDatabase } from './exerciseDatabase';
 
 export interface Level {
   name: string;
@@ -197,11 +198,12 @@ export function getTodayVolume(): number {
 /**
  * Returns today's workout name and completed set count. 
  */
-export function getTodayWorkoutSummary(): { name: string; completedSets: number; totalSets: number } {
+export function getTodayWorkoutSummary(): { name: string; completedSets: number; totalSets: number; caloriesBurned: number } {
   const db = getWorkoutsDb();
-  const todayStr = new Date().toISOString().split('T')[0];
+  const d = new Date();
+  const todayStr = [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-');
   const entry = db[todayStr];
-  const fallback = { name: 'No workout logged today', completedSets: 0, totalSets: 0 };
+  const fallback = { name: 'No workout logged today', completedSets: 0, totalSets: 0, caloriesBurned: 0 };
 
   if (!entry || typeof entry !== 'object' || entry === null) return fallback;
   const e = entry as Record<string, unknown>;
@@ -210,17 +212,163 @@ export function getTodayWorkoutSummary(): { name: string; completedSets: number;
 
   let completedSets = 0;
   let totalSets = 0;
+  let caloriesBurned = 0;
 
   for (const ex of exercises) {
     if (!ex || typeof ex !== 'object' || ex === null) continue;
+    
+    const exName = typeof (ex as Record<string, unknown>).name === 'string' ? (ex as Record<string, unknown>).name as string : '';
+    const dbMatch = exerciseDatabase.find(e => e.name.toLowerCase() === exName.toLowerCase().trim());
+    const calsPerMin = dbMatch ? dbMatch.caloriesPerMinute : 6;
+
     const sets = (ex as Record<string, unknown>).sets;
     if (!Array.isArray(sets)) continue;
     totalSets += sets.length;
-    completedSets += sets.filter((s: unknown) => {
+    
+    const exCompletedSets = sets.filter((s: unknown) => {
       if (!s || typeof s !== 'object' || s === null) return false;
       return (s as Record<string, unknown>).completed === true;
     }).length;
+
+    completedSets += exCompletedSets;
+    // Assume 1.5 minutes active/rest time per set
+    caloriesBurned += exCompletedSets * 1.5 * calsPerMin;
   }
 
-  return { name, completedSets, totalSets };
+  return { name, completedSets, totalSets, caloriesBurned: Math.round(caloriesBurned) };
+}
+
+/**
+ * Generates data for the 30-day contribution graph (Heatmap).
+ */
+export function getHeatmapData(days: number = 30): { date: string; hasWorkout: boolean; volume: number; calories: number }[] {
+  const db = getWorkoutsDb();
+  const data = [];
+  const today = new Date();
+  
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const dateStr = [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-');
+    
+    const entry = db[dateStr];
+    let hasWorkout = false;
+    let volume = 0;
+    let calories = 0;
+    
+    if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
+      const exercises = (entry as Record<string, unknown>).exercises;
+      if (Array.isArray(exercises)) {
+        for (const ex of exercises) {
+          if (!ex || typeof ex !== 'object' || ex === null) continue;
+
+          const exName = typeof (ex as Record<string, unknown>).name === 'string' ? (ex as Record<string, unknown>).name as string : '';
+          const dbMatch = exerciseDatabase.find(e => e.name.toLowerCase() === exName.toLowerCase().trim());
+          const calsPerMin = dbMatch ? dbMatch.caloriesPerMinute : 6;
+
+          const sets = (ex as Record<string, unknown>).sets;
+          if (Array.isArray(sets)) {
+            for (const s of sets) {
+              if (!s || typeof s !== 'object' || s === null) continue;
+              const set = s as Record<string, unknown>;
+              if (set.completed === true) {
+                hasWorkout = true;
+                const weight = typeof set.weight === 'number' ? set.weight : 0;
+                const reps = typeof set.reps === 'number' ? set.reps : 0;
+                volume += weight * reps;
+                calories += 1.5 * calsPerMin;
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    data.push({ date: dateStr, hasWorkout, volume: Math.round(volume), calories: Math.round(calories) });
+  }
+  
+  return data;
+}
+
+const DAILY_CHALLENGES = [
+  { id: 'c1', title: 'The Century Club', desc: 'Complete 100 total reps across any exercises today.', icon: '💯' },
+  { id: 'c2', title: 'Heavy Lifter', desc: 'Log a workout with over 5,000kg of total volume.', icon: '🏋️' },
+  { id: 'c3', title: 'Core Crusher', desc: 'Complete at least 3 sets of Plank or Crunches.', icon: '🧘' },
+  { id: 'c4', title: 'Cardio Engine', desc: 'Log at least 1 set of HIIT Sprints or Treadmill.', icon: '🏃' },
+  { id: 'c5', title: 'Leg Day Hero', desc: 'Complete 5 sets of any Squat variation.', icon: '🦵' },
+  { id: 'c6', title: 'Consistency is Key', desc: 'Simply log a workout with at least 1 completed set.', icon: '🔥' },
+  { id: 'c7', title: 'Push/Pull Master', desc: 'Log at least one push exercise and one pull exercise.', icon: '💪' }
+];
+
+/**
+ * Returns a deterministic Daily Challenge based on the current date,
+ * and checks if the user has completed it today.
+ */
+export function getDailyChallenge(): { title: string; desc: string; icon: string; completed: boolean } {
+  const db = getWorkoutsDb();
+  const today = new Date();
+  const dateStr = today.toISOString().split('T')[0];
+  
+  // Deterministic selection based on day of month
+  const challenge = DAILY_CHALLENGES[today.getDate() % DAILY_CHALLENGES.length];
+  
+  // Check completion
+  let completed = false;
+  const entry = db[dateStr];
+  if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
+    const exercises = (entry as Record<string, unknown>).exercises;
+    if (Array.isArray(exercises)) {
+      let totalReps = 0;
+      let totalVolume = 0;
+      let hasCore = false;
+      let hasCardio = false;
+      let squatSets = 0;
+      let hasPush = false;
+      let hasPull = false;
+      let validSets = 0;
+
+      for (const ex of exercises) {
+        if (!ex || typeof ex !== 'object') continue;
+        const e = ex as Record<string, unknown>;
+        const name = (typeof e.name === 'string' ? e.name : '').toLowerCase();
+        const sets = Array.isArray(e.sets) ? e.sets : [];
+        
+        for (const s of sets) {
+          if (!s || typeof s !== 'object') continue;
+          const set = s as Record<string, unknown>;
+          if (set.completed === true) {
+            validSets++;
+            const reps = typeof set.reps === 'number' ? set.reps : 0;
+            const weight = typeof set.weight === 'number' ? set.weight : 0;
+            
+            totalReps += reps;
+            totalVolume += (reps * weight);
+            
+            if (name.includes('plank') || name.includes('crunch')) hasCore = true;
+            if (name.includes('sprint') || name.includes('treadmill') || name.includes('cardio')) hasCardio = true;
+            if (name.includes('squat')) squatSets++;
+            if (name.includes('press') || name.includes('push') || name.includes('dip')) hasPush = true;
+            if (name.includes('pull') || name.includes('row') || name.includes('curl')) hasPull = true;
+          }
+        }
+      }
+
+      switch (challenge.id) {
+        case 'c1': completed = totalReps >= 100; break;
+        case 'c2': completed = totalVolume >= 5000; break;
+        case 'c3': completed = hasCore && validSets >= 3; break;
+        case 'c4': completed = hasCardio; break;
+        case 'c5': completed = squatSets >= 5; break;
+        case 'c6': completed = validSets >= 1; break;
+        case 'c7': completed = hasPush && hasPull; break;
+      }
+    }
+  }
+
+  return {
+    title: challenge.title,
+    desc: challenge.desc,
+    icon: challenge.icon,
+    completed
+  };
 }

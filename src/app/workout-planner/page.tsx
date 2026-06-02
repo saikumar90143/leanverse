@@ -30,6 +30,7 @@ export default function AIWorkoutPlanner() {
 
   const [generated, setGenerated] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [activeDayIndex, setActiveDayIndex] = useState(0);
 
   // Workout Timer States
   const [timerSeconds, setTimerSeconds] = useState(60);
@@ -47,7 +48,7 @@ export default function AIWorkoutPlanner() {
   const [swaps, setSwaps] = useState<Record<string, number>>({
     BenchPress: 0, OHP: 0, LateralRaises: 0, TricepExtension: 0,
     Pullups: 0, BarbellRow: 0, FacePulls: 0, BicepCurls: 0,
-    Squats: 0, RDLs: 0, LegExtensions: 0, CalfRaises: 0
+    Squats: 0, RDLs: 0, LegExtensions: 0, Calves: 0
   });
 
   const alternatives = {
@@ -130,6 +131,24 @@ export default function AIWorkoutPlanner() {
     return 0; // fallback to the first option
   };
 
+  const getExerciseImage = (key: string) => {
+    const map: Record<string, string> = {
+      BenchPress: 'push.png',
+      OHP: 'ohp.png',
+      LateralRaises: 'lateralraises.png',
+      TricepExtension: 'tricepextension.png',
+      Pullups: 'pull.png',
+      BarbellRow: 'barbellrow.png',
+      FacePulls: 'facepulls.png',
+      BicepCurls: 'arms.png',
+      Squats: 'legs.png',
+      RDLs: 'rdls.png',
+      LegExtensions: 'legextensions.png',
+      Calves: 'calves.png'
+    };
+    return `/images/exercises/${map[key] || 'arms.png'}`;
+  };
+
   const generateRoutine = () => {
     // Smart Defaults based on equipment
     const initialSwaps: Record<string, number> = {};
@@ -154,7 +173,7 @@ export default function AIWorkoutPlanner() {
       { key: 'Squats', target: 'Quadriceps & Glutes', sets: '4 Sets x 6-8 Reps' },
       { key: 'RDLs', target: 'Hamstrings', sets: '3 Sets x 8-10 Reps' },
       { key: 'LegExtensions', target: 'Quadriceps', sets: '3 Sets x 12-15 Reps' },
-      { key: 'CalfRaises', target: 'Calves', sets: '4 Sets x 15-20 Reps' },
+      { key: 'Calves', target: 'Calves', sets: '4 Sets x 15-20 Reps' },
     ];
     
     // Derived Days
@@ -186,6 +205,7 @@ export default function AIWorkoutPlanner() {
     const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     return routine.map((r, i) => ({
       day: `${daysOfWeek[i]} - ${r.dayType}`,
+      dayType: r.dayType,
       burn: r.isRest ? "0 kcal (Recovery)" : `~ ${r.exercises.length * 110} kcal Burned`,
       exercises: r.exercises,
       isRest: r.isRest
@@ -487,36 +507,84 @@ export default function AIWorkoutPlanner() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Core Exercise sheets */}
             <div className="lg:col-span-8 space-y-6 print-card">
-              <span className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1">Day Split Exercises & logs</span>
+              <span className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1">Weekly Blueprint</span>
               
-              {/* Weekly Plan Cards */}
-              {weeklyRoutine.map((dayPlan, idx) => (
-                <div key={idx} className={`glass p-6 rounded-3xl border ${dayPlan.isRest ? 'border-slate-200/5 opacity-70' : 'border-slate-200/10'} space-y-5`}>
+              {/* Horizontal Day Pills Selector */}
+              <div className="flex space-x-3 overflow-x-auto no-scrollbar pb-4 snap-x">
+                {weeklyRoutine.map((dayPlan, idx) => {
+                  const isActive = idx === activeDayIndex;
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => setActiveDayIndex(idx)}
+                      className={`flex flex-col items-center min-w-[85px] p-3 rounded-2xl transition-all border snap-center shrink-0 cursor-pointer ${
+                        isActive 
+                          ? 'bg-emerald-500 border-emerald-400 text-white shadow-lg shadow-emerald-500/20 scale-105 z-10' 
+                          : 'glass border-slate-200/10 text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-white/5 hover:scale-105'
+                      }`}
+                    >
+                      <span className={`text-[10px] font-black uppercase tracking-widest mb-1.5 ${isActive ? 'text-emerald-100' : 'text-slate-400'}`}>
+                        Day {idx + 1}
+                      </span>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 shadow-sm ${isActive ? 'bg-white/20' : 'bg-slate-100 dark:bg-zinc-800'}`}>
+                        {dayPlan.isRest ? '🧘' : dayPlan.dayType.includes('Push') ? '💪' : dayPlan.dayType.includes('Pull') ? '🏋️' : dayPlan.dayType.includes('Legs') ? '🦵' : '🔥'}
+                      </div>
+                      <span className="text-xs font-bold leading-tight line-clamp-1">{dayPlan.dayType}</span>
+                      <span className={`text-[9px] mt-1 font-bold ${isActive ? 'text-emerald-100' : 'text-slate-400'}`}>
+                        {dayPlan.isRest ? 'Recovery' : `${dayPlan.exercises.length} Exercises`}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Active Day Content */}
+              {weeklyRoutine[activeDayIndex] && (
+                <div className="glass p-6 rounded-3xl border border-slate-200/10 space-y-5 animate-fade-in relative">
                   <div className="pb-3 border-b border-slate-200/10 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                    <h3 className={`font-extrabold text-lg ${dayPlan.isRest ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}`}>{dayPlan.day}</h3>
-                    <span className="text-xs text-emerald-500 font-extrabold uppercase">{dayPlan.burn}</span>
+                    <h3 className={`font-extrabold text-xl ${weeklyRoutine[activeDayIndex].isRest ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}`}>
+                      {weeklyRoutine[activeDayIndex].day}
+                    </h3>
+                    <span className="text-xs px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-full font-extrabold uppercase tracking-wide">
+                      {weeklyRoutine[activeDayIndex].burn}
+                    </span>
                   </div>
 
-                  {!dayPlan.isRest ? (
+                  {!weeklyRoutine[activeDayIndex].isRest ? (
                     <div className="space-y-4">
-                      {dayPlan.exercises.map((ex: any) => (
-                        <div key={ex.key} className="p-4 bg-slate-100/40 dark:bg-white/5 rounded-2xl border border-slate-300/5 space-y-3">
-                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                      {weeklyRoutine[activeDayIndex].exercises.map((ex: any) => (
+                        <div key={ex.key} className="p-4 bg-slate-100/40 dark:bg-white/5 rounded-2xl border border-slate-300/5 space-y-3 relative group transition-all hover:border-emerald-500/20">
+                          {/* Complete Checkmark Button */}
+                          <div className="absolute top-4 right-4 z-10">
+                             <button className="w-6 h-6 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center hover:border-emerald-500 hover:bg-emerald-500/20 transition-colors text-transparent hover:text-emerald-500 cursor-pointer group-hover:border-slate-400">
+                               <CheckCircle2 className="w-4 h-4 fill-current" />
+                             </button>
+                          </div>
+                          
+                          <div className="flex flex-row items-start gap-3 pr-8">
+                            <img 
+                              src={ex?.key ? getExerciseImage(ex.key) : '/images/exercises/arms.png'} 
+                              alt="Exercise preview" 
+                              className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover shadow-sm border border-slate-200/50 dark:border-white/10 shrink-0 bg-slate-200/30 dark:bg-white/5 p-1"
+                              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                            />
+                            
                             <div className="flex-1">
-                              <span className="font-black text-slate-800 dark:text-slate-200 text-sm block">
+                              <span className="font-black text-slate-800 dark:text-slate-200 text-sm sm:text-base block">
                                 {ex?.key && alternatives[ex.key as keyof typeof alternatives] 
                                   ? alternatives[ex.key as keyof typeof alternatives][swaps[ex.key] || 0] 
                                   : "Unknown Exercise"}
                               </span>
-                              <span className="text-[10px] text-slate-400 block mt-0.5">Primary Target: {ex?.target || "Unknown"}</span>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <button onClick={() => ex?.key && handleSwap(ex.key as keyof typeof alternatives)} className="text-[10px] px-2 py-1 bg-slate-200/50 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 rounded-md font-bold transition-all text-slate-500 cursor-pointer">
-                                Swap 🔄
-                              </button>
-                              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{ex?.sets || "Unknown"}</span>
+                              <span className="text-[10px] sm:text-xs text-slate-400 block mt-0.5 font-semibold">Primary Target: {ex?.target || "Unknown"}</span>
+                              <div className="flex flex-wrap items-center gap-2 mt-2.5">
+                                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-zinc-900 px-2 py-1 rounded-md border border-slate-200/50 dark:border-white/5">{ex?.sets || "Unknown"}</span>
+                                <button onClick={() => ex?.key && handleSwap(ex.key as keyof typeof alternatives)} className="text-[10px] px-2 py-1 bg-slate-200/50 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 rounded-md font-bold transition-all text-slate-500 cursor-pointer border border-slate-300/10">
+                                  Swap 🔄
+                                </button>
+                              </div>
                             </div>
                           </div>
+                          
                           {/* Log block */}
                           <div className="flex flex-col sm:flex-row sm:justify-between gap-3 pt-2.5 border-t border-slate-300/10 text-xs">
                             <div className="flex items-center space-x-2">
@@ -544,12 +612,14 @@ export default function AIWorkoutPlanner() {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-4">
-                      <p className="text-sm text-slate-500 font-bold">Active Recovery & Rest</p>
+                    <div className="text-center py-12 px-4 rounded-2xl bg-slate-100/30 dark:bg-white/5 border border-slate-200/50 dark:border-white/5">
+                      <div className="text-4xl mb-3">🧘‍♂️</div>
+                      <h4 className="text-lg font-black text-slate-800 dark:text-slate-200">Active Recovery & Rest</h4>
+                      <p className="text-xs text-slate-500 mt-2 max-w-sm mx-auto leading-relaxed">Focus on mobility, stretching, and hydration today. Muscle grows when you rest!</p>
                     </div>
                   )}
                 </div>
-              ))}
+              )}
             </div>
 
             {/* Workout countdown timer & progressive explanation widgets */}

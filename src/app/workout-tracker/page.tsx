@@ -11,76 +11,10 @@ import {
 import StreakBadge from '@/components/shared/StreakBadge';
 import { playSetComplete, playTimerEnd } from '@/lib/sounds';
 import { getUserStorageKey } from '@/lib/storage';
+import { exerciseDatabase } from '@/lib/exerciseDatabase';
+import Image from 'next/image';
 
-// ── Exercise Library ──────────────────────────────────────────────────────────
-const EXERCISE_LIBRARY: { name: string; muscle: string; category: string; emoji: string }[] = [
-  // Chest
-  { name: 'Bench Press', muscle: 'Chest', category: 'Push', emoji: '🏋️' },
-  { name: 'Incline Bench Press', muscle: 'Chest', category: 'Push', emoji: '🏋️' },
-  { name: 'Decline Bench Press', muscle: 'Chest', category: 'Push', emoji: '🏋️' },
-  { name: 'Dumbbell Flyes', muscle: 'Chest', category: 'Push', emoji: '🤸' },
-  { name: 'Cable Crossover', muscle: 'Chest', category: 'Push', emoji: '💪' },
-  { name: 'Push Up', muscle: 'Chest', category: 'Push', emoji: '🔄' },
-  { name: 'Chest Dips', muscle: 'Chest', category: 'Push', emoji: '💪' },
-  // Shoulders
-  { name: 'Overhead Press', muscle: 'Shoulders', category: 'Push', emoji: '🏋️' },
-  { name: 'Lateral Raises', muscle: 'Shoulders', category: 'Push', emoji: '🤸' },
-  { name: 'Front Raises', muscle: 'Shoulders', category: 'Push', emoji: '🤸' },
-  { name: 'Arnold Press', muscle: 'Shoulders', category: 'Push', emoji: '💪' },
-  { name: 'Face Pulls', muscle: 'Shoulders', category: 'Pull', emoji: '💪' },
-  { name: 'Rear Delt Flyes', muscle: 'Shoulders', category: 'Pull', emoji: '🤸' },
-  // Back
-  { name: 'Deadlift', muscle: 'Back', category: 'Pull', emoji: '🏋️' },
-  { name: 'Pull Up', muscle: 'Back', category: 'Pull', emoji: '💪' },
-  { name: 'Barbell Row', muscle: 'Back', category: 'Pull', emoji: '🏋️' },
-  { name: 'Seated Cable Row', muscle: 'Back', category: 'Pull', emoji: '💪' },
-  { name: 'Lat Pulldown', muscle: 'Back', category: 'Pull', emoji: '💪' },
-  { name: 'T-Bar Row', muscle: 'Back', category: 'Pull', emoji: '🏋️' },
-  { name: 'Single Arm Dumbbell Row', muscle: 'Back', category: 'Pull', emoji: '🤸' },
-  // Biceps
-  { name: 'Barbell Curl', muscle: 'Biceps', category: 'Pull', emoji: '💪' },
-  { name: 'Dumbbell Curl', muscle: 'Biceps', category: 'Pull', emoji: '💪' },
-  { name: 'Hammer Curl', muscle: 'Biceps', category: 'Pull', emoji: '💪' },
-  { name: 'Preacher Curl', muscle: 'Biceps', category: 'Pull', emoji: '💪' },
-  { name: 'Cable Curl', muscle: 'Biceps', category: 'Pull', emoji: '💪' },
-  { name: 'Concentration Curl', muscle: 'Biceps', category: 'Pull', emoji: '💪' },
-  // Triceps
-  { name: 'Tricep Pushdown', muscle: 'Triceps', category: 'Push', emoji: '💪' },
-  { name: 'Skull Crusher', muscle: 'Triceps', category: 'Push', emoji: '🏋️' },
-  { name: 'Overhead Tricep Extension', muscle: 'Triceps', category: 'Push', emoji: '🤸' },
-  { name: 'Close Grip Bench Press', muscle: 'Triceps', category: 'Push', emoji: '🏋️' },
-  { name: 'Diamond Push Up', muscle: 'Triceps', category: 'Push', emoji: '🔄' },
-  // Legs
-  { name: 'Squat', muscle: 'Quads', category: 'Legs', emoji: '🏋️' },
-  { name: 'Front Squat', muscle: 'Quads', category: 'Legs', emoji: '🏋️' },
-  { name: 'Leg Press', muscle: 'Quads', category: 'Legs', emoji: '🦵' },
-  { name: 'Bulgarian Split Squat', muscle: 'Quads', category: 'Legs', emoji: '🤸' },
-  { name: 'Leg Extension', muscle: 'Quads', category: 'Legs', emoji: '🦵' },
-  { name: 'Romanian Deadlift', muscle: 'Hamstrings', category: 'Legs', emoji: '🏋️' },
-  { name: 'Leg Curl', muscle: 'Hamstrings', category: 'Legs', emoji: '🦵' },
-  { name: 'Hip Thrust', muscle: 'Glutes', category: 'Legs', emoji: '🏋️' },
-  { name: 'Sumo Deadlift', muscle: 'Glutes', category: 'Legs', emoji: '🏋️' },
-  { name: 'Standing Calf Raise', muscle: 'Calves', category: 'Legs', emoji: '🦵' },
-  { name: 'Seated Calf Raise', muscle: 'Calves', category: 'Legs', emoji: '🦵' },
-  { name: 'Lunges', muscle: 'Quads', category: 'Legs', emoji: '🤸' },
-  // Core
-  { name: 'Plank', muscle: 'Core', category: 'Core', emoji: '🧘' },
-  { name: 'Crunches', muscle: 'Core', category: 'Core', emoji: '🤸' },
-  { name: 'Leg Raise', muscle: 'Core', category: 'Core', emoji: '🤸' },
-  { name: 'Russian Twist', muscle: 'Core', category: 'Core', emoji: '🔄' },
-  { name: 'Ab Wheel Rollout', muscle: 'Core', category: 'Core', emoji: '🔄' },
-  { name: 'Cable Crunch', muscle: 'Core', category: 'Core', emoji: '💪' },
-  { name: 'Hanging Knee Raise', muscle: 'Core', category: 'Core', emoji: '🤸' },
-  // Cardio
-  { name: 'Treadmill Run', muscle: 'Cardio', category: 'Cardio', emoji: '🏃' },
-  { name: 'Cycling', muscle: 'Cardio', category: 'Cardio', emoji: '🚴' },
-  { name: 'Rowing Machine', muscle: 'Cardio', category: 'Cardio', emoji: '🚣' },
-  { name: 'Jump Rope', muscle: 'Cardio', category: 'Cardio', emoji: '🏃' },
-  { name: 'Burpees', muscle: 'Cardio', category: 'Cardio', emoji: '🔄' },
-  { name: 'Stair Climber', muscle: 'Cardio', category: 'Cardio', emoji: '🏃' },
-];
-
-const MUSCLES = ['All', 'Chest', 'Shoulders', 'Back', 'Biceps', 'Triceps', 'Quads', 'Hamstrings', 'Glutes', 'Calves', 'Core', 'Cardio'];
+const MUSCLES = ['All', ...Array.from(new Set(exerciseDatabase.map(e => e.muscleGroup)))].sort();
 
 interface SetData {
   id: string;
@@ -188,7 +122,7 @@ export default function WorkoutTracker() {
 
   const [workout, setWorkout] = useState<WorkoutState>({
     name: 'My Daily Workout',
-    date: new Date().toISOString().split('T')[0],
+    date: (() => { const d = new Date(); return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-'); })(),
     exercises: [
       {
         id: crypto.randomUUID(),
@@ -233,7 +167,8 @@ export default function WorkoutTracker() {
     }
 
     // Normal load: Check DB for today's workout
-    const today = new Date().toISOString().split('T')[0];
+    const d = new Date();
+    const today = [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-');
     const savedDb = localStorage.getItem(getUserStorageKey('leanverse_workouts_db'));
     if (savedDb) {
       try {
@@ -432,6 +367,12 @@ export default function WorkoutTracker() {
             ...ex,
             sets: ex.sets.map(s => {
               if (s.id === setId) {
+                // Prevent completion if weight or reps are missing
+                if (!s.completed && (typeof s.weight !== 'number' || typeof s.reps !== 'number')) {
+                  alert('Please enter both weight and reps before completing this set.');
+                  return s;
+                }
+                
                 const newCompleted = !s.completed;
                 // If just completed, auto-start timer and play sound
                 if (newCompleted) {
@@ -514,6 +455,14 @@ export default function WorkoutTracker() {
 
   const totalSets = workout.exercises.reduce((total, ex) => total + ex.sets.length, 0);
 
+  const totalCalories = Math.round(workout.exercises.reduce((total, ex) => {
+    const exName = typeof ex.name === 'string' ? ex.name : '';
+    const dbMatch = exerciseDatabase.find(e => e.name.toLowerCase() === exName.toLowerCase().trim());
+    const calsPerMin = dbMatch ? dbMatch.caloriesPerMinute : 6;
+    const exCompletedSets = ex.sets.filter(s => s.completed).length;
+    return total + (exCompletedSets * 1.5 * calsPerMin);
+  }, 0));
+
   // Format timer
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
@@ -557,11 +506,21 @@ export default function WorkoutTracker() {
           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[40px] -z-10" />
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Total Volume</span>
-              <span className="text-emerald-500 font-bold text-xs"><Flame className="w-3.5 h-3.5 inline mr-1"/>Burn</span>
+              <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Workout Stats</span>
             </div>
-            <div className="text-3xl font-black text-slate-800 dark:text-slate-100 font-mono tracking-tighter">
-              {totalVolume.toLocaleString()} <span className="text-sm text-slate-500 font-bold">kg</span>
+            <div className="flex items-end justify-between">
+              <div>
+                <div className="text-xs font-bold text-slate-500 mb-1">Volume</div>
+                <div className="text-2xl font-black text-slate-800 dark:text-slate-100 font-mono tracking-tighter">
+                  {totalVolume.toLocaleString()} <span className="text-xs text-slate-500 font-bold">kg</span>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-xs font-bold text-orange-500 mb-1 flex items-center justify-end gap-1"><Flame className="w-3 h-3"/> Active Burn</div>
+                <div className="text-2xl font-black text-orange-600 dark:text-orange-400 font-mono tracking-tighter">
+                  {totalCalories.toLocaleString()} <span className="text-xs text-orange-500/70 font-bold">kcal</span>
+                </div>
+              </div>
             </div>
             <div className="w-full bg-slate-200 dark:bg-white/10 h-1.5 rounded-full overflow-hidden mt-2">
               <div 
@@ -624,9 +583,24 @@ export default function WorkoutTracker() {
             {/* Exercise Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center flex-1 space-x-3">
-                <div className="w-8 h-8 rounded-full bg-slate-200/50 dark:bg-white/5 flex items-center justify-center font-black text-slate-400 text-xs">
-                  {index + 1}
-                </div>
+                {(() => {
+                  const dbMatch = exerciseDatabase.find(e => e.name.toLowerCase() === exercise.name.toLowerCase().trim());
+                  if (dbMatch && dbMatch.imageUrl) {
+                    return (
+                      <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-slate-200/50 dark:bg-zinc-800 border border-slate-200/50 dark:border-white/10 shrink-0 shadow-sm">
+                        <Image src={dbMatch.imageUrl} alt={exercise.name} fill className="object-cover" />
+                        <div className="absolute top-0 left-0 bg-emerald-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-br-lg z-10">
+                          {index + 1}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="w-12 h-12 rounded-xl bg-slate-200/50 dark:bg-white/5 flex items-center justify-center font-black text-slate-400 text-sm shrink-0">
+                      {index + 1}
+                    </div>
+                  );
+                })()}
                 <input 
                   type="text"
                   value={exercise.name}
@@ -790,7 +764,7 @@ export default function WorkoutTracker() {
                   </div>
                   <div>
                     <h2 className="font-black text-slate-800 dark:text-slate-100 text-sm">Exercise Library</h2>
-                    <p className="text-[10px] text-slate-400 font-bold">{EXERCISE_LIBRARY.length} exercises · tap to add</p>
+                    <p className="text-[10px] text-slate-400 font-bold">{exerciseDatabase.length} exercises · tap to add</p>
                   </div>
                 </div>
                 <button
@@ -847,9 +821,9 @@ export default function WorkoutTracker() {
               {/* Results */}
               {(() => {
                 const query = exerciseSearch.toLowerCase().trim();
-                const filtered = EXERCISE_LIBRARY.filter(ex => {
-                  const matchesMuscle = muscleFilter === 'All' || ex.muscle === muscleFilter;
-                  const matchesSearch = !query || ex.name.toLowerCase().includes(query) || ex.muscle.toLowerCase().includes(query);
+                const filtered = exerciseDatabase.filter(ex => {
+                  const matchesMuscle = muscleFilter === 'All' || ex.muscleGroup === muscleFilter;
+                  const matchesSearch = !query || ex.name.toLowerCase().includes(query) || ex.muscleGroup.toLowerCase().includes(query);
                   return matchesMuscle && matchesSearch;
                 });
 
@@ -880,20 +854,22 @@ export default function WorkoutTracker() {
                             className={`w-full flex items-center justify-between p-3 rounded-2xl transition-all text-left ${inSession ? 'opacity-50 cursor-not-allowed bg-slate-50 dark:bg-white/5' : 'hover:bg-emerald-500/8 dark:hover:bg-emerald-500/10 hover:border-emerald-500/20 border border-transparent cursor-pointer group/ex'}`}
                           >
                             <div className="flex items-center space-x-3">
-                              <span className="text-xl w-8 text-center">{ex.emoji}</span>
+                              <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-slate-200/30 dark:bg-zinc-800 shrink-0 border border-slate-200/50 dark:border-white/10">
+                                <Image src={ex.imageUrl || '/images/exercises/arms.png'} alt={ex.name} fill className="object-cover" />
+                              </div>
                               <div>
                                 <span className="font-black text-sm text-slate-800 dark:text-slate-100 group-hover/ex:text-emerald-600 dark:group-hover/ex:text-emerald-400 transition-colors block">
                                   {ex.name}
                                 </span>
-                                <div className="flex items-center gap-1.5 mt-0.5">
-                                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">{ex.muscle}</span>
+                                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">{ex.muscleGroup}</span>
                                   <span className="text-[9px] text-slate-300 dark:text-slate-600">·</span>
                                   <span className={`text-[9px] font-bold uppercase ${
-                                    ex.category === 'Push' ? 'text-orange-400' :
-                                    ex.category === 'Pull' ? 'text-blue-400' :
-                                    ex.category === 'Legs' ? 'text-purple-400' :
-                                    ex.category === 'Core' ? 'text-cyan-400' : 'text-pink-400'
-                                  }`}>{ex.category}</span>
+                                    ex.difficulty === 'Beginner' ? 'text-emerald-500' :
+                                    ex.difficulty === 'Intermediate' ? 'text-amber-500' : 'text-red-500'
+                                  }`}>{ex.difficulty}</span>
+                                  <span className="text-[9px] text-slate-300 dark:text-slate-600">·</span>
+                                  <span className="text-[9px] font-bold uppercase text-blue-400">{ex.exerciseType}</span>
                                 </div>
                               </div>
                             </div>
