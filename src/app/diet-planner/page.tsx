@@ -6,7 +6,7 @@ import { useAuth } from '@/components/layout/AuthProvider';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import MacroRings from '@/components/shared/MacroRings';
-import { getUserStorageKey } from '@/lib/storage';
+import { getUserStorageKey, formatLocalDate } from '@/lib/storage';
 import { foodDatabase } from '@/lib/foodDatabase';
 
 const BarcodeScanner = dynamic(() => import('@/components/shared/BarcodeScanner'), { ssr: false });
@@ -46,7 +46,7 @@ export default function AIDietPlanner() {
   // Hot-patch legacy snack items in memory (prevents requiring a page refresh)
   useEffect(() => {
     if (selectedFoods.some(f => f.includes('|snack'))) {
-      setSelectedFoods(prev => prev.map(f => typeof f === 'string' ? f.replace(/\|snack$/, '|pre-workout') : f));
+      setSelectedFoods(prev => Array.from(new Set(prev.map(f => typeof f === 'string' ? f.replace(/\|snack$/, '|pre-workout') : f))));
       
       setCustomQty(prev => {
         const next = { ...prev };
@@ -130,7 +130,7 @@ export default function AIDietPlanner() {
   const getDisplayDate = (offset: number) => {
     const d = new Date();
     d.setDate(d.getDate() + offset);
-    return d.toISOString().split('T')[0];
+    return formatLocalDate(d);
   };
 
   const [copiedGrocery, setCopiedGrocery] = useState(false);
@@ -157,7 +157,9 @@ Built with LeanVerse AI`;
   const shareWhatsapp = `https://wa.me/?text=${shareText}`;
   const shareX = `https://twitter.com/intent/tweet?text=${shareText}`;
   const getActiveDateStr = (offset: number) => {
-    return new Date(Date.now() + offset * 86400000).toISOString().split('T')[0];
+    const d = new Date();
+    d.setDate(d.getDate() + offset);
+    return formatLocalDate(d);
   };
   const activeDateStr = getActiveDateStr(viewDateOffset);
 
@@ -204,7 +206,7 @@ Built with LeanVerse AI`;
   };
 
   // Tracks custom macro foods added by the user
-  const [customFoodsDatabase, setCustomFoodsDatabase] = useState<Record<string, { cals: number; protein: number; carbs: number; fat: number; alternative: string; warning?: string; icon: string; category: string; unit: string; baseQty: number }>>(() => {
+  const [customFoodsDatabase, setCustomFoodsDatabase] = useState<Record<string, { cals: number; protein: number; carbs: number; fat: number; alternative: string; warning?: string; icon: string; category: string; unit: string; baseQty: number; hidden?: boolean }>>(() => {
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem(getUserStorageKey('leanverse_custom_foods'));
@@ -241,7 +243,7 @@ Built with LeanVerse AI`;
     }));
     
     setSelectedFoods(prev => {
-      const entry = `${scannedName}|snack`;
+      const entry = `${scannedName}|pre-workout`;
       if (!prev.includes(entry)) {
         return [...prev, entry];
       }
@@ -283,7 +285,7 @@ Built with LeanVerse AI`;
         const migratedFoods = saved.selectedFoods.map((f: any) => 
           typeof f === 'string' ? f.replace(/\|snack$/, '|pre-workout') : f
         );
-        setSelectedFoods(migratedFoods);
+        setSelectedFoods(Array.from(new Set(migratedFoods)));
       }
       if (typeof saved.customQty === 'object' && saved.customQty !== null) {
         const migratedQty: Record<string, number> = {};
@@ -807,6 +809,7 @@ Built with LeanVerse AI`;
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 max-h-[300px] overflow-y-auto pr-1 no-scrollbar">
                 {Object.keys(allFoods)
                   .filter((food) => {
+                    if (allFoods[food].hidden) return false;
                     const matchesSearch = food.includes(searchFood.toLowerCase().trim());
                     const matchesTab = allFoods[food].category === activeMealTab;
                     // If the user is actively searching, show all matches regardless of category

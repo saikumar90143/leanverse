@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { getUserStorageKey } from '@/lib/storage';
+import { getUserStorageKey, formatLocalDate } from '@/lib/storage';
 
 export default function WorkoutHeatmap() {
   const [heatmapData, setHeatmapData] = useState<{ date: string; active: boolean; volume: number }[]>([]);
@@ -25,7 +25,7 @@ export default function WorkoutHeatmap() {
     for (let i = daysToGenerate - 1; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(today.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = formatLocalDate(d);
       
       const entry = db[dateStr];
       let active = false;

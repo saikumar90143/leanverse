@@ -4,7 +4,7 @@
  * All functions read directly from localStorage and are safe to call on the server
  * (they guard with typeof window check).
  */
-import { getUserStorageKey } from './storage';
+import { getUserStorageKey, formatLocalDate } from './storage';
 import { exerciseDatabase } from './exerciseDatabase';
 
 export interface Level {
@@ -88,7 +88,7 @@ export function getStreak(): number {
   let checkDate = new Date(today);
 
   // Normalize to local date string YYYY-MM-DD
-  const toDateStr = (d: Date) => d.toISOString().split('T')[0];
+  const toDateStr = (d: Date) => formatLocalDate(d);
 
   // Start from today; if today has no workout, start from yesterday (grace period)
   const todayStr = toDateStr(today);
@@ -171,7 +171,7 @@ export function getLevelProgress(lifetimeVolume: number): number {
  */
 export function getTodayVolume(): number {
   const db = getWorkoutsDb();
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = formatLocalDate();
   const entry = db[todayStr];
   if (!entry || typeof entry !== 'object' || entry === null) return 0;
 
@@ -200,8 +200,7 @@ export function getTodayVolume(): number {
  */
 export function getTodayWorkoutSummary(): { name: string; completedSets: number; totalSets: number; caloriesBurned: number } {
   const db = getWorkoutsDb();
-  const d = new Date();
-  const todayStr = [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-');
+  const todayStr = formatLocalDate();
   const entry = db[todayStr];
   const fallback = { name: 'No workout logged today', completedSets: 0, totalSets: 0, caloriesBurned: 0 };
 
@@ -249,7 +248,7 @@ export function getHeatmapData(days: number = 30): { date: string; hasWorkout: b
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
-    const dateStr = [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-');
+    const dateStr = formatLocalDate(d);
     
     const entry = db[dateStr];
     let hasWorkout = false;
@@ -307,7 +306,7 @@ const DAILY_CHALLENGES = [
 export function getDailyChallenge(): { title: string; desc: string; icon: string; completed: boolean } {
   const db = getWorkoutsDb();
   const today = new Date();
-  const dateStr = today.toISOString().split('T')[0];
+  const dateStr = formatLocalDate(today);
   
   // Deterministic selection based on day of month
   const challenge = DAILY_CHALLENGES[today.getDate() % DAILY_CHALLENGES.length];

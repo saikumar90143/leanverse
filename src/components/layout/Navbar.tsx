@@ -43,7 +43,6 @@ export default function Navbar() {
     { name: 'Home', path: '/' },
     { name: 'Diet Planner', path: '/diet-planner', icon: Apple },
     { name: 'Workout Planner', path: '/workout-planner', icon: Dumbbell },
-    { name: 'Workout Tracker', path: '/workout-tracker', icon: Flame },
     { name: 'Exercises', path: '/exercises' },
     { name: 'Recipes', path: '/recipes', icon: Trophy },
     { name: 'Store', path: '/store', icon: ShoppingBag },

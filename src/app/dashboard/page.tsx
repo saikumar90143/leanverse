@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { getTodayWorkoutSummary } from '@/lib/gamification';
-import { getUserStorageKey, getUserId } from '@/lib/storage';
+import { getUserStorageKey, getUserId, formatLocalDate } from '@/lib/storage';
 import MacroRings from '@/components/shared/MacroRings';
 export default function UserDashboard() {
   const { user, updateUserSession } = useAuth();
@@ -65,7 +65,7 @@ export default function UserDashboard() {
 
   const logMacrosToTracker = () => {
     if (!macroResult) return;
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatLocalDate();
 
     // Update calories in localStorage (additive)
     const prevCalsRaw = localStorage.getItem(getUserStorageKey(`leanverse_quick_cals_${today}`));
@@ -117,25 +117,25 @@ export default function UserDashboard() {
         }
       }
 
-      // Load Workouts DB
-      const workoutsRaw = localStorage.getItem(getUserStorageKey('leanverse_workouts_db'));
-      if (workoutsRaw) {
-        const db = JSON.parse(workoutsRaw);
-        const dates = Object.keys(db).sort((a, b) => b.localeCompare(a));
-        if (dates.length > 0) {
-          const last = db[dates[0]];
-          setHasWorkout(true);
-          setLastWorkoutName(last.name || 'Custom Workout');
-          setLastWorkoutDetails(`${last.exercises?.length || 0} exercises • ${dates[0]}`);
+      // Load Transformation Journey
+      const journeyRaw = localStorage.getItem(getUserStorageKey('leanverse_transformation'));
+      if (journeyRaw) {
+        const journey = JSON.parse(journeyRaw);
+        setHasWorkout(true);
+        setLastWorkoutName(`Journey Day ${journey.currentDay} of ${journey.totalDays}`);
+        
+        const currentDay = journey.schedule?.[journey.currentDay - 1];
+        if (currentDay) {
+          setLastWorkoutDetails(`${currentDay.phaseName} • ${currentDay.workoutName}`);
         }
+        
+        setWorkoutProgress({ completed: journey.workoutsCompleted || 0, total: journey.totalDays || 30 });
+      } else {
+        setWorkoutProgress({ completed: 0, total: 30 });
       }
 
-      // Load Today Workout Progress
-      const summary = getTodayWorkoutSummary();
-      setWorkoutProgress({ completed: summary.completedSets, total: summary.totalSets });
-
       // Load Today Diet Eaten Cals & Macros
-      const today = new Date().toISOString().split('T')[0];
+      const today = formatLocalDate();
       const eatenCalsRaw = localStorage.getItem(getUserStorageKey(`leanverse_eaten_cals_${today}`));
       const quickCalsRaw = localStorage.getItem(getUserStorageKey(`leanverse_quick_cals_${today}`));
       const eatenCals = eatenCalsRaw ? parseInt(eatenCalsRaw, 10) : 0;
@@ -333,11 +333,11 @@ export default function UserDashboard() {
           </div>
         </div>
 
-        {/* Workout Completion Chart */}
+        {/* Journey Completion Chart */}
         <div className="glass rounded-3xl p-6 border border-slate-200/10 flex flex-col justify-between items-center text-center group hover:border-cyan-500/20 transition-all shadow-sm">
           <div className="flex items-center space-x-1.5 mb-4 w-full justify-center">
             <Dumbbell className="w-4 h-4 text-cyan-500" />
-            <span className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Workout Progress</span>
+            <span className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Journey Progress</span>
           </div>
           
           <div className="relative flex items-center justify-center mb-4">
@@ -358,9 +358,9 @@ export default function UserDashboard() {
           </div>
           
           <div className="w-full">
-            <span className="text-xs font-bold text-slate-500 mb-2 block">{workoutProgress.completed} / {workoutProgress.total || 0} Sets Done</span>
-            <Link href="/workout-tracker" className="block w-full bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl py-2 font-bold text-xs transition-colors cursor-pointer">
-              Open Tracker
+            <span className="text-xs font-bold text-slate-500 mb-2 block">{workoutProgress.completed} / {workoutProgress.total || 0} Days Done</span>
+            <Link href="/workout-planner" className="block w-full bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl py-2 font-bold text-xs transition-colors cursor-pointer">
+              Open Journey
             </Link>
           </div>
         </div>
@@ -582,7 +582,7 @@ export default function UserDashboard() {
                     <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mt-0.5">{lastWorkoutDetails}</span>
                   </div>
                 </div>
-                <Link href="/workout-tracker" className="p-2 bg-slate-200/50 dark:bg-white/5 group-hover:bg-cyan-500/10 rounded-xl group-hover:text-cyan-500 transition-all text-slate-500 dark:text-slate-400">
+                <Link href="/workout-planner" className="p-2 bg-slate-200/50 dark:bg-white/5 group-hover:bg-cyan-500/10 rounded-xl group-hover:text-cyan-500 transition-all text-slate-500 dark:text-slate-400">
                   <ChevronRight className="w-5 h-5" />
                 </Link>
               </div>
