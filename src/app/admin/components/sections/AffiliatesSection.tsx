@@ -22,7 +22,7 @@ const CATEGORIES = ['Whey Protein', 'Creatine', 'Vitamins', 'Gym Equipment', 'Fi
 
 const empty = () => ({
   name: '', brand: '', affiliateLink: '', commission: 5,
-  price: 0, rating: 4.0, category: 'Whey Protein', isActive: true,
+  price: 0, rating: 4.0, category: 'Whey Protein', isActive: true, imageUrl: ''
 });
 
 export default function AffiliatesSection() {
@@ -163,14 +163,15 @@ export default function AffiliatesSection() {
               {[
                 { label: 'Product Name', key: 'name', type: 'text', placeholder: 'e.g. MyProtein Impact Whey' },
                 { label: 'Brand', key: 'brand', type: 'text', placeholder: 'MyProtein' },
+                { label: 'Image URL', key: 'imageUrl', type: 'url', placeholder: 'https://images.unsplash.com/...' },
                 { label: 'Affiliate Link', key: 'affiliateLink', type: 'url', placeholder: 'https://...' },
                 { label: 'Price (₹)', key: 'price', type: 'number', placeholder: '2499' },
                 { label: 'Commission (%)', key: 'commission', type: 'number', placeholder: '8' },
               ].map(({ label, key, type, placeholder }) => (
                 <div key={key}>
                   <label className="text-[10px] font-black text-slate-400 uppercase block mb-1">{label}</label>
-                  <input type={type} value={editing[key]} placeholder={placeholder}
-                    onChange={(e) => setEditing((p: any) => ({ ...p, [key]: type === 'number' ? parseFloat(e.target.value) : e.target.value }))}
+                  <input type={type} value={editing[key] === undefined || Number.isNaN(editing[key]) ? '' : editing[key]} placeholder={placeholder}
+                    onChange={(e) => setEditing((p: any) => ({ ...p, [key]: type === 'number' ? (e.target.value === '' ? '' : parseFloat(e.target.value)) : e.target.value }))}
                     className="w-full px-3 py-2.5 bg-slate-100/50 dark:bg-white/5 border border-slate-200/20 dark:border-white/10 rounded-xl text-sm focus:outline-none focus:border-emerald-500" />
                 </div>
               ))}

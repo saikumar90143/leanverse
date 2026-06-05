@@ -21,59 +21,33 @@ export default function SupplementStorePage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [compareList, setCompareList] = useState<Product[]>([]);
   const [compareModalOpen, setCompareModalOpen] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const staticProducts: Product[] = [
-    {
-      name: 'Optimum Nutrition Gold Standard Whey',
-      category: 'Supplements',
-      description: 'The world\'s best-selling whey protein powder. Delivering 24g of high-quality premium whey isolates to build muscle and support recovery.',
-      price: 59.99,
-      rating: 4.8,
-      affiliateLink: 'https://amazon.com',
-      imageUrl: 'https://images.unsplash.com/photo-1579758629938-03607ccdbaba?w=400&q=80',
-      tags: ['Best for Beginners', 'High Protein', 'Muscle Recovery'],
-    },
-    {
-      name: 'Creapure Micronized Creatine Monohydrate',
-      category: 'Supplements',
-      description: '100% pure Creapure premium micronized creatine monohydrate. Increases athletic power, explosive force, and cellular muscular endurance.',
-      price: 24.99,
-      rating: 4.9,
-      affiliateLink: 'https://amazon.com',
-      imageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400&q=80',
-      tags: ['High Quality', 'Strength Builder'],
-    },
-    {
-      name: 'ActiveFit Smart Watch Pro v5',
-      category: 'Trackers',
-      description: 'Advanced dynamic biometric sensor tracking. Real-time heart rate, calorie burn calculations, sleep mapping, and integrated training assistant.',
-      price: 189.00,
-      rating: 4.6,
-      affiliateLink: 'https://amazon.com',
-      imageUrl: 'https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?w=400&q=80',
-      tags: ['Smart Tracker', 'Heart Monitor'],
-    },
-    {
-      name: 'LeanVerse Smart Bluetooth Body Fat Scale',
-      category: 'Accessories',
-      description: 'Syncs with your phone to instantly calculate BMI, body fat %, muscle mass, hydration index, bone density, and visceral fat percentages.',
-      price: 34.99,
-      rating: 4.7,
-      affiliateLink: 'https://amazon.com',
-      imageUrl: 'https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?w=400&q=80',
-      tags: ['Best Seller', 'Weight Tracker'],
-    },
-    {
-      name: 'Heavy Duty Latex Resistance Bands Set',
-      category: 'Accessories',
-      description: 'Complete workout kit featuring 5 color-coded resistance tubes, foam handles, ankle straps, and standard door anchors. Ideal for home workouts.',
-      price: 19.99,
-      rating: 4.5,
-      affiliateLink: 'https://amazon.com',
-      imageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400&q=80',
-      tags: ['Home Gym', 'Portability'],
-    },
-  ];
+  React.useEffect(() => {
+    fetch('/api/admin/affiliates?limit=100')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.affiliates) {
+          const mapped = data.affiliates
+            .filter((af: any) => af.isActive)
+            .map((af: any) => ({
+              name: af.name,
+              category: af.category,
+              description: af.brand ? `Brand: ${af.brand}` : '',
+              price: af.price,
+              rating: af.rating,
+              affiliateLink: af.affiliateLink,
+              imageUrl: af.imageUrl || 'https://images.unsplash.com/photo-1579758629938-03607ccdbaba?w=400&q=80',
+              tags: af.brand ? [af.brand] : [],
+            }));
+          setProducts(mapped);
+        }
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
 
   const handleToggleCompare = (prod: Product) => {
     setCompareList((prev) => {
@@ -94,7 +68,7 @@ export default function SupplementStorePage() {
     setCompareList([]);
   };
 
-  const filteredProducts = staticProducts.filter((p) => {
+  const filteredProducts = products.filter((p) => {
     return selectedCategory === 'all' || p.category === selectedCategory;
   });
 
@@ -112,8 +86,8 @@ export default function SupplementStorePage() {
 
       {/* Category controls and compare shelf reminder */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/10 pb-6">
-        <div className="flex space-x-2">
-          {['all', 'Supplements', 'Trackers', 'Accessories'].map((cat) => (
+        <div className="flex space-x-2 flex-wrap gap-y-2">
+          {['all', ...Array.from(new Set(products.map((p) => p.category)))].map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
@@ -146,7 +120,11 @@ export default function SupplementStorePage() {
 
       {/* Product Card grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {filteredProducts.map((p) => {
+        {loading ? (
+          <div className="col-span-3 text-center py-20 text-slate-400 font-bold">Loading store inventory...</div>
+        ) : filteredProducts.length === 0 ? (
+          <div className="col-span-3 text-center py-20 text-slate-400 font-bold">No products found. Add some in the Admin Dashboard!</div>
+        ) : filteredProducts.map((p) => {
           const isComparing = compareList.some((item) => item.name === p.name);
           return (
             <div key={p.name} className="glass rounded-3xl overflow-hidden border border-slate-200/10 shadow-lg flex flex-col justify-between glow-card relative">
@@ -184,7 +162,7 @@ export default function SupplementStorePage() {
                 </div>
 
                 <div className="pt-3 border-t border-slate-200/10 flex justify-between items-center">
-                  <span className="text-xl font-black text-slate-800 dark:text-slate-100">${p.price}</span>
+                  <span className="text-xl font-black text-slate-800 dark:text-slate-100">₹{p.price}</span>
                   <div className="flex items-center space-x-2">
                     {/* Compare selector button */}
                     <button
@@ -246,7 +224,7 @@ export default function SupplementStorePage() {
                   <div className="space-y-2 border-t border-slate-200/10 pt-3 text-xs font-semibold text-slate-600 dark:text-slate-350">
                     <div className="flex justify-between">
                       <span>Price:</span>
-                      <span className="font-black text-slate-800 dark:text-slate-100">${p.price}</span>
+                      <span className="font-black text-slate-800 dark:text-slate-100">₹{p.price}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Rating:</span>

@@ -8,6 +8,15 @@ const encodedSecret = new TextEncoder().encode(JWT_SECRET);
 export async function middleware(request: NextRequest) {
   // We only want to protect /api/admin routes for now
   if (request.nextUrl.pathname.startsWith('/api/admin')) {
+    // Allow public GET access to foods, diet-plans, and affiliates
+    if (request.method === 'GET' && (
+      request.nextUrl.pathname.startsWith('/api/admin/foods') ||
+      request.nextUrl.pathname.startsWith('/api/admin/diet-plans') ||
+      request.nextUrl.pathname.startsWith('/api/admin/affiliates')
+    )) {
+      return NextResponse.next();
+    }
+
     const token = request.cookies.get('leanverse_token')?.value;
 
     if (!token) {
