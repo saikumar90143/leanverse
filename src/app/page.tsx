@@ -22,15 +22,20 @@ export default function HomePage() {
   const [qsGoal, setQsGoal] = useState('muscle');
   const [qsLocation, setQsLocation] = useState('gym');
   const [qsExperience, setQsExperience] = useState('beginner');
+  const [qsDuration, setQsDuration] = useState(60);
+  const [qsDaysPerWeek, setQsDaysPerWeek] = useState(4);
 
   const handleQuickStart = (overrides?: { goal?: string, location?: string, experience?: string, timelineDays?: number }) => {
     // Store pending configuration in localStorage to be picked up by the planner after login
     try {
       localStorage.setItem('leanverse_pending_wizard', JSON.stringify({
-        goal: overrides?.goal || qsGoal,
-        location: overrides?.location || qsLocation,
-        experience: overrides?.experience || qsExperience,
-        timelineDays: overrides?.timelineDays || 90
+          goal: overrides?.goal || qsGoal,
+          location: overrides?.location || qsLocation,
+          experience: overrides?.experience || qsExperience,
+          timelineDays: overrides?.timelineDays || 90,
+          duration: qsDuration,
+          daysPerWeek: qsDaysPerWeek,
+          autoGenerate: true
       }));
     } catch {}
     // The workout planner route is protected, so this will ultimately force a login
@@ -68,12 +73,7 @@ export default function HomePage() {
         <div className="relative z-10 w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
           {/* Left: Copy & CTA */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="lg:col-span-6 space-y-8"
-          >
+          <div className="lg:col-span-6 space-y-8">
             <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-slate-800/50 dark:bg-white/5 border border-slate-700/50 dark:border-white/10 backdrop-blur-md">
               <Sparkles className="w-4 h-4 text-emerald-400" />
               <span className="text-xs font-bold text-slate-300 dark:text-slate-300 tracking-wider uppercase">AI-Powered Fitness Engine</span>
@@ -122,14 +122,11 @@ export default function HomePage() {
                 Calculate Calories
               </Link>
             </div>
-          </motion.div>
+          </div>
 
           {/* Right: Quick Start Wizard & Dashboard Mock */}
-          <motion.div 
+          <div 
             id="quick-start-wizard"
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
             className="lg:col-span-6 relative"
           >
             {/* The Floating UI Dashboard Mock */}
@@ -177,6 +174,30 @@ export default function HomePage() {
                   </div>
                 </div>
 
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Duration */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">4. Duration</label>
+                    <select value={qsDuration} onChange={(e) => setQsDuration(parseInt(e.target.value))} className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:border-emerald-500">
+                      <option value={30}>30 min</option>
+                      <option value={45}>45 min</option>
+                      <option value={60}>60 min</option>
+                      <option value={90}>90 min</option>
+                    </select>
+                  </div>
+
+                  {/* Days per week */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">5. Days/Week</label>
+                    <select value={qsDaysPerWeek} onChange={(e) => setQsDaysPerWeek(parseInt(e.target.value))} className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:border-emerald-500">
+                      <option value={3}>3 Days</option>
+                      <option value={4}>4 Days</option>
+                      <option value={5}>5 Days</option>
+                      <option value={6}>6 Days</option>
+                    </select>
+                  </div>
+                </div>
+
                 <button onClick={() => handleQuickStart()} className="w-full mt-4 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-black text-lg rounded-xl shadow-lg transition-transform active:scale-95 flex justify-center items-center gap-2">
                   <Sparkles className="w-5 h-5" />
                   Generate AI Transformation
@@ -209,7 +230,7 @@ export default function HomePage() {
               </>
             )}
 
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -443,7 +464,7 @@ export default function HomePage() {
               { name: 'Body Fat', icon: <Target className="w-5 h-5" />, path: '/calculators/body-fat' },
               { name: 'Water Intake', icon: <Clock className="w-5 h-5" />, path: '/calculators/water' },
             ].map(calc => (
-              <Link key={calc.name} href={calc.path} className="group glass bg-white/5 border border-white/10 p-6 rounded-2xl text-center hover:bg-white/10 hover:border-cyan-500/50 transition-all cursor-pointer">
+              <Link key={calc.name} href={calc.path} className="group bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl text-center hover:bg-white/10 hover:border-cyan-500/50 transition-all cursor-pointer shadow-lg">
                 <div className="w-12 h-12 bg-cyan-500/20 text-cyan-400 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                   {calc.icon}
                 </div>
@@ -589,7 +610,7 @@ export default function HomePage() {
           <p className="text-lg text-slate-400 font-medium">Join thousands of users following personalized fitness plans built specifically for their unique goals, diets, and environments.</p>
           <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
             <Link href="/diet-planner" className="px-8 py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-black text-lg transition-all shadow-xl shadow-emerald-500/25 flex items-center justify-center space-x-2"><span>Generate Diet Plan</span> <ArrowRight className="w-5 h-5" /></Link>
-            <Link href="/calculators/maintenance" className="px-8 py-4 rounded-2xl glass bg-white/5 hover:bg-white/10 text-white font-bold text-lg transition-all border border-white/10 flex items-center justify-center">Calculate Calories</Link>
+            <Link href="/calculators/maintenance" className="px-8 py-4 rounded-2xl bg-white/5 backdrop-blur-md hover:bg-white/10 text-white font-bold text-lg transition-all border border-white/10 flex items-center justify-center shadow-lg">Calculate Calories</Link>
           </div>
         </div>
       </section>

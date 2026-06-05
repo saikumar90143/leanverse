@@ -43,7 +43,7 @@ export default function Navbar() {
     { name: 'Home', path: '/' },
     { name: 'Diet Planner', path: '/diet-planner', icon: Apple },
     { name: 'Workout Planner', path: '/workout-planner', icon: Dumbbell },
-    { name: 'Exercises', path: '/exercises' },
+
     { name: 'Recipes', path: '/recipes', icon: Trophy },
     { name: 'Store', path: '/store', icon: ShoppingBag },
     { name: 'Blog', path: '/blog' },
@@ -70,7 +70,7 @@ export default function Navbar() {
         : 'bg-transparent py-5'
     }`}>
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between w-full gap-4 xl:gap-8">
+        <div className="flex items-center justify-between w-full gap-4 lg:gap-8">
           {/* Left Area: Logo */}
           <div className="flex items-center shrink-0">
             <Link href="/" className="flex items-center space-x-2 shrink-0">
@@ -82,7 +82,7 @@ export default function Navbar() {
           </div>
 
           {/* Center Area: Desktop Navigation */}
-          <div className="hidden xl:flex flex-1 justify-center items-center">
+          <div className="hidden lg:flex flex-1 justify-center items-center">
             <nav className="flex items-center space-x-1">
               {navLinks.map((link) => (
                 <Link 
@@ -145,7 +145,7 @@ export default function Navbar() {
           </div>
 
           {/* Right Area Widgets */}
-          <div className="hidden xl:flex items-center justify-end space-x-2 xl:space-x-4 shrink-0">
+          <div className="hidden lg:flex items-center justify-end space-x-2 lg:space-x-4 shrink-0">
             {/* Theme Toggle Button */}
             <button 
               onClick={toggleTheme}
@@ -165,7 +165,7 @@ export default function Navbar() {
 
             {/* User Session Widget */}
             {isMounted && (user ? (
-              <div className="flex items-center space-x-2 xl:space-x-3">
+              <div className="flex items-center space-x-2 lg:space-x-3">
                 <Link 
                   href="/dashboard"
                   className="flex items-center space-x-1.5 px-3 py-2 rounded-full bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white text-sm font-bold transition-all shadow-lg hover:shadow-emerald-500/20"
@@ -202,7 +202,7 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Menu Buttons */}
-          <div className="flex xl:hidden flex-1 items-center justify-end space-x-1.5 sm:space-x-3 shrink-0">
+          <div className="flex lg:hidden flex-1 items-center justify-end space-x-1.5 sm:space-x-3 shrink-0">
             {isMounted && user && (
               <div className="flex items-center space-x-0.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-500 text-xs font-black">
                 <Flame className="w-3.5 h-3.5 fill-current" />
@@ -235,7 +235,7 @@ export default function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="xl:hidden bg-white dark:bg-slate-900 border-t border-slate-200/20 dark:border-white/10 mt-3 max-h-[85vh] overflow-y-auto shadow-2xl rounded-b-3xl"
+            className="lg:hidden bg-white dark:bg-slate-900 border-t border-slate-200/20 dark:border-white/10 mt-3 max-h-[85vh] overflow-y-auto shadow-2xl rounded-b-3xl"
           >
             <div className="px-4 pt-2 pb-6 space-y-2 flex flex-col">
               {navLinks.map((link) => (

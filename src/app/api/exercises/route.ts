@@ -85,3 +85,33 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
+export async function PUT(req: Request) {
+  try {
+    await dbConnect();
+    const body = await req.json();
+    const { id, userId, name, muscleGroup, equipment, category, description } = body;
+
+    if (!id || !userId) {
+      return NextResponse.json({ error: 'Authentication and Exercise ID required' }, { status: 401 });
+    }
+
+    const exercise = await Exercise.findOne({ _id: id, createdBy: userId, isCustom: true });
+    if (!exercise) {
+      return NextResponse.json({ error: 'Exercise not found or not authorized' }, { status: 404 });
+    }
+
+    exercise.name = name || exercise.name;
+    exercise.muscleGroup = muscleGroup || exercise.muscleGroup;
+    exercise.equipment = equipment || exercise.equipment;
+    exercise.equipmentRequired = equipment ? [equipment] : exercise.equipmentRequired;
+    exercise.category = category || exercise.category;
+    exercise.description = description !== undefined ? description : exercise.description;
+
+    await exercise.save();
+
+    return NextResponse.json({ exercise });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}

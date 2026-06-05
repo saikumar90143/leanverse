@@ -29,10 +29,14 @@ export default function AIWorkoutPlanner() {
   const [loading, setLoading] = useState(false);
 
   // Active Workout State
-  const [timerSeconds, setTimerSeconds] = useState(60);
-  const [timerActive, setTimerActive] = useState(false);
-  const [timerMax, setTimerMax] = useState(60);
   const [logs, setLogs] = useState<Record<string, { reps: string; weight: string }[]>>({});
+  const [viewDayIndex, setViewDayIndex] = useState(-1);
+
+  useEffect(() => {
+    if (state && viewDayIndex === -1) {
+      setViewDayIndex(state.currentDay - 1);
+    }
+  }, [state, viewDayIndex]);
   
   // Auto-fill logs with history for progressive overload
   useEffect(() => {
@@ -86,12 +90,14 @@ export default function AIWorkoutPlanner() {
 
   // Custom Exercise State
   const [showCreateExercise, setShowCreateExercise] = useState(false);
+  const [editExerciseId, setEditExerciseId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [cfName, setCfName] = useState('');
   const [cfMuscle, setCfMuscle] = useState('Chest');
   const [cfEquipment, setCfEquipment] = useState('Bodyweight');
   const [cfCategory, setCfCategory] = useState('Strength');
   const [cfDescription, setCfDescription] = useState('');
+  const [pendingAutoGenerate, setPendingAutoGenerate] = useState(false);
 
   const muscleOptions = ['Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps', 'Legs', 'Abs', 'Cardio'];
   const equipmentOptions = ['Bodyweight', 'Dumbbells', 'Barbell', 'Cables', 'Machine', 'Resistance Band', 'Kettlebell', 'Other'];
@@ -115,6 +121,12 @@ export default function AIWorkoutPlanner() {
         if (pending.location) setLocation(pending.location as WorkoutLocation);
         if (pending.experience) setExperience(pending.experience as ExperienceLevel);
         if (pending.timelineDays) setTimelineDays(pending.timelineDays as 30|60|90|120);
+        if (pending.duration) setDuration(pending.duration as 30|45|60|90);
+        if (pending.daysPerWeek) setDaysPerWeek(pending.daysPerWeek as 3|4|5|6|7);
+        if (pending.autoGenerate) {
+          setPendingAutoGenerate(true);
+          setStep(3);
+        }
         localStorage.removeItem('leanverse_pending_wizard');
       }
     } catch {}
@@ -148,20 +160,14 @@ export default function AIWorkoutPlanner() {
   }, [state, isMounted, user]);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-    if (timerActive && timerSeconds > 0) {
-      interval = setInterval(() => {
-        setTimerSeconds((prev) => prev - 1);
-      }, 1000);
-    } else if (timerSeconds === 0) {
-      setTimerActive(false);
-      setTimerSeconds(timerMax);
-      alert('Rest session finished! Get back to lifting.');
+    if (pendingAutoGenerate && user) {
+      setPendingAutoGenerate(false);
+      handleGenerate();
     }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [timerActive, timerSeconds, timerMax]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingAutoGenerate, user]);
+
+
 
   const toggleEquipment = (eq: string) => {
     setEquipment((prev) => prev.includes(eq) ? prev.filter((item) => item !== eq) : [...prev, eq]);
@@ -235,6 +241,7 @@ export default function AIWorkoutPlanner() {
     
     setState(newState);
     setLogs({}); // Clear logs for next day
+    setViewDayIndex(newState.currentDay - 1);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -287,9 +294,10 @@ export default function AIWorkoutPlanner() {
     setCreating(true);
     try {
       const res = await fetch('/api/exercises', {
-        method: 'POST',
+        method: editExerciseId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          id: editExerciseId,
           userId: user.id,
           name: cfName,
           muscleGroup: cfMuscle,
@@ -300,13 +308,28 @@ export default function AIWorkoutPlanner() {
       });
       const data = await res.json();
       if (res.ok && data.exercise) {
-        setDbExercises(prev => [data.exercise, ...prev]);
+        if (editExerciseId) {
+          setDbExercises(prev => prev.map(ex => (ex._id || ex.id) === editExerciseId ? data.exercise : ex));
+        } else {
+          setDbExercises(prev => [data.exercise, ...prev]);
+          handleAddExtraExercise(data.exercise._id || data.exercise.id);
+        }
         setShowCreateExercise(false);
+        setEditExerciseId(null);
         setCfName(''); setCfMuscle('Chest'); setCfEquipment('Bodyweight'); setCfCategory('Strength'); setCfDescription('');
-        handleAddExtraExercise(data.exercise._id || data.exercise.id);
       }
     } catch {}
     setCreating(false);
+  };
+
+  const handleEditExercisePrompt = (ex: any) => {
+    setEditExerciseId(ex._id || ex.id);
+    setCfName(ex.name);
+    setCfMuscle(ex.muscleGroup || 'Chest');
+    setCfEquipment(ex.equipment || 'Bodyweight');
+    setCfCategory(ex.category || 'Strength');
+    setCfDescription(ex.description || '');
+    setShowCreateExercise(true);
   };
 
   const handleRemoveExercise = (exerciseId: string) => {
@@ -345,6 +368,24 @@ export default function AIWorkoutPlanner() {
     day.mainExercises = day.mainExercises.map(ex => 
       ex.id === exerciseId ? { ...ex, completed: !ex.completed } : ex
     );
+    newState.schedule[dayIndex] = day;
+    setState(newState);
+  };
+
+  const handleUpdateSets = (exerciseId: string, delta: number) => {
+    if (!state) return;
+    const dayIndex = state.currentDay - 1;
+    const newState = { ...state, schedule: [...state.schedule] };
+    const day = { ...newState.schedule[dayIndex] };
+    
+    day.mainExercises = day.mainExercises.map(ex => {
+      if (ex.id === exerciseId) {
+        const newSets = Math.max(1, Math.min(4, ex.targetSets + delta));
+        return { ...ex, targetSets: newSets };
+      }
+      return ex;
+    });
+    
     newState.schedule[dayIndex] = day;
     setState(newState);
   };
@@ -413,10 +454,12 @@ export default function AIWorkoutPlanner() {
     return '/images/chest_press.webp';
   };
 
-  if (authLoading) {
+  if (authLoading || pendingAutoGenerate || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <RotateCcw className="w-8 h-8 animate-spin text-emerald-500" />
+      <div className="min-h-[80vh] flex flex-col items-center justify-center space-y-4 animate-fade-in">
+        <RotateCcw className="w-10 h-10 animate-spin text-emerald-500" />
+        <h2 className="text-xl font-black text-slate-800 dark:text-slate-100">Generating AI Transformation...</h2>
+        <p className="text-sm text-slate-500 font-bold">Optimizing your path to success</p>
       </div>
     );
   }
@@ -448,7 +491,7 @@ export default function AIWorkoutPlanner() {
         <div className="space-y-5 animate-fade-in">
           <span className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-4">Step 1: Focus & Timeline</span>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1">
               <span className="text-xs font-bold text-slate-400 block ml-1">Transformation Goal</span>
               <select value={goal} onChange={(e) => setGoal(e.target.value as Goal)} className="w-full bg-slate-100/50 dark:bg-zinc-900 border border-slate-300/20 dark:border-white/10 rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:border-emerald-500">
@@ -469,26 +512,6 @@ export default function AIWorkoutPlanner() {
                 <option value="120">120 Days (Elite Journey)</option>
               </select>
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="space-y-1">
-              <span className="text-xs font-bold text-slate-400 block ml-1">Experience</span>
-              <select value={experience} onChange={(e) => setExperience(e.target.value as ExperienceLevel)} className="w-full bg-slate-100/50 dark:bg-zinc-900 border border-slate-300/20 dark:border-white/10 rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:border-emerald-500">
-                <option value="beginner">Beginner</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="advanced">Advanced</option>
-              </select>
-            </div>
-            <div className="space-y-1">
-              <span className="text-xs font-bold text-slate-400 block ml-1">Days / Week</span>
-              <select value={daysPerWeek} onChange={(e) => setDaysPerWeek(parseInt(e.target.value) as any)} className="w-full bg-slate-100/50 dark:bg-zinc-900 border border-slate-300/20 dark:border-white/10 rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:border-emerald-500">
-                <option value="3">3 Days</option>
-                <option value="4">4 Days</option>
-                <option value="5">5 Days</option>
-                <option value="6">6 Days</option>
-              </select>
-            </div>
             <div className="space-y-1">
               <span className="text-xs font-bold text-slate-400 block ml-1">Duration</span>
               <select value={duration} onChange={(e) => setDuration(parseInt(e.target.value) as any)} className="w-full bg-slate-100/50 dark:bg-zinc-900 border border-slate-300/20 dark:border-white/10 rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:border-emerald-500">
@@ -500,10 +523,39 @@ export default function AIWorkoutPlanner() {
             </div>
           </div>
 
-          <button onClick={() => setStep(2)} className="w-full mt-6 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition-all flex items-center justify-center space-x-1 cursor-pointer">
-            <span>Next Phase</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
+          {goal !== 'custom plan' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <span className="text-xs font-bold text-slate-400 block ml-1">Experience</span>
+                <select value={experience} onChange={(e) => setExperience(e.target.value as ExperienceLevel)} className="w-full bg-slate-100/50 dark:bg-zinc-900 border border-slate-300/20 dark:border-white/10 rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:border-emerald-500">
+                  <option value="beginner">Beginner</option>
+                  <option value="intermediate">Intermediate</option>
+                  <option value="advanced">Advanced</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs font-bold text-slate-400 block ml-1">Days / Week</span>
+                <select value={daysPerWeek} onChange={(e) => setDaysPerWeek(parseInt(e.target.value) as any)} className="w-full bg-slate-100/50 dark:bg-zinc-900 border border-slate-300/20 dark:border-white/10 rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:border-emerald-500">
+                  <option value="3">3 Days</option>
+                  <option value="4">4 Days</option>
+                  <option value="5">5 Days</option>
+                  <option value="6">6 Days</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {goal === 'custom plan' ? (
+            <button onClick={handleGenerate} disabled={loading} className="w-full mt-6 py-3.5 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center space-x-1 cursor-pointer">
+              {loading ? <RotateCcw className="w-4 h-4 animate-spin mr-1" /> : <Sparkles className="w-4 h-4 mr-1 text-amber-300" />}
+              <span>Build Custom Journey</span>
+            </button>
+          ) : (
+            <button onClick={() => setStep(2)} className="w-full mt-6 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition-all flex items-center justify-center space-x-1 cursor-pointer">
+              <span>Next Phase</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          )}
         </div>
       )}
 
@@ -549,14 +601,18 @@ export default function AIWorkoutPlanner() {
   const renderDashboard = () => {
     if (!state) return null;
     
-    const activeDay = state.schedule[state.currentDay - 1] || state.schedule[state.totalDays - 1];
+    const displayDayIndex = viewDayIndex >= 0 ? viewDayIndex : (state.currentDay - 1);
+    const activeDay = state.schedule[displayDayIndex] || state.schedule[state.totalDays - 1];
+    const isPastDay = displayDayIndex < (state.currentDay - 1);
+    const isFutureDay = displayDayIndex > (state.currentDay - 1);
+    
     const progressPercent = Math.round((state.currentDay / state.totalDays) * 100);
     const allCompleted = activeDay.isRestDay || (activeDay.mainExercises.length > 0 && activeDay.mainExercises.every(ex => ex.completed));
     
     const prevDay = state.currentDay > 1 ? state.schedule[state.currentDay - 2] : null;
     const isAlreadyWorkedOutToday = prevDay?.dateCompleted ? new Date(prevDay.dateCompleted).toDateString() === new Date().toDateString() : false;
     
-    const canComplete = allCompleted && !isAlreadyWorkedOutToday;
+    const canComplete = allCompleted && !isAlreadyWorkedOutToday && !isPastDay && !isFutureDay;
 
     return (
       <div className="space-y-8 animate-fade-in max-w-6xl mx-auto">
@@ -622,11 +678,34 @@ export default function AIWorkoutPlanner() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <span className="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest flex items-center gap-2">
                 <Activity className="w-5 h-5 text-emerald-500 shrink-0" />
-                <span className="truncate">Today's Mission: {activeDay.workoutName}</span>
+                <span className="truncate">{isPastDay ? "Completed Mission" : isFutureDay ? "Upcoming Mission" : "Today's Mission"}: {activeDay.workoutName}</span>
               </span>
               <span className="text-xs font-bold text-slate-500 bg-slate-200/50 dark:bg-white/5 px-3 py-1.5 rounded-full border border-slate-300/10 w-fit">
                 ~{activeDay.estimatedMinutes} mins
               </span>
+            </div>
+
+            <div className="flex justify-between items-center bg-slate-100/50 dark:bg-white/5 rounded-2xl p-2 mb-4 border border-slate-200/50 dark:border-white/10">
+              <button 
+                onClick={() => setViewDayIndex(Math.max(0, displayDayIndex - 1))} 
+                disabled={displayDayIndex === 0}
+                className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${displayDayIndex === 0 ? 'text-slate-400 opacity-50 cursor-not-allowed' : 'text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-white/10 shadow-sm cursor-pointer'}`}
+              >
+                &larr; Previous
+              </button>
+              <div className="text-center">
+                 <span className="text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest block">Viewing</span>
+                 <span className={`text-xs sm:text-sm font-bold ${isPastDay ? 'text-emerald-500' : 'text-slate-700 dark:text-slate-200'}`}>
+                   Day {displayDayIndex + 1} {isPastDay ? '(Completed)' : ''}
+                 </span>
+              </div>
+              <button 
+                onClick={() => setViewDayIndex(Math.min(state.currentDay - 1, displayDayIndex + 1))} 
+                disabled={displayDayIndex >= state.currentDay - 1}
+                className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${displayDayIndex >= state.currentDay - 1 ? 'text-slate-400 opacity-50 cursor-not-allowed' : 'text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-white/10 shadow-sm cursor-pointer'}`}
+              >
+                Next &rarr;
+              </button>
             </div>
 
             <div className="glass p-6 sm:p-8 rounded-3xl border border-slate-200/10 space-y-6">
@@ -704,8 +783,13 @@ export default function AIWorkoutPlanner() {
                         </div>
 
                         {/* Logging UI */}
-                        <div className={`space-y-2 pt-3 border-t border-slate-200/10 transition-opacity ${ex.completed ? 'opacity-50 pointer-events-none' : ''}`}>
-                          {Array.from({ length: ex.targetSets }).map((_, setIdx) => (
+                        <div className={`space-y-2 pt-3 border-t border-slate-200/10 transition-opacity ${ex.completed && !isPastDay ? 'opacity-50 pointer-events-none' : ''}`}>
+                          {Array.from({ length: ex.targetSets }).map((_, setIdx) => {
+                            const pastLog = isPastDay && ex.loggedSets ? ex.loggedSets[setIdx] : null;
+                            const weightVal = isPastDay ? (pastLog?.weight || '') : (logs[ex.id]?.[setIdx]?.weight || '');
+                            const repsVal = isPastDay ? (pastLog?.reps || '') : (logs[ex.id]?.[setIdx]?.reps || '');
+                            
+                            return (
                             <div key={setIdx} className="flex items-center gap-2 w-full">
                               <div className="bg-slate-200/50 dark:bg-white/5 rounded-lg w-8 h-9 flex items-center justify-center shrink-0">
                                 <span className="text-xs font-black text-slate-500">{setIdx + 1}</span>
@@ -713,29 +797,55 @@ export default function AIWorkoutPlanner() {
                               <input 
                                 type="text" 
                                 placeholder="Weight" 
-                                value={logs[ex.id]?.[setIdx]?.weight || ''}
+                                value={weightVal}
+                                readOnly={isPastDay || ex.completed}
                                 onChange={(e) => handleLogChange(ex.id, setIdx, 'weight', e.target.value)}
-                                className="min-w-0 flex-1 bg-white dark:bg-zinc-900 border border-slate-300/20 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-emerald-500 text-center sm:text-left"
+                                className={`min-w-0 flex-1 border rounded-xl px-3 py-2 text-sm font-bold text-center sm:text-left ${isPastDay ? 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-500 cursor-not-allowed' : 'bg-white dark:bg-zinc-900 border-slate-300/20 dark:border-white/10 text-slate-800 dark:text-slate-100 focus:outline-emerald-500'}`}
                               />
                               <span className="text-slate-300 dark:text-slate-600 font-bold shrink-0">×</span>
                               <input 
                                 type="number" 
                                 placeholder="Reps" 
-                                value={logs[ex.id]?.[setIdx]?.reps || ''}
+                                value={repsVal}
+                                readOnly={isPastDay || ex.completed}
                                 onChange={(e) => handleLogChange(ex.id, setIdx, 'reps', e.target.value)}
-                                className="min-w-0 w-16 sm:w-20 bg-white dark:bg-zinc-900 border border-slate-300/20 dark:border-white/10 rounded-xl px-2 py-2 text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-emerald-500 text-center shrink-0"
+                                className={`min-w-0 w-16 sm:w-20 border rounded-xl px-2 py-2 text-sm font-bold text-center shrink-0 ${isPastDay ? 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-500 cursor-not-allowed' : 'bg-white dark:bg-zinc-900 border-slate-300/20 dark:border-white/10 text-slate-800 dark:text-slate-100 focus:outline-emerald-500'}`}
                               />
                             </div>
-                          ))}
+                            );
+                          })}
+                          
+                          {/* Add/Remove Sets Controls */}
+                          {!isPastDay && !ex.completed && (
+                            <div className="flex justify-between items-center pt-2 px-1">
+                              <button 
+                                onClick={() => handleUpdateSets(ex.id, -1)} 
+                                disabled={ex.targetSets <= 1}
+                                className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${ex.targetSets <= 1 ? 'opacity-30 cursor-not-allowed border-slate-200 dark:border-white/5 text-slate-400' : 'border-red-500/20 text-red-500 hover:bg-red-500/10 cursor-pointer'}`}
+                              >
+                                - Remove Set
+                              </button>
+                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{ex.targetSets} Sets Limit: 4</span>
+                              <button 
+                                onClick={() => handleUpdateSets(ex.id, 1)} 
+                                disabled={ex.targetSets >= 4}
+                                className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${ex.targetSets >= 4 ? 'opacity-30 cursor-not-allowed border-slate-200 dark:border-white/5 text-slate-400' : 'border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/10 cursor-pointer'}`}
+                              >
+                                + Add Set
+                              </button>
+                            </div>
+                          )}
                         </div>
-                        <div className="flex gap-2 mt-2 sm:hidden">
-                          <button onClick={() => handleToggleExerciseComplete(ex.id)} className={`flex-1 py-2 text-xs font-bold rounded-xl transition-colors ${ex.completed ? 'text-emerald-500 bg-emerald-500/10' : 'text-slate-500 bg-slate-200/50 dark:bg-white/5'}`}>
-                            {ex.completed ? 'Completed' : 'Mark Complete'}
-                          </button>
-                          <button onClick={() => handleRemoveExercise(ex.id)} className="flex-1 py-2 text-xs font-bold text-red-500 bg-red-500/5 rounded-xl">
-                            Remove
-                          </button>
-                        </div>
+                        {!isPastDay && (
+                          <div className="flex gap-2 mt-2 sm:hidden">
+                            <button onClick={() => handleToggleExerciseComplete(ex.id)} className={`flex-1 py-2 text-xs font-bold rounded-xl transition-colors ${ex.completed ? 'text-emerald-500 bg-emerald-500/10' : 'text-slate-500 bg-slate-200/50 dark:bg-white/5'}`}>
+                              {ex.completed ? 'Completed' : 'Mark Complete'}
+                            </button>
+                            <button onClick={() => handleRemoveExercise(ex.id)} className="flex-1 py-2 text-xs font-bold text-red-500 bg-red-500/5 rounded-xl">
+                              Remove
+                            </button>
+                          </div>
+                        )}
                       </div>
                       );
                     })}
@@ -747,13 +857,15 @@ export default function AIWorkoutPlanner() {
                       </div>
                     )}
                     
-                    <button 
-                      onClick={() => setShowExerciseSearch(true)}
-                      className="w-full py-3 rounded-xl border-2 border-dashed border-slate-300 dark:border-white/10 text-slate-500 font-bold text-xs hover:border-emerald-500/50 hover:text-emerald-500 hover:bg-emerald-500/5 transition-all flex items-center justify-center space-x-1"
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>Add Extra Exercise</span>
-                    </button>
+                    {!isPastDay && (
+                      <button 
+                        onClick={() => setShowExerciseSearch(true)}
+                        className="w-full py-3 rounded-xl border-2 border-dashed border-slate-300 dark:border-white/10 text-slate-500 font-bold text-xs hover:border-emerald-500/50 hover:text-emerald-500 hover:bg-emerald-500/5 transition-all flex items-center justify-center space-x-1 cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Add Extra Exercise</span>
+                      </button>
+                    )}
                   </div>
 
                   {/* Finisher & Cooldown */}
@@ -765,14 +877,21 @@ export default function AIWorkoutPlanner() {
                     </div>
                   </div>
 
-                  <button 
-                    onClick={handleCompleteWorkout} 
-                    disabled={!canComplete}
-                    className={`w-full mt-4 py-4 font-black text-lg rounded-2xl shadow-lg transition-all flex items-center justify-center space-x-2 ${canComplete ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white cursor-pointer' : 'bg-slate-200 dark:bg-white/5 text-slate-400 cursor-not-allowed opacity-50'}`}
-                  >
-                    <span>{isAlreadyWorkedOutToday ? 'Come Back Tomorrow!' : allCompleted ? 'Mission Complete (+250 XP)' : 'Complete All Exercises First'}</span>
-                    <ArrowRight className="w-5 h-5" />
-                  </button>
+                  {!isPastDay ? (
+                    <button 
+                      onClick={handleCompleteWorkout} 
+                      disabled={!canComplete}
+                      className={`w-full mt-4 py-4 font-black text-lg rounded-2xl shadow-lg transition-all flex items-center justify-center space-x-2 ${canComplete ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white cursor-pointer' : 'bg-slate-200 dark:bg-white/5 text-slate-400 cursor-not-allowed opacity-50'}`}
+                    >
+                      <span>{isAlreadyWorkedOutToday ? 'Come Back Tomorrow!' : allCompleted ? 'Mission Complete (+250 XP)' : 'Complete All Exercises First'}</span>
+                      <ArrowRight className="w-5 h-5" />
+                    </button>
+                  ) : (
+                    <div className="w-full mt-4 py-4 font-black text-lg rounded-2xl bg-slate-100 dark:bg-white/5 text-emerald-500 flex items-center justify-center space-x-2 border border-slate-200/50 dark:border-white/10">
+                      <CheckCircle2 className="w-5 h-5" />
+                      <span>Workout Completed</span>
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -780,28 +899,6 @@ export default function AIWorkoutPlanner() {
 
           {/* Sidebar */}
           <div className="lg:col-span-4 space-y-6 order-first lg:order-last">
-            {/* Rest Timer */}
-            <div className="glass p-6 rounded-3xl border border-slate-200/10 text-center flex flex-col items-center">
-              <span className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-4">Rest Timer</span>
-              <div className="w-32 h-32 rounded-full border-4 border-emerald-500/20 flex items-center justify-center mb-6 relative">
-                <div className="absolute inset-0 rounded-full border-t-4 border-emerald-500 animate-spin [animation-duration:12s]" style={{ animationPlayState: timerActive ? 'running' : 'paused' }} />
-                <span className="text-3xl font-black text-slate-800 dark:text-slate-100">{timerSeconds}s</span>
-              </div>
-              <div className="flex space-x-2 w-full mb-4">
-                <button onClick={() => setTimerActive(!timerActive)} className="flex-1 py-3 rounded-xl bg-emerald-500 text-white font-bold cursor-pointer text-sm flex justify-center items-center">
-                  {timerActive ? <Pause className="w-4 h-4 mr-1" /> : <Play className="w-4 h-4 mr-1 fill-current" />} {timerActive ? 'Pause' : 'Start'}
-                </button>
-                <button onClick={() => { setTimerSeconds(timerMax); setTimerActive(false); }} className="px-4 py-3 bg-slate-200/50 dark:bg-white/5 rounded-xl cursor-pointer">
-                  <RotateCcw className="w-4 h-4 text-slate-500" />
-                </button>
-              </div>
-              <div className="flex space-x-2 w-full">
-                {[45, 60, 90].map(s => (
-                  <button key={s} onClick={() => { setTimerMax(s); setTimerSeconds(s); setTimerActive(true); }} className="flex-1 py-1.5 text-xs font-bold text-slate-500 bg-slate-200/40 dark:bg-white/5 rounded-lg border border-slate-300/10 cursor-pointer">{s}s</button>
-                ))}
-              </div>
-            </div>
-
             {/* Options */}
             <div className="glass p-6 rounded-3xl border border-slate-200/10 text-center">
                <button onClick={resetJourney} className="w-full py-3 rounded-xl border border-red-500/20 text-red-500 font-bold hover:bg-red-500/10 transition-all cursor-pointer text-sm">
@@ -877,19 +974,25 @@ export default function AIWorkoutPlanner() {
                   .filter((ex: any) => exerciseSearch === '' || ex.name.toLowerCase().includes(exerciseSearch.toLowerCase()))
                   .slice(0, 50)
                   .map((ex: any) => (
-                    <button
-                      key={ex.id || ex._id}
-                      onClick={() => handleAddExtraExercise(ex.id || ex._id)}
-                      className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-white/5 transition-colors group cursor-pointer text-left"
-                    >
-                      <div>
+                    <div key={ex.id || ex._id} className="relative group flex items-center justify-between p-2 sm:p-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-white/5 transition-colors text-left border border-transparent hover:border-slate-200 dark:hover:border-white/5">
+                      <button
+                        onClick={() => handleAddExtraExercise(ex.id || ex._id)}
+                        className="flex-1 flex flex-col items-start cursor-pointer"
+                      >
                         <div className="font-bold text-sm text-slate-800 dark:text-slate-100">{ex.name}</div>
                         <div className="text-[10px] text-slate-500 font-semibold">{ex.muscleGroup} • {ex.requiredEquipment ? ex.requiredEquipment.join(', ') : (ex.equipment || 'None')}</div>
+                      </button>
+                      <div className="flex items-center space-x-1 shrink-0">
+                        {ex.createdBy === user?.id && (
+                          <button onClick={() => handleEditExercisePrompt(ex)} className="p-2 sm:p-2.5 rounded-xl text-slate-400 hover:text-amber-500 hover:bg-amber-500/10 cursor-pointer transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100" title="Edit Custom Exercise">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                          </button>
+                        )}
+                        <button onClick={() => handleAddExtraExercise(ex.id || ex._id)} className="p-2 sm:p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white cursor-pointer transition-colors" title="Add to Workout">
+                          <Plus className="w-4 h-4" />
+                        </button>
                       </div>
-                      <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Plus className="w-4 h-4" />
-                      </div>
-                    </button>
+                    </div>
                   ))}
               </div>
             </div>
@@ -911,12 +1014,12 @@ export default function AIWorkoutPlanner() {
                     <Plus className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="font-black text-slate-800 dark:text-slate-100 text-lg">Create Custom Exercise</h2>
+                    <h2 className="font-black text-slate-800 dark:text-slate-100 text-lg">{editExerciseId ? 'Edit Custom Exercise' : 'Create Custom Exercise'}</h2>
                     <p className="text-xs text-slate-400 font-bold">Only visible to you</p>
                   </div>
                 </div>
                 <button
-                  onClick={() => setShowCreateExercise(false)}
+                  onClick={() => { setShowCreateExercise(false); setEditExerciseId(null); }}
                   className="p-2 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
@@ -1006,7 +1109,7 @@ export default function AIWorkoutPlanner() {
                   ) : (
                     <Plus className="w-4 h-4" />
                   )}
-                  <span>{creating ? 'Creating...' : 'Create & Add to Workout'}</span>
+                  <span>{creating ? (editExerciseId ? 'Saving...' : 'Creating...') : (editExerciseId ? 'Save Changes' : 'Create & Add to Workout')}</span>
                 </button>
               </form>
             </div>

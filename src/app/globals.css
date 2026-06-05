@@ -37,6 +37,7 @@
 }
 
 @theme {
+  --variant-dark: (&:where(.dark, .dark *));
   --color-bg-custom: var(--background);
   --color-text-custom: var(--foreground);
   
