@@ -1474,42 +1474,49 @@ Built with LeanVerse AI`;
                             const eaten = !!eatenMeals[item];
 
                             return (
-                              <li key={item} className={`flex justify-between items-center p-3 rounded-xl border transition-all duration-300 ${
+                              <li key={item} className={`flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 rounded-xl border transition-all duration-300 gap-2 sm:gap-0 ${
                                 eaten
                                   ? 'bg-emerald-500/5 border-emerald-500/20 opacity-70'
                                   : 'bg-slate-100/50 dark:bg-white/5 border-slate-200/10 dark:border-white/5'
                               }`}>
-                                {/* Eaten checkbox */}
-                                <button
-                                  aria-label={eaten ? "Mark as not eaten" : "Mark as eaten"}
-                                  onClick={() => toggleEaten(item)}
-                                  className={`w-6 h-6 shrink-0 rounded-full border-2 flex items-center justify-center mr-3 transition-all cursor-pointer ${
-                                    eaten
-                                      ? 'bg-emerald-500 border-emerald-500 text-white'
-                                      : 'border-slate-300 dark:border-white/20 hover:border-emerald-400'
-                                  }`}
-                                  title={eaten ? 'Mark as not eaten' : 'Mark as eaten'}
-                                >
-                                  {eaten && <CheckCircle2 className="w-3.5 h-3.5" />}
-                                </button>
+                                <div className="flex items-center w-full sm:w-auto flex-1 min-w-0">
+                                  {/* Eaten checkbox */}
+                                  <button
+                                    aria-label={eaten ? "Mark as not eaten" : "Mark as eaten"}
+                                    onClick={() => toggleEaten(item)}
+                                    className={`w-6 h-6 shrink-0 rounded-full border-2 flex items-center justify-center mr-3 transition-all cursor-pointer ${
+                                      eaten
+                                        ? 'bg-emerald-500 border-emerald-500 text-white'
+                                        : 'border-slate-300 dark:border-white/20 hover:border-emerald-400'
+                                    }`}
+                                    title={eaten ? 'Mark as not eaten' : 'Mark as eaten'}
+                                  >
+                                    {eaten && <CheckCircle2 className="w-3.5 h-3.5" />}
+                                  </button>
 
-                                <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                  <span className={`text-2xl transition-all ${eaten ? 'grayscale' : ''}`}>{fData.icon}</span>
-                                  <div className="min-w-0">
-                                    <span className={`font-bold block leading-tight truncate ${eaten ? 'line-through text-slate-400' : 'text-slate-800 dark:text-slate-100'}`}>{baseFood.toUpperCase()}</span>
-                                    <div className="flex items-center space-x-1.5 mt-1">
-                                      <button aria-label="Decrease quantity" onClick={() => adjustQty(-stepSize)} className="w-5 h-5 flex items-center justify-center rounded-md bg-slate-200/80 dark:bg-white/10 text-slate-500 hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors cursor-pointer leading-none font-black text-sm">-</button>
-                                      <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest min-w-[25px] text-center">{exactQty}</span>
-                                      <button aria-label="Increase quantity" onClick={() => adjustQty(stepSize)} className="w-5 h-5 flex items-center justify-center rounded-md bg-slate-200/80 dark:bg-white/10 text-slate-500 hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors cursor-pointer leading-none font-black text-sm">+</button>
-                                      <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest ml-1">{fData.unit}</span>
+                                  <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                    <span className={`text-2xl transition-all shrink-0 ${eaten ? 'grayscale' : ''}`}>{fData.icon}</span>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex justify-between items-start gap-2">
+                                        <span className={`font-bold block leading-tight truncate ${eaten ? 'line-through text-slate-400' : 'text-slate-800 dark:text-slate-100'}`}>{baseFood.toUpperCase()}</span>
+                                        <span className="font-mono text-sm font-black text-slate-800 dark:text-slate-100 block leading-tight sm:hidden shrink-0">{finalCals} <span className="text-[10px] text-slate-400">kcal</span></span>
+                                      </div>
+                                      <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                                        <div className="flex items-center space-x-1">
+                                          <button aria-label="Decrease quantity" onClick={() => adjustQty(-stepSize)} className="w-5 h-5 flex items-center justify-center rounded-md bg-slate-200/80 dark:bg-white/10 text-slate-500 hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors cursor-pointer leading-none font-black text-sm">-</button>
+                                          <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest min-w-[25px] text-center">{exactQty}</span>
+                                          <button aria-label="Increase quantity" onClick={() => adjustQty(stepSize)} className="w-5 h-5 flex items-center justify-center rounded-md bg-slate-200/80 dark:bg-white/10 text-slate-500 hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors cursor-pointer leading-none font-black text-sm">+</button>
+                                        </div>
+                                        <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mr-1">{fData.unit}</span>
+                                        <span className="font-mono text-[10px] font-bold text-slate-500 bg-slate-200/50 dark:bg-white/5 px-2 py-0.5 rounded-md truncate max-w-full">
+                                          {finalProtein}g P • {finalCarbs}g C • {finalFat}g F
+                                        </span>
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
-                                <div className="text-right ml-2">
+                                <div className="text-right ml-2 shrink-0 hidden sm:block">
                                   <span className="font-mono text-sm font-black text-slate-800 dark:text-slate-100 block leading-tight">{finalCals} <span className="text-[10px] text-slate-400">kcal</span></span>
-                                  <span className="font-mono text-[10px] font-bold text-slate-500 block">
-                                    {finalProtein}g P ΓÇó {finalCarbs}g C ΓÇó {finalFat}g F
-                                  </span>
                                 </div>
                               </li>
                             );

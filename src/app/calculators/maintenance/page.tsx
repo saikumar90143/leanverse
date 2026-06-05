@@ -165,19 +165,19 @@ export default function MaintenanceCaloriesCalculator() {
               </svg>
               {/* Absolute Center Content */}
               <div className="absolute flex flex-col items-center justify-center">
-                <span className="text-3xl font-black text-slate-800 dark:text-slate-100">{tdee}</span>
-                <span className="text-[10px] uppercase font-extrabold text-slate-400 tracking-wider">Kcal / Day</span>
+                <span key={tdee} className="text-3xl font-black text-slate-800 dark:text-slate-100 transform-gpu">{tdee}</span>
+                <span className="text-[10px] uppercase font-extrabold text-slate-400 tracking-wider mt-1">Kcal / Day</span>
               </div>
             </div>
 
             <div className="w-full grid grid-cols-2 gap-4 border-t border-slate-200/15 dark:border-white/5 pt-6 text-left">
               <div className="p-3 bg-slate-100/40 dark:bg-white/5 border border-slate-200/5 rounded-2xl">
                 <span className="text-[10px] text-slate-400 uppercase font-black tracking-wider block">BMR Baseline</span>
-                <span className="text-lg font-black text-slate-800 dark:text-slate-100 mt-1 block">{bmr} kcal</span>
+                <span key={bmr} className="text-lg font-black text-slate-800 dark:text-slate-100 mt-1 block transform-gpu">{bmr} kcal</span>
               </div>
               <div className="p-3 bg-slate-100/40 dark:bg-white/5 border border-slate-200/5 rounded-2xl">
                 <span className="text-[10px] text-slate-400 uppercase font-black tracking-wider block">Active Burn</span>
-                <span className="text-lg font-black text-emerald-500 dark:text-emerald-400 mt-1 block">{tdee - bmr} kcal</span>
+                <span key={tdee - bmr} className="text-lg font-black text-emerald-500 dark:text-emerald-400 mt-1 block transform-gpu">{tdee - bmr} kcal</span>
               </div>
             </div>
           </div>
@@ -188,15 +188,15 @@ export default function MaintenanceCaloriesCalculator() {
             <div className="space-y-2.5 text-sm font-semibold">
               <div className="flex justify-between items-center py-2 border-b border-slate-200/10">
                 <span className="text-rose-500">Fat Loss (-500 kcal)</span>
-                <span className="font-extrabold text-slate-800 dark:text-slate-200">{tdee - 500} kcal/day</span>
+                <span key={tdee - 500} className="font-extrabold text-slate-800 dark:text-slate-200 transform-gpu">{tdee - 500} kcal/day</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-slate-200/10">
                 <span className="text-emerald-500">Lean Bulk (+300 kcal)</span>
-                <span className="font-extrabold text-slate-800 dark:text-slate-200">{tdee + 300} kcal/day</span>
+                <span key={tdee + 300} className="font-extrabold text-slate-800 dark:text-slate-200 transform-gpu">{tdee + 300} kcal/day</span>
               </div>
               <div className="flex justify-between items-center py-2">
                 <span className="text-cyan-500">Maintenance (Balanced)</span>
-                <span className="font-extrabold text-slate-800 dark:text-slate-200">{tdee} kcal/day</span>
+                <span key={tdee} className="font-extrabold text-slate-800 dark:text-slate-200 transform-gpu">{tdee} kcal/day</span>
               </div>
             </div>
           </div>
