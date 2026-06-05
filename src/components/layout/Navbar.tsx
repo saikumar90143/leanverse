@@ -60,10 +60,11 @@ export default function Navbar() {
 
   const isActive = (path: string) => pathname === path;
 
-
+  // Hide on admin routes
+  if (pathname?.startsWith('/admin')) return null;
 
   return (
-    <header suppressHydrationWarning className={`fixed top-0 left-0 right-0 z-50 transition-all duration-350 ${
+    <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${
       scrolled 
         ? 'glass-nav py-3 shadow-lg' 
         : 'bg-transparent py-5'
@@ -148,7 +149,7 @@ export default function Navbar() {
             {/* Theme Toggle Button */}
             <button 
               onClick={toggleTheme}
-              className="p-2.5 rounded-full glass hover:bg-slate-200/20 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 cursor-pointer transition-all active:scale-95"
+              className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full glass hover:bg-slate-200/20 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 cursor-pointer transition-all active:scale-95"
               aria-label="Toggle Theme"
             >
               {isMounted ? (theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-slate-700" />) : <div className="w-5 h-5" />}
@@ -182,8 +183,9 @@ export default function Navbar() {
                 )}
                 <button 
                   onClick={logout}
-                  className="p-2 rounded-full glass text-slate-500 hover:text-red-500 hover:bg-red-500/10 dark:text-slate-400 dark:hover:text-red-400 dark:hover:bg-red-500/20 transition-all cursor-pointer"
+                  className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full glass text-slate-500 hover:text-red-500 hover:bg-red-500/10 dark:text-slate-400 dark:hover:text-red-400 dark:hover:bg-red-500/20 transition-all cursor-pointer"
                   title="Sign Out"
+                  aria-label="Sign Out"
                 >
                   <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
@@ -209,17 +211,17 @@ export default function Navbar() {
             )}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-full glass text-slate-700 dark:text-slate-300"
+              className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full glass text-slate-700 dark:text-slate-300"
               aria-label="Toggle Theme"
             >
-              {isMounted ? (theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />) : <div className="w-4 h-4" />}
+              {isMounted ? (theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-slate-700" />) : <div className="w-5 h-5" />}
             </button>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-full glass text-slate-700 dark:text-slate-300"
+              className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full glass text-slate-700 dark:text-slate-300"
               aria-label="Toggle Mobile Menu"
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
 

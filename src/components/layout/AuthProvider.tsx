@@ -149,7 +149,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [saveUser]
   );
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
     setUser(null);
     localStorage.removeItem(SESSION_KEY);
   };

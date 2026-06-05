@@ -1,6 +1,6 @@
 export type Goal = 
   | 'muscle' | 'fatloss' | 'leanbulk' | 'strength' 
-  | 'athletic' | 'recomp' | 'yoga' | 'mobility' | 'general';
+  | 'athletic' | 'recomp' | 'yoga' | 'mobility' | 'general' | 'custom plan';
 
 export type WorkoutLocation = 
   | 'gym' | 'home' | 'home_dumbbells' | 'home_bands' | 'home_full';
@@ -40,6 +40,7 @@ export interface WorkoutExercise {
   name: string;
   muscleGroup?: string;
   pattern?: string;
+  imageUrl?: string;
   targetSets: number;
   targetReps: string; // e.g., "8-10", "12", "Till Failure"
   targetWeight?: string; // Optional, dynamically calculated

@@ -106,15 +106,15 @@ export default function AboutContactPage() {
             <div className="space-y-4 text-xs font-bold text-slate-600 dark:text-slate-350">
               <div className="flex items-center space-x-3">
                 <Mail className="w-5 h-5 text-emerald-500 shrink-0" />
-                <span>support@leanverse.com</span>
+                <span>saikumardoodala011@gmail.com</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="w-5 h-5 text-cyan-500 shrink-0" />
-                <span>+1 (800) 555-LEAN</span>
+                <span>+91 9014386620</span>
               </div>
               <div className="flex items-center space-x-3">
                 <MapPin className="w-5 h-5 text-rose-500 shrink-0" />
-                <span>Silicon Valley, San Francisco, CA</span>
+                <span>shameerpet,Jangaon, Telangana</span>
               </div>
             </div>
           </div>

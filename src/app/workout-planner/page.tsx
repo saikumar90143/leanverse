@@ -34,10 +34,68 @@ export default function AIWorkoutPlanner() {
   const [timerMax, setTimerMax] = useState(60);
   const [logs, setLogs] = useState<Record<string, { reps: string; weight: string }[]>>({});
   
+  // Auto-fill logs with history for progressive overload
+  useEffect(() => {
+    if (state && state.schedule && state.currentDay) {
+      const day = state.schedule[state.currentDay - 1];
+      if (day && day.mainExercises && !day.completed) {
+        setLogs(prev => {
+          const newLogs = { ...prev };
+          let changed = false;
+          
+          day.mainExercises.forEach(ex => {
+            if (!newLogs[ex.id]) {
+              const history = state.exerciseHistory?.[ex.exerciseId];
+              if (history && history.length > 0) {
+                const lastSession = history[history.length - 1];
+                // Pre-fill the inputs with the exact weights and reps they hit last time
+                newLogs[ex.id] = Array.from({ length: ex.targetSets }).map((_, i) => ({
+                  reps: lastSession.repsAchieved[i] !== undefined ? lastSession.repsAchieved[i].toString() : '',
+                  weight: lastSession.weightUsed[i] !== undefined ? lastSession.weightUsed[i].toString() : ''
+                }));
+                changed = true;
+              }
+            }
+          });
+          
+          return changed ? newLogs : prev;
+        });
+      }
+    }
+  }, [state?.currentDay, state?.schedule, state?.exerciseHistory]);
+  
   // Exercise Search Modal
   const [showExerciseSearch, setShowExerciseSearch] = useState(false);
   const [exerciseSearch, setExerciseSearch] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // DB Exercises State
+  const [dbExercises, setDbExercises] = useState<any[]>([]);
+
+  useEffect(() => {
+    const url = user?.id ? `/api/exercises?userId=${user.id}` : '/api/exercises';
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        if (data.exercises) {
+          setDbExercises(data.exercises);
+        }
+      })
+      .catch(console.error);
+  }, [user?.id]);
+
+  // Custom Exercise State
+  const [showCreateExercise, setShowCreateExercise] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [cfName, setCfName] = useState('');
+  const [cfMuscle, setCfMuscle] = useState('Chest');
+  const [cfEquipment, setCfEquipment] = useState('Bodyweight');
+  const [cfCategory, setCfCategory] = useState('Strength');
+  const [cfDescription, setCfDescription] = useState('');
+
+  const muscleOptions = ['Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps', 'Legs', 'Abs', 'Cardio'];
+  const equipmentOptions = ['Bodyweight', 'Dumbbells', 'Barbell', 'Cables', 'Machine', 'Resistance Band', 'Kettlebell', 'Other'];
+  const categoryOptions = ['Strength', 'Cardio', 'HIIT', 'Mobility', 'Stretching'];
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -72,7 +130,7 @@ export default function AIWorkoutPlanner() {
         // Ensure today's workout is populated
         if (parsed && parsed.currentDay <= parsed.totalDays) {
           const updatedState = { ...parsed };
-          updatedState.schedule[parsed.currentDay - 1] = populateExercisesForDay(updatedState, parsed.currentDay - 1);
+          updatedState.schedule[parsed.currentDay - 1] = populateExercisesForDay(updatedState, parsed.currentDay - 1, dbExercises);
           setState(updatedState);
         } else {
           setState(parsed);
@@ -128,7 +186,7 @@ export default function AIWorkoutPlanner() {
       };
       
       let newState = generateTransformationJourney(profile);
-      newState.schedule[0] = populateExercisesForDay(newState, 0); // Populate day 1
+      newState.schedule[0] = populateExercisesForDay(newState, 0, dbExercises); // Populate day 1
       setState(newState);
       setLoading(false);
       
@@ -172,7 +230,7 @@ export default function AIWorkoutPlanner() {
     // Move to next day
     if (newState.currentDay < newState.totalDays) {
       newState.currentDay++;
-      newState.schedule[newState.currentDay - 1] = populateExercisesForDay(newState, newState.currentDay - 1);
+      newState.schedule[newState.currentDay - 1] = populateExercisesForDay(newState, newState.currentDay - 1, dbExercises);
     }
     
     setState(newState);
@@ -182,7 +240,8 @@ export default function AIWorkoutPlanner() {
 
   const handleAddExtraExercise = (dbExerciseId: string) => {
     if (!state) return;
-    const dbExercise = transformationExercises.find(e => e.id === dbExerciseId);
+    const exerciseSource = dbExercises.length > 0 ? dbExercises : transformationExercises;
+    const dbExercise = exerciseSource.find(e => e.id === dbExerciseId || e._id === dbExerciseId);
     if (!dbExercise) return;
     
     const dayIndex = state.currentDay - 1;
@@ -201,8 +260,11 @@ export default function AIWorkoutPlanner() {
 
     const newEx: WorkoutExercise = {
       id: crypto.randomUUID(),
-      exerciseId: dbExercise.id,
+      exerciseId: dbExercise.id || dbExercise._id,
       name: dbExercise.name,
+      muscleGroup: dbExercise.muscleGroup,
+      pattern: dbExercise.pattern || dbExercise.category || '',
+      imageUrl: dbExercise.imageUrl,
       targetSets: 3,
       targetReps: '10-12',
       targetWeight: 'Auto-regulate',
@@ -217,6 +279,34 @@ export default function AIWorkoutPlanner() {
     setState(newState);
     setShowExerciseSearch(false);
     setExerciseSearch('');
+  };
+
+  const handleCreateExercise = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setCreating(true);
+    try {
+      const res = await fetch('/api/exercises', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          name: cfName,
+          muscleGroup: cfMuscle,
+          equipment: cfEquipment,
+          category: cfCategory,
+          description: cfDescription,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.exercise) {
+        setDbExercises(prev => [data.exercise, ...prev]);
+        setShowCreateExercise(false);
+        setCfName(''); setCfMuscle('Chest'); setCfEquipment('Bodyweight'); setCfCategory('Strength'); setCfDescription('');
+        handleAddExtraExercise(data.exercise._id || data.exercise.id);
+      }
+    } catch {}
+    setCreating(false);
   };
 
   const handleRemoveExercise = (exerciseId: string) => {
@@ -267,36 +357,60 @@ export default function AIWorkoutPlanner() {
     }
   };
 
-  const getExerciseImage = (muscleGroup?: string, pattern?: string) => {
-    if (pattern) {
-      const p = pattern.toLowerCase();
-      if (p.includes('horizontal_push')) return '/images/chest.png';
-      if (p.includes('chest_isolation')) return '/images/chest_isolation.png';
-      if (p.includes('vertical_pull')) return '/images/vertical_pull.png';
-      if (p.includes('horizontal_pull')) return '/images/horizontal_pull.png';
-      if (p.includes('hinge')) return '/images/back.png';
-      if (p.includes('vertical_push')) return '/images/vertical_push.png';
-      if (p.includes('shoulder_isolation')) return '/images/shoulders.png';
-      if (p.includes('bicep_isolation')) return '/images/arms.png';
-      if (p.includes('tricep_isolation')) return '/images/tricep_isolation.png';
-      if (p.includes('squat')) return '/images/legs.png';
-      if (p.includes('lunge')) return '/images/lunge.png';
-      if (p.includes('leg_isolation')) return '/images/leg_isolation.png';
-      if (p.includes('core_flexion')) return '/images/core_flexion.png';
-      if (p.includes('core_iso')) return '/images/abs.png';
-      if (p.includes('cardio')) return '/images/cardio.png';
+  const getExerciseImage = (muscleGroup?: string, pattern?: string, name?: string, imageUrl?: string, exerciseId?: string) => {
+    if (imageUrl) return imageUrl;
+
+    // Check DB exercises in case this was loaded from older localstorage
+    if (exerciseId && dbExercises && dbExercises.length > 0) {
+      const dbMatch = dbExercises.find(e => (e.id || e._id) === exerciseId);
+      if (dbMatch && dbMatch.imageUrl) return dbMatch.imageUrl;
     }
 
-    if (!muscleGroup) return '/images/chest.png';
-    const mg = muscleGroup.toLowerCase();
-    if (mg.includes('chest')) return '/images/chest.png';
-    if (mg.includes('back')) return '/images/back.png';
-    if (mg.includes('shoulder')) return '/images/shoulders.png';
-    if (mg.includes('bicep') || mg.includes('tricep') || mg.includes('arm')) return '/images/arms.png';
-    if (mg.includes('leg')) return '/images/legs.png';
-    if (mg.includes('abs') || mg.includes('core')) return '/images/abs.png';
-    if (mg.includes('cardio')) return '/images/cardio.png';
-    return '/images/chest.png';
+    const mg = (muscleGroup || '').toLowerCase();
+    const p = (pattern || '').toLowerCase();
+    const n = (name || '').toLowerCase();
+
+    // Cardio
+    if (mg.includes('cardio') || p === 'cardio') return '/images/cardio_run.webp';
+
+    // Abs/Core
+    if (mg.includes('abs') || mg.includes('core')) {
+      if (n.includes('plank') || n.includes('twist') || p === 'core_iso') return '/images/abs_plank.webp';
+      return '/images/abs_crunch.webp';
+    }
+
+    // Legs
+    if (mg.includes('leg') || mg.includes('glute') || mg.includes('calf')) {
+      if (p === 'lunge' || n.includes('lunge') || n.includes('split squat')) return '/images/legs_lunge.webp';
+      if (n.includes('extension') || n.includes('curl') || n.includes('calf raise') || n.includes('glute bridge')) return '/images/legs_isolation.webp';
+      if (p === 'hinge' || n.includes('deadlift') || n.includes('rdl') || n.includes('good morning')) return '/images/back.webp'; // Deadlifts
+      return '/images/legs_squat.webp'; // Squats and default
+    }
+
+    // Back
+    if (mg.includes('back')) {
+      if (n.includes('pull up') || n.includes('chin up') || n.includes('pulldown') || p === 'vertical_pull') return '/images/back_pullup.webp';
+      return '/images/back_row.webp';
+    }
+
+    // Chest
+    if (mg.includes('chest')) {
+      if (n.includes('fly') || n.includes('pec deck') || n.includes('cable crossover')) return '/images/chest_fly.webp';
+      return '/images/chest_press.webp';
+    }
+
+    // Shoulders
+    if (mg.includes('shoulder')) {
+      if (n.includes('lateral') || n.includes('raise') || n.includes('fly') || n.includes('face pull') || n.includes('upright row')) return '/images/shoulders_lateral.webp';
+      return '/images/shoulders_press.webp';
+    }
+
+    // Arms
+    if (mg.includes('bicep')) return '/images/biceps.webp';
+    if (mg.includes('tricep')) return '/images/triceps.webp';
+
+    // Fallback
+    return '/images/chest_press.webp';
   };
 
   if (authLoading) {
@@ -343,6 +457,7 @@ export default function AIWorkoutPlanner() {
                 <option value="leanbulk">Lean Bulk</option>
                 <option value="strength">Strength</option>
                 <option value="recomp">Body Recomposition</option>
+                <option value="custom plan">Custom Plan (Track Your Own)</option>
               </select>
             </div>
             <div className="space-y-1">
@@ -436,7 +551,7 @@ export default function AIWorkoutPlanner() {
     
     const activeDay = state.schedule[state.currentDay - 1] || state.schedule[state.totalDays - 1];
     const progressPercent = Math.round((state.currentDay / state.totalDays) * 100);
-    const allCompleted = activeDay.isRestDay || activeDay.mainExercises.every(ex => ex.completed);
+    const allCompleted = activeDay.isRestDay || (activeDay.mainExercises.length > 0 && activeDay.mainExercises.every(ex => ex.completed));
     
     const prevDay = state.currentDay > 1 ? state.schedule[state.currentDay - 2] : null;
     const isAlreadyWorkedOutToday = prevDay?.dateCompleted ? new Date(prevDay.dateCompleted).toDateString() === new Date().toDateString() : false;
@@ -535,9 +650,9 @@ export default function AIWorkoutPlanner() {
                   {/* Warmup Section */}
                   <div className="space-y-3">
                     <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Phase 1: Warmup</h4>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       {activeDay.warmup.map((w, i) => (
-                        <span key={i} className="text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 px-3 py-1.5 rounded-lg border border-amber-500/20">{w}</span>
+                        <span key={i} className="text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-1.5 rounded-lg border border-amber-500/20 text-center flex items-center justify-center leading-tight">{w}</span>
                       ))}
                     </div>
                   </div>
@@ -545,12 +660,19 @@ export default function AIWorkoutPlanner() {
                   {/* Main Workout Exercises */}
                   <div className="space-y-4 pt-4 border-t border-slate-200/10">
                     <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Phase 2: Main Routine</h4>
-                    {activeDay.mainExercises.map((ex, idx) => (
+                    {activeDay.mainExercises.map((ex, idx) => {
+                      const history = state.exerciseHistory?.[ex.exerciseId];
+                      const lastSession = history && history.length > 0 ? history[history.length - 1] : null;
+                      // Find the max weight they used last time (for display purposes)
+                      const maxLastWeight = lastSession ? 
+                        Math.max(...lastSession.weightUsed.map(w => parseFloat(w) || 0)) : 0;
+                      
+                      return (
                       <div key={ex.id} className={`p-4 sm:p-5 rounded-2xl space-y-4 group transition-all ${ex.completed ? 'bg-emerald-500/5 border border-emerald-500/30' : 'bg-slate-100/40 dark:bg-white/5 border border-slate-300/5'}`}>
                         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
                           <div className={`flex gap-4 items-start ${ex.completed ? 'opacity-60' : ''}`}>
                             <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden shrink-0 border border-slate-200/10 shadow-inner bg-slate-200 dark:bg-zinc-800 relative group-hover:scale-105 transition-transform duration-500">
-                               <img src={getExerciseImage(ex.muscleGroup, ex.pattern)} alt={ex.name} className="w-full h-full object-cover" />
+                               <img src={getExerciseImage(ex.muscleGroup, ex.pattern, ex.name, ex.imageUrl, ex.exerciseId)} alt={ex.name} className="w-full h-full object-cover" />
                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                                <span className="absolute bottom-2 right-2 text-[10px] font-black tracking-widest uppercase text-white/90">{ex.muscleGroup || 'Exercise'}</span>
                             </div>
@@ -558,11 +680,19 @@ export default function AIWorkoutPlanner() {
                               <span className="text-xs font-black text-emerald-500 mb-1 block">EXERCISE 0{idx + 1}</span>
                               <h5 className="font-bold text-lg text-slate-800 dark:text-slate-100 leading-tight mb-1">{ex.name}</h5>
                               <p className="text-xs text-slate-500 font-semibold">{ex.targetSets} Sets • {ex.targetReps} Reps • {ex.restSeconds}s Rest</p>
+                              
+                              {/* Progressive Overload Note */}
+                              {lastSession && !ex.completed && (
+                                <div className="mt-2 inline-flex items-center space-x-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] sm:text-xs font-bold px-2 py-1 rounded-lg border border-amber-500/20">
+                                  <Flame className="w-3 h-3" />
+                                  <span>Last time: {maxLastWeight > 0 ? `${maxLastWeight}kg` : 'Bodyweight'}. Try to add weight or reps today! 📈</span>
+                                </div>
+                              )}
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <div className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold px-3 py-1.5 rounded-lg border border-emerald-500/20 shrink-0 text-center">
-                              Target: {ex.targetWeight}
+                          <div className="flex items-center space-x-2 shrink-0">
+                            <div className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold px-3 py-1.5 rounded-lg border border-emerald-500/20 shrink-0 text-center hidden sm:block">
+                              {ex.targetWeight}
                             </div>
                             <button onClick={() => handleToggleExerciseComplete(ex.id)} className={`p-2 rounded-lg transition-colors hidden sm:block ${ex.completed ? 'text-emerald-500 bg-emerald-500/10 opacity-100' : 'text-slate-400 hover:text-emerald-500 hover:bg-emerald-500/10 opacity-0 group-hover:opacity-100'}`}>
                               <CheckCircle2 className="w-4 h-4" />
@@ -598,7 +728,6 @@ export default function AIWorkoutPlanner() {
                             </div>
                           ))}
                         </div>
-                        {/* Mobile actions */}
                         <div className="flex gap-2 mt-2 sm:hidden">
                           <button onClick={() => handleToggleExerciseComplete(ex.id)} className={`flex-1 py-2 text-xs font-bold rounded-xl transition-colors ${ex.completed ? 'text-emerald-500 bg-emerald-500/10' : 'text-slate-500 bg-slate-200/50 dark:bg-white/5'}`}>
                             {ex.completed ? 'Completed' : 'Mark Complete'}
@@ -608,7 +737,15 @@ export default function AIWorkoutPlanner() {
                           </button>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
+                    {activeDay.mainExercises.length === 0 && (
+                      <div className="text-center py-8 bg-slate-100/50 dark:bg-white/5 rounded-2xl border border-dashed border-slate-300 dark:border-white/10 mb-4">
+                        <span className="text-4xl mb-3 block">🏗️</span>
+                        <p className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-1">Your routine is empty.</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500">Tap below to add your first exercise.</p>
+                      </div>
+                    )}
                     
                     <button 
                       onClick={() => setShowExerciseSearch(true)}
@@ -677,10 +814,10 @@ export default function AIWorkoutPlanner() {
         {/* Exercise Search Modal */}
         {showExerciseSearch && (
           <div
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4 pt-16 sm:pt-4 bg-black/60 backdrop-blur-sm"
             onClick={(e) => { if (e.target === e.currentTarget) { setShowExerciseSearch(false); setExerciseSearch(''); } }}
           >
-            <div className="w-full max-w-lg bg-slate-50 dark:bg-zinc-900 rounded-3xl shadow-2xl border border-slate-200/20 dark:border-white/10 overflow-hidden flex flex-col max-h-[85vh] animate-fade-in">
+            <div className="w-full max-w-lg bg-slate-50 dark:bg-zinc-900 rounded-3xl shadow-2xl border border-slate-200/20 dark:border-white/10 overflow-hidden flex flex-col max-h-[80vh] animate-fade-in">
 
               {/* Modal Header */}
               <div className="flex items-center justify-between p-5 border-b border-slate-200/10">
@@ -723,22 +860,31 @@ export default function AIWorkoutPlanner() {
                     </button>
                   )}
                 </div>
+                {user && (
+                  <button
+                    onClick={() => setShowCreateExercise(true)}
+                    className="mt-3 w-full flex items-center justify-center space-x-2 px-4 py-2 bg-violet-500/10 hover:bg-violet-500/20 text-violet-600 dark:text-violet-400 font-bold rounded-xl transition-colors cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Create Custom Exercise</span>
+                  </button>
+                )}
               </div>
 
               {/* Search Results */}
               <div className="overflow-y-auto p-2">
-                {transformationExercises
-                  .filter(ex => exerciseSearch === '' || ex.name.toLowerCase().includes(exerciseSearch.toLowerCase()))
+                {(dbExercises.length > 0 ? dbExercises : transformationExercises)
+                  .filter((ex: any) => exerciseSearch === '' || ex.name.toLowerCase().includes(exerciseSearch.toLowerCase()))
                   .slice(0, 50)
-                  .map(ex => (
+                  .map((ex: any) => (
                     <button
-                      key={ex.id}
-                      onClick={() => handleAddExtraExercise(ex.id)}
+                      key={ex.id || ex._id}
+                      onClick={() => handleAddExtraExercise(ex.id || ex._id)}
                       className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-white/5 transition-colors group cursor-pointer text-left"
                     >
                       <div>
                         <div className="font-bold text-sm text-slate-800 dark:text-slate-100">{ex.name}</div>
-                        <div className="text-[10px] text-slate-500 font-semibold">{ex.muscleGroup} • {ex.requiredEquipment.join(', ')}</div>
+                        <div className="text-[10px] text-slate-500 font-semibold">{ex.muscleGroup} • {ex.requiredEquipment ? ex.requiredEquipment.join(', ') : (ex.equipment || 'None')}</div>
                       </div>
                       <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Plus className="w-4 h-4" />
@@ -746,6 +892,123 @@ export default function AIWorkoutPlanner() {
                     </button>
                   ))}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Create Exercise Modal */}
+        {showCreateExercise && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-0">
+            <div
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+              onClick={() => setShowCreateExercise(false)}
+            />
+            <div className="bg-white dark:bg-zinc-900 w-full max-w-lg rounded-3xl shadow-2xl relative z-10 overflow-hidden animate-fade-in">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-slate-200/50 dark:border-white/10">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 rounded-xl bg-violet-500/10 text-violet-500">
+                    <Plus className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="font-black text-slate-800 dark:text-slate-100 text-lg">Create Custom Exercise</h2>
+                    <p className="text-xs text-slate-400 font-bold">Only visible to you</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowCreateExercise(false)}
+                  className="p-2 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateExercise} className="p-6 space-y-5">
+                {/* Exercise Name */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Exercise Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. My Cable Chest Squeeze"
+                    value={cfName}
+                    onChange={(e) => setCfName(e.target.value)}
+                    className="w-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-2xl px-4 py-3 text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-violet-500 transition-all"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Muscle Group */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Target Muscle *</label>
+                    <select
+                      value={cfMuscle}
+                      onChange={(e) => setCfMuscle(e.target.value)}
+                      className="w-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-2xl px-4 py-3 text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-violet-500 transition-all"
+                    >
+                      {muscleOptions.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </div>
+
+                  {/* Equipment */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Equipment</label>
+                    <select
+                      value={cfEquipment}
+                      onChange={(e) => setCfEquipment(e.target.value)}
+                      className="w-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-2xl px-4 py-3 text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-violet-500 transition-all"
+                    >
+                      {equipmentOptions.map(eq => <option key={eq} value={eq}>{eq}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Category */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Category</label>
+                  <div className="flex flex-wrap gap-2">
+                    {categoryOptions.map(c => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setCfCategory(c)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                          cfCategory === c
+                            ? 'bg-violet-500 border-violet-500 text-white'
+                            : 'bg-slate-100 dark:bg-zinc-800 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300'
+                        }`}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Description (optional)</label>
+                  <textarea
+                    placeholder="How to perform this exercise, any personal tips..."
+                    value={cfDescription}
+                    onChange={(e) => setCfDescription(e.target.value)}
+                    rows={3}
+                    className="w-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-2xl px-4 py-3 text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-violet-500 transition-all resize-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={creating || !cfName}
+                  className="w-full py-3.5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 text-white font-bold rounded-2xl transition-all shadow-lg shadow-violet-500/20 flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {creating ? (
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                  ) : (
+                    <Plus className="w-4 h-4" />
+                  )}
+                  <span>{creating ? 'Creating...' : 'Create & Add to Workout'}</span>
+                </button>
+              </form>
             </div>
           </div>
         )}

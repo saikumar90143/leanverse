@@ -108,13 +108,13 @@ export default function HomePage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-2">
-              <button 
-                onClick={() => handleQuickStart()}
+              <Link 
+                href="/diet-planner"
                 className="px-8 py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-black text-lg transition-all shadow-xl shadow-emerald-500/25 flex items-center justify-center space-x-2"
               >
-                <span>Generate Free Plan</span>
+                <span>Generate Diet Plan</span>
                 <ArrowRight className="w-5 h-5" />
-              </button>
+              </Link>
               <Link 
                 href="/calculators/maintenance"
                 className="px-8 py-4 rounded-2xl glass hover:bg-slate-800/10 dark:hover:bg-white/10 text-slate-900 dark:text-white font-bold text-lg transition-all border border-slate-200 dark:border-white/10 text-center flex items-center justify-center"
@@ -149,9 +149,10 @@ export default function HomePage() {
                 {/* Goal */}
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">1. Primary Goal</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button onClick={() => setQsGoal('fat_loss')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsGoal === 'fat_loss' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10'}`}>Lose Fat</button>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <button onClick={() => setQsGoal('fatloss')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsGoal === 'fatloss' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10'}`}>Lose Fat</button>
                     <button onClick={() => setQsGoal('muscle')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsGoal === 'muscle' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10'}`}>Build Muscle</button>
+                    <button onClick={() => setQsGoal('custom plan')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsGoal === 'custom plan' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10'}`}>Custom Plan</button>
                   </div>
                 </div>
 
@@ -587,7 +588,7 @@ export default function HomePage() {
           <h2 className="text-4xl md:text-6xl font-black text-white leading-tight">Your Transformation <br/>Starts Today</h2>
           <p className="text-lg text-slate-400 font-medium">Join thousands of users following personalized fitness plans built specifically for their unique goals, diets, and environments.</p>
           <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
-            <button onClick={() => handleQuickStart()} className="px-8 py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-black text-lg transition-all shadow-xl shadow-emerald-500/25">Generate Free Plan</button>
+            <Link href="/diet-planner" className="px-8 py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-black text-lg transition-all shadow-xl shadow-emerald-500/25 flex items-center justify-center space-x-2"><span>Generate Diet Plan</span> <ArrowRight className="w-5 h-5" /></Link>
             <Link href="/calculators/maintenance" className="px-8 py-4 rounded-2xl glass bg-white/5 hover:bg-white/10 text-white font-bold text-lg transition-all border border-white/10 flex items-center justify-center">Calculate Calories</Link>
           </div>
         </div>

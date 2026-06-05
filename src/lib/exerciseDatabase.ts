@@ -28,7 +28,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Strength",
     caloriesPerMinute: 7,
     videoUrl: "",
-    imageUrl: "/images/exercises/pushups.png",
+    imageUrl: "/images/exercises/pushups.webp",
     instructions: [
       "Start in a high plank position with hands slightly wider than shoulders.",
       "Lower your body until your chest nearly touches the floor.",
@@ -47,7 +47,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Strength",
     caloriesPerMinute: 6,
     videoUrl: "",
-    imageUrl: "/images/exercises/pushups.png",
+    imageUrl: "/images/exercises/pushups.webp",
     instructions: [
       "Place hands on an elevated surface (bench or box).",
       "Lower your chest towards the edge.",
@@ -66,7 +66,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Strength",
     caloriesPerMinute: 5,
     videoUrl: "",
-    imageUrl: "/images/exercises/pushups.png",
+    imageUrl: "/images/exercises/pushups.webp",
     instructions: [
       "Perform a standard push-up but rest your knees on the ground."
     ]
@@ -83,7 +83,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Strength",
     caloriesPerMinute: 6,
     videoUrl: "",
-    imageUrl: "/images/exercises/dumbbell_floor_press.jpg",
+    imageUrl: "/images/exercises/dumbbell_floor_press.webp",
     instructions: [
       "Lie on your back with knees bent and feet flat on the floor.",
       "Hold dumbbells above you with arms extended.",
@@ -102,7 +102,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Strength",
     caloriesPerMinute: 8,
     videoUrl: "",
-    imageUrl: "/images/exercises/benchpress.png",
+    imageUrl: "/images/exercises/benchpress.webp",
     instructions: [
       "Lie flat on the bench, feet firmly on the ground.",
       "Grip the bar slightly wider than shoulder-width.",
@@ -122,7 +122,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Strength",
     caloriesPerMinute: 8,
     videoUrl: "",
-    imageUrl: "/images/exercises/incline_dumbbell_press.jpg",
+    imageUrl: "/images/exercises/incline_dumbbell_press.webp",
     instructions: [
       "Set bench to a 30-45 degree incline.",
       "Press dumbbells directly above your chest.",
@@ -141,7 +141,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Hypertrophy",
     caloriesPerMinute: 6,
     videoUrl: "",
-    imageUrl: "/images/exercises/dumbbell_flyes.jpg",
+    imageUrl: "/images/exercises/dumbbell_flyes.webp",
     instructions: [
       "Lie on bench holding dumbbells above you with a slight bend in elbows.",
       "Lower arms in a wide arc until you feel a stretch in the chest.",
@@ -160,7 +160,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Strength",
     caloriesPerMinute: 8,
     videoUrl: "",
-    imageUrl: "/images/exercises/dips.png",
+    imageUrl: "/images/exercises/dips.webp",
     instructions: [
       "Support yourself on dip bars.",
       "Lean torso forward slightly to target chest.",
@@ -179,7 +179,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Strength",
     caloriesPerMinute: 10,
     videoUrl: "",
-    imageUrl: "/images/exercises/dips.png",
+    imageUrl: "/images/exercises/dips.webp",
     instructions: [
       "Attach a weight belt with plates.",
       "Perform chest dips, focusing on deep stretches and explosive lockouts."
@@ -197,7 +197,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Strength",
     caloriesPerMinute: 8,
     videoUrl: "",
-    imageUrl: "/images/exercises/decline_bench_press.jpg",
+    imageUrl: "/images/exercises/decline_bench_press.webp",
     instructions: [
       "Secure feet on a decline bench.",
       "Lower the barbell to the lower chest line.",
@@ -216,7 +216,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Hypertrophy",
     caloriesPerMinute: 7,
     videoUrl: "",
-    imageUrl: "/images/exercises/cable_flyes.jpg",
+    imageUrl: "/images/exercises/cable_flyes.webp",
     instructions: [
       "Set pulleys at chest height.",
       "Bring handles together in a hugging motion, crossing wrists at the end.",
@@ -237,7 +237,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Endurance",
     caloriesPerMinute: 5,
     videoUrl: "",
-    imageUrl: "/images/exercises/pull.png",
+    imageUrl: "/images/exercises/pull.webp",
     instructions: [
       "Lie face down on the floor with arms extended ahead.",
       "Lift your chest, arms, and legs off the ground simultaneously.",
@@ -256,7 +256,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Hypertrophy",
     caloriesPerMinute: 6,
     videoUrl: "",
-    imageUrl: "/images/exercises/pull.png",
+    imageUrl: "/images/exercises/pull.webp",
     instructions: [
       "Anchor the band at chest height or wrap it around your feet if seated.",
       "Pull the bands toward your torso, squeezing shoulder blades together."
@@ -274,7 +274,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Strength",
     caloriesPerMinute: 7,
     videoUrl: "",
-    imageUrl: "/images/exercises/pull.png",
+    imageUrl: "/images/exercises/pull.webp",
     instructions: [
       "Set a bar at waist height.",
       "Lie under the bar, grip it wider than shoulders.",
@@ -293,7 +293,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Hypertrophy",
     caloriesPerMinute: 7,
     videoUrl: "",
-    imageUrl: "/images/exercises/latpulldown.png",
+    imageUrl: "/images/exercises/latpulldown.webp",
     instructions: [
       "Grip the wide bar and sit securely.",
       "Pull the bar down to your upper chest.",
@@ -312,7 +312,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Hypertrophy",
     caloriesPerMinute: 7,
     videoUrl: "",
-    imageUrl: "/images/exercises/barbellrow.png",
+    imageUrl: "/images/exercises/barbellrow.webp",
     instructions: [
       "Sit with knees slightly bent and back straight.",
       "Pull the V-handle toward your belly button.",
@@ -331,7 +331,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Strength",
     caloriesPerMinute: 8,
     videoUrl: "",
-    imageUrl: "/images/exercises/onearm_dumbbell_row.jpg",
+    imageUrl: "/images/exercises/onearm_dumbbell_row.webp",
     instructions: [
       "Place one knee and hand on a flat bench.",
       "Row the dumbbell up toward your hip with the opposite arm.",
@@ -350,7 +350,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Strength",
     caloriesPerMinute: 9,
     videoUrl: "",
-    imageUrl: "/images/exercises/pullups.png",
+    imageUrl: "/images/exercises/pullups.webp",
     instructions: [
       "Grip the bar with an overhand grip slightly wider than shoulders.",
       "Pull yourself up until your chin clears the bar.",
@@ -369,7 +369,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Strength",
     caloriesPerMinute: 11,
     videoUrl: "",
-    imageUrl: "/images/exercises/rdls.png",
+    imageUrl: "/images/exercises/rdls.webp",
     instructions: [
       "Stand with mid-foot under the barbell.",
       "Hinge at hips to grip the bar, keep back straight.",
@@ -390,7 +390,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Strength",
     caloriesPerMinute: 7,
     videoUrl: "",
-    imageUrl: "/images/exercises/ohp.png",
+    imageUrl: "/images/exercises/ohp.webp",
     instructions: [
       "Assume an inverted V position (downward dog).",
       "Lower your head towards the floor.",
@@ -409,7 +409,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Strength",
     caloriesPerMinute: 8,
     videoUrl: "",
-    imageUrl: "/images/exercises/dumbbell_shoulder_press.jpg",
+    imageUrl: "/images/exercises/dumbbell_shoulder_press.webp",
     instructions: [
       "Sit on a bench with back support.",
       "Press dumbbells directly overhead until arms lock out.",
@@ -428,7 +428,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Hypertrophy",
     caloriesPerMinute: 6,
     videoUrl: "",
-    imageUrl: "/images/exercises/lateralraises.png",
+    imageUrl: "/images/exercises/lateralraises.webp",
     instructions: [
       "Stand holding dumbbells at your sides.",
       "Raise arms out to the sides until parallel with the floor.",
@@ -447,7 +447,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Hypertrophy",
     caloriesPerMinute: 6,
     videoUrl: "",
-    imageUrl: "/images/exercises/facepulls.png",
+    imageUrl: "/images/exercises/facepulls.webp",
     instructions: [
       "Set cable at face height with a rope attachment.",
       "Pull the rope toward your face, splitting your hands past your ears.",
@@ -468,7 +468,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Endurance",
     caloriesPerMinute: 8,
     videoUrl: "",
-    imageUrl: "/images/exercises/legs.png",
+    imageUrl: "/images/exercises/legs.webp",
     instructions: [
       "Stand with feet shoulder-width apart.",
       "Sit back like you're aiming for a chair.",
@@ -487,7 +487,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Strength",
     caloriesPerMinute: 9,
     videoUrl: "",
-    imageUrl: "/images/exercises/legs.png",
+    imageUrl: "/images/exercises/legs.webp",
     instructions: [
       "Hold a weight vertically against your chest.",
       "Descend into a deep squat, keeping chest up.",
@@ -506,7 +506,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Strength",
     caloriesPerMinute: 12,
     videoUrl: "",
-    imageUrl: "/images/exercises/barbell_back_squat.jpg",
+    imageUrl: "/images/exercises/barbell_back_squat.webp",
     instructions: [
       "Rest the barbell on your upper back (traps).",
       "Squat down until thighs are parallel to the floor.",
@@ -525,7 +525,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Strength",
     caloriesPerMinute: 9,
     videoUrl: "",
-    imageUrl: "/images/exercises/rdls.png",
+    imageUrl: "/images/exercises/rdls.webp",
     instructions: [
       "Hold weight with a slight bend in the knees.",
       "Hinge at the hips, pushing them back until you feel a hamstring stretch.",
@@ -544,7 +544,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Endurance",
     caloriesPerMinute: 5,
     videoUrl: "",
-    imageUrl: "/images/exercises/calves.png",
+    imageUrl: "/images/exercises/calves.webp",
     instructions: [
       "Stand on the edge of a step.",
       "Raise your heels as high as possible.",
@@ -565,7 +565,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Hypertrophy",
     caloriesPerMinute: 5,
     videoUrl: "",
-    imageUrl: "/images/exercises/dumbbell_curl.jpg",
+    imageUrl: "/images/exercises/dumbbell_curl.webp",
     instructions: [
       "Stand or sit holding dumbbells.",
       "Curl the weight up, keeping elbows pinned to your sides.",
@@ -584,7 +584,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Hypertrophy",
     caloriesPerMinute: 6,
     videoUrl: "",
-    imageUrl: "/images/exercises/tricepextension.png",
+    imageUrl: "/images/exercises/tricepextension.webp",
     instructions: [
       "Attach a rope to the high pulley.",
       "Push the rope down, splitting the handles at the bottom.",
@@ -603,7 +603,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Strength",
     caloriesPerMinute: 7,
     videoUrl: "",
-    imageUrl: "/images/exercises/arms.png",
+    imageUrl: "/images/exercises/arms.webp",
     instructions: [
       "Lie on a bench holding an EZ bar overhead.",
       "Lower the bar towards your forehead by bending the elbows.",
@@ -624,7 +624,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Endurance",
     caloriesPerMinute: 4,
     videoUrl: "",
-    imageUrl: "/images/exercises/plank.jpg",
+    imageUrl: "/images/exercises/plank.webp",
     instructions: [
       "Rest on forearms and toes, keeping your body in a straight line.",
       "Brace your core tight and hold."
@@ -642,7 +642,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Strength",
     caloriesPerMinute: 7,
     videoUrl: "",
-    imageUrl: "/images/exercises/pull.png",
+    imageUrl: "/images/exercises/pull.webp",
     instructions: [
       "Hang from a bar.",
       "Raise your straight legs until they are parallel to the floor.",
@@ -661,7 +661,7 @@ export const exerciseDatabase: Exercise[] = [
     exerciseType: "Cardio",
     caloriesPerMinute: 15,
     videoUrl: "",
-    imageUrl: "/images/exercises/legs.png",
+    imageUrl: "/images/exercises/legs.webp",
     instructions: [
       "Sprint at maximum effort for 30 seconds.",
       "Walk or jog very slowly for 30 seconds to recover.",

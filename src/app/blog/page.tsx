@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Search, Clock, ChevronRight, Apple, Dumbbell, Shield, Sparkles } from 'lucide-react';
@@ -21,50 +21,46 @@ export default function BlogListingPage() {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
 
-  const staticBlogs: Article[] = [
-    {
-      title: 'The Ultimate Guide to Indian Diet Plans for Fat Loss',
-      slug: 'ultimate-indian-diet-plan-fat-loss',
-      summary: 'Struggling to hit your protein targets on a traditional Indian diet? Discover how to combine paneer, dal, chicken, and brown rice to shred fat sustainably.',
-      category: 'Indian diet plans',
-      tags: ['Weight loss', 'Indian diet plans', 'High protein'],
-      coverImage: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80',
-      author: 'Dietitian Priya Patel',
-      date: 'May 20, 2026',
-    },
-    {
-      title: 'Gym Workouts: Designing a Perfect Push/Pull/Legs Split',
-      slug: 'gym-workouts-perfect-push-pull-legs-split',
-      summary: 'PPL is one of the most effective weekly training programs. Learn how to sequence movements to optimize muscle recovery and progressive overload.',
-      category: 'Gym workouts',
-      tags: ['Gym workouts', 'Hypertrophy', 'Strength'],
-      coverImage: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&q=80',
-      author: 'Coach Vikram Rathore',
-      date: 'May 15, 2026',
-    },
-    {
-      title: 'Home Workouts: How to Lose Fat with Minimal Equipment',
-      slug: 'home-workouts-fat-loss-minimal-equipment',
-      summary: 'No gym membership? No problem. Here is an intensive HIIT and bodyweight circuit designed to burn calories and build lean muscle in your living room.',
-      category: 'Home workouts',
-      tags: ['Home workouts', 'HIIT', 'Fat loss'],
-      coverImage: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400&q=80',
-      author: 'Trainer Sarah Jenkins',
-      date: 'May 10, 2026',
-    },
-  ];
+  const [blogs, setBlogs] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/blogs')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.posts) {
+          // Format date for display
+          const formatted = data.posts.map((p: any) => ({
+            ...p,
+            date: p.publishedAt ? new Date(p.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) 
+                  : new Date(p.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            coverImage: p.coverImage || 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&q=80',
+            tags: p.tags || [],
+            author: p.author || 'LeanVerse Team'
+          }));
+          setBlogs(formatted);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Error fetching blogs:', err);
+        setLoading(false);
+      });
+  }, []);
 
   const categories = [
     { id: 'all', name: 'All Categories' },
-    { id: 'Indian diet plans', name: 'Indian Diets' },
-    { id: 'Gym workouts', name: 'Gym Training' },
-    { id: 'Home workouts', name: 'Home Splits' },
+    { id: 'Indian Diet Plans', name: 'Indian Diets' },
+    { id: 'Gym Workouts', name: 'Gym Training' },
+    { id: 'Home Workouts', name: 'Home Splits' },
+    { id: 'Nutrition', name: 'Nutrition' },
+    { id: 'Supplements', name: 'Supplements' }
   ];
 
-  const filteredArticles = staticBlogs.filter((art) => {
-    const matchesSearch = art.title.toLowerCase().includes(search.toLowerCase()) || 
-                          art.summary.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = activeCategory === 'all' || art.category === activeCategory;
+  const filteredArticles = blogs.filter((art) => {
+    const matchesSearch = art.title?.toLowerCase().includes(search.toLowerCase()) || 
+                          art.summary?.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = activeCategory === 'all' || art.category?.toLowerCase() === activeCategory.toLowerCase();
     return matchesSearch && matchesCategory;
   });
 
@@ -114,43 +110,54 @@ export default function BlogListingPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {filteredArticles.map((art) => (
-              <article key={art.slug} className="glass rounded-3xl overflow-hidden border border-slate-200/10 shadow-lg flex flex-col justify-between glow-card">
-                <div>
-                  {/* Cover Image */}
-                  <div className="relative w-full h-44 overflow-hidden bg-slate-800">
-                    <Image 
-                      src={art.coverImage} 
-                      alt={art.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                      className="object-cover opacity-80 hover:scale-105 transition-transform duration-500" 
-                    />
-                    <span className="absolute top-3 left-3 text-[9px] font-black uppercase tracking-wider bg-slate-900/80 text-white px-2 py-0.5 rounded-md backdrop-blur-sm">
-                      {art.category}
-                    </span>
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-slate-500 text-sm font-bold">Loading articles...</p>
+              </div>
+            ) : filteredArticles.length === 0 ? (
+              <div className="col-span-2 text-center py-12 border-2 border-dashed border-slate-200/50 rounded-3xl">
+                <p className="text-slate-500 text-sm font-bold">No articles found matching your criteria.</p>
+              </div>
+            ) : (
+              filteredArticles.map((art) => (
+                <article key={art.slug} className="glass rounded-3xl overflow-hidden border border-slate-200/10 shadow-lg flex flex-col justify-between glow-card">
+                  <div>
+                    {/* Cover Image */}
+                    <div className="relative w-full h-44 overflow-hidden bg-slate-800">
+                      <Image 
+                        src={art.coverImage} 
+                        alt={art.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        className="object-cover opacity-80 hover:scale-105 transition-transform duration-500" 
+                      />
+                      <span className="absolute top-3 left-3 text-[9px] font-black uppercase tracking-wider bg-slate-900/80 text-white px-2 py-0.5 rounded-md backdrop-blur-sm">
+                        {art.category}
+                      </span>
+                    </div>
+                    {/* Info */}
+                    <div className="p-5 space-y-2">
+                      <span className="text-[10px] text-slate-400 font-bold block">{art.date} • {art.author}</span>
+                      <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm leading-snug">{art.title}</h3>
+                      <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{art.summary}</p>
+                    </div>
                   </div>
-                  {/* Info */}
-                  <div className="p-5 space-y-2">
-                    <span className="text-[10px] text-slate-400 font-bold block">{art.date} • {art.author}</span>
-                    <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm leading-snug">{art.title}</h3>
-                    <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{art.summary}</p>
-                  </div>
-                </div>
 
-                <div className="px-5 pb-5 pt-2 border-t border-slate-200/10 flex justify-between items-center text-xs">
-                  <div className="flex space-x-1.5">
-                    {art.tags.slice(0, 2).map((t) => (
-                      <span key={t} className="text-[9px] text-slate-400 dark:text-slate-400 font-bold">#{t}</span>
-                    ))}
+                  <div className="px-5 pb-5 pt-2 border-t border-slate-200/10 flex justify-between items-center text-xs">
+                    <div className="flex space-x-1.5">
+                      {art.tags && art.tags.slice(0, 2).map((t) => (
+                        <span key={t} className="text-[9px] text-slate-400 dark:text-slate-400 font-bold">#{t}</span>
+                      ))}
+                    </div>
+                    <Link href={`/blog/${art.slug}`} className="font-black text-emerald-500 hover:text-emerald-400 transition-colors flex items-center">
+                      <span>Read Article</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </Link>
                   </div>
-                  <Link href={`/blog/${art.slug}`} className="font-black text-emerald-500 hover:text-emerald-400 transition-colors flex items-center">
-                    <span>Read Article</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </article>
-            ))}
+                </article>
+              ))
+            )}
           </div>
 
           {/* Ad container inline */}

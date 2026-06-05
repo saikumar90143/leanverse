@@ -8,6 +8,7 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import AIChatbot from '@/components/shared/AIChatbot';
 import PWARegister from '@/components/layout/PWARegister';
+import CookieBanner from '@/components/layout/CookieBanner';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -44,7 +45,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased scroll-smooth scroll-pt-24`}
       suppressHydrationWarning
     >
       <head>
@@ -53,7 +54,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="LeanVerse" />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.webp" />
       </head>
       <body suppressHydrationWarning className="min-h-full flex flex-col bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 transition-colors duration-300">
         <ThemeProvider>
@@ -71,6 +72,7 @@ export default function RootLayout({
             <Footer />
             <AIChatbot />
             <PWARegister />
+            <CookieBanner />
           </AuthProvider>
         </ThemeProvider>
         <Script

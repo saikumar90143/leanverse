@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Bot, Dumbbell, Apple, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePathname } from 'next/navigation';
 
 interface Message {
   id: string;
@@ -12,6 +13,7 @@ interface Message {
 }
 
 export default function AIChatbot() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -32,6 +34,8 @@ export default function AIChatbot() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping]);
+
+  if (pathname?.startsWith('/admin')) return null;
 
   const quickPrompts = [
     { text: 'Calculate my BMI', action: 'bmi' },

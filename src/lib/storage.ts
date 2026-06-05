@@ -23,3 +23,4 @@ export function formatLocalDate(d: Date = new Date()): string {
   const day = String(offsetDate.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
+

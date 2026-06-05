@@ -4,7 +4,7 @@ import {
   DailyWorkout, 
   WorkoutExercise
 } from './types/transformation';
-import { transformationExercises } from './transformationExercises';
+import { transformationExercises as fallbackExercises } from './transformationExercises';
 
 export const areExercisesSimilar = (name1: string, name2: string) => {
   const normalize = (name: string) => {
@@ -30,7 +30,11 @@ export const areExercisesSimilar = (name1: string, name2: string) => {
   return false;
 };
 
-function getWeeklySplit(experience: string, daysPerWeek: number, currentDayInJourney: number): string[] {
+function getWeeklySplit(experience: string, daysPerWeek: number, currentDayInJourney: number, goal?: string): string[] {
+  if (goal === 'custom plan') {
+    return Array(7).fill('Custom Workout');
+  }
+
   // Beginner
   if (experience === 'beginner') {
     if (currentDayInJourney <= 30) {
@@ -135,7 +139,7 @@ export function generateTransformationJourney(profile: UserProfile): Transformat
 
   for (let i = 0; i < totalDays; i++) {
     const dayNumber = i + 1;
-    const weeklySplit = getWeeklySplit(profile.experience, profile.daysPerWeek, dayNumber);
+    const weeklySplit = getWeeklySplit(profile.experience, profile.daysPerWeek, dayNumber, profile.goal);
     const workoutName = weeklySplit[i % 7];
     
     const isRest = workoutName === 'Rest';
@@ -193,9 +197,9 @@ export function generateTransformationJourney(profile: UserProfile): Transformat
 }
 
 // Generate the specific exercises for a day, handling rotation and progressive overload
-export function populateExercisesForDay(state: TransformationState, dayIndex: number): DailyWorkout {
+export function populateExercisesForDay(state: TransformationState, dayIndex: number, dbExercises?: any[]): DailyWorkout {
   const day = state.schedule[dayIndex];
-  if (day.isRestDay || day.mainExercises.length > 0) return day;
+  if (day.isRestDay || day.mainExercises.length > 0 || day.workoutName === 'Custom Workout') return day;
 
   // Determine target exercise count based on logic map
   // Beginners & Cardio get less exercises than advanced
@@ -212,9 +216,12 @@ export function populateExercisesForDay(state: TransformationState, dayIndex: nu
   const newExercises: WorkoutExercise[] = [];
   let muscleIndex = 0;
   
+  const exerciseSource = dbExercises && dbExercises.length > 0 ? dbExercises : fallbackExercises;
+  
   // Create a pool of available exercises matching the equipment profile
-  let availablePool = transformationExercises.filter(e => 
-    e.requiredEquipment.some(eq => state.profile.equipment.includes(eq) || eq === 'bodyweight')
+  let availablePool = exerciseSource.filter(e => 
+    e.requiredEquipment?.some((eq: string) => state.profile.equipment.includes(eq) || eq === 'bodyweight') || 
+    (e.equipment && (state.profile.equipment.includes(e.equipment.toLowerCase()) || e.equipment.toLowerCase() === 'bodyweight' || e.equipment.toLowerCase() === 'none'))
   );
 
   // We want to pick `targetExerciseCount` unique exercises
@@ -274,10 +281,11 @@ export function populateExercisesForDay(state: TransformationState, dayIndex: nu
 
       newExercises.push({
         id: crypto.randomUUID(),
-        exerciseId: chosen.id,
+        exerciseId: chosen.id || chosen._id,
         name: chosen.name,
         muscleGroup: chosen.muscleGroup,
-        pattern: chosen.pattern,
+        pattern: chosen.pattern || chosen.category || '',
+        imageUrl: chosen.imageUrl,
         targetSets,
         targetReps,
         targetWeight,

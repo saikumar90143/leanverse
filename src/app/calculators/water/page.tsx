@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { Calculator, ArrowLeft, Heart, Droplet, Plus, RefreshCw, Trophy } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/components/layout/AuthProvider';
 
 export default function WaterIntakeCalculator() {
   const [weight, setWeight] = useState(70); // kg
@@ -12,6 +14,9 @@ export default function WaterIntakeCalculator() {
   const [waterGoal, setWaterGoal] = useState(2.8); // Liters
   const [cupsGoal, setCupsGoal] = useState(11);
   const [cupsConsumed, setCupsConsumed] = useState(0);
+
+  const router = useRouter();
+  const { user } = useAuth();
 
   useEffect(() => {
     // Standard hydration formulas
@@ -34,7 +39,15 @@ export default function WaterIntakeCalculator() {
   }, [weight, exercise, climate]);
 
   const handleAddCup = () => {
-    setCupsConsumed((prev) => Math.min(prev + 1, cupsGoal + 4));
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    setCupsConsumed((prev) => Math.min(prev + 1, cupsGoal));
+  };
+
+  const handleRemoveCup = () => {
+    setCupsConsumed((prev) => Math.max(prev - 1, 0));
   };
 
   const handleReset = () => {
@@ -169,13 +182,30 @@ export default function WaterIntakeCalculator() {
             </div>
 
             {/* Click Log button widgets */}
-            <div className="w-full flex space-x-3">
+            <div className="w-full flex space-x-2">
+              <button
+                onClick={handleRemoveCup}
+                className="w-12 py-3 bg-slate-200/50 dark:bg-white/5 hover:bg-slate-300/50 dark:hover:bg-white/10 text-slate-500 dark:text-slate-300 font-bold rounded-2xl border border-slate-300/10 transition-all active:scale-95 cursor-pointer flex items-center justify-center"
+                title="Remove 1 Cup"
+              >
+                <span className="text-lg font-black">-</span>
+              </button>
               <button
                 onClick={handleAddCup}
-                className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-bold rounded-2xl shadow-lg hover:shadow-cyan-500/10 flex items-center justify-center space-x-1 transition-all active:scale-95 cursor-pointer"
+                disabled={cupsConsumed >= cupsGoal}
+                className={`flex-1 py-3 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center space-x-1 ${cupsConsumed >= cupsGoal ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 hover:shadow-cyan-500/10 active:scale-95 cursor-pointer'}`}
               >
-                <Plus className="w-4 h-4" />
-                <span>Log 1 Cup (250ml)</span>
+                {cupsConsumed >= cupsGoal ? (
+                  <>
+                    <Trophy className="w-4 h-4" />
+                    <span>Goal Completed!</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4" />
+                    <span>Log 1 Cup (250ml)</span>
+                  </>
+                )}
               </button>
               <button
                 onClick={handleReset}

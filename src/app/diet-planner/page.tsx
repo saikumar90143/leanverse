@@ -1,13 +1,66 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Apple, AlertTriangle, Printer, Sparkles, RefreshCw, CheckCircle2, ChevronRight, ChevronLeft, CalendarDays, Camera, Copy, Check, Share2, MessageCircle, User, Search, Plus, X } from 'lucide-react';
+import { Apple, AlertTriangle, Printer, TrendingDown, TrendingUp, Scale, UtensilsCrossed, Target, Info, Flame, Droplets, RefreshCw, CheckCircle2, ChevronRight, ChevronLeft, CalendarDays, Camera, Copy, Check, Share2, MessageCircle, User, Search, Plus, X, Activity, Star, Sparkles } from 'lucide-react';
 import { useAuth } from '@/components/layout/AuthProvider';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import MacroRings from '@/components/shared/MacroRings';
 import { getUserStorageKey, formatLocalDate } from '@/lib/storage';
-import { foodDatabase } from '@/lib/foodDatabase';
+
+
+
+const ACTIVITY_LEVELS = [
+  { id: 'sedentary', label: 'Sedentary', desc: 'Little or no exercise', mult: 1.2 },
+  { id: 'light', label: 'Lightly Active', desc: '1-3 workouts/week', mult: 1.375 },
+  { id: 'moderate', label: 'Moderately Active', desc: '3-5 workouts/week', mult: 1.55 },
+  { id: 'active', label: 'Very Active', desc: '6-7 workouts/week', mult: 1.725 },
+  { id: 'athlete', label: 'Athlete', desc: 'Intense training', mult: 1.9 },
+];
+
+const GOALS = [
+  { id: 'fat_loss', label: 'Fat Loss', desc: 'Burn body fat while preserving muscle', icon: TrendingDown },
+  { id: 'muscle_gain', label: 'Muscle Gain', desc: 'Build lean muscle mass', icon: TrendingUp },
+  { id: 'recomp', label: 'Body Recomposition', desc: 'Lose fat & gain muscle simultaneously', icon: Activity },
+  { id: 'maintenance', label: 'Maintenance', desc: 'Maintain current weight and stay healthy', icon: Scale },
+];
+
+const TIMELINES = [
+  { id: 30, label: '30 Days' },
+  { id: 60, label: '60 Days' },
+  { id: 90, label: '90 Days' },
+  { id: 120, label: '120 Days' },
+  { id: 180, label: '180 Days' },
+];
+
+const DIET_STYLES = [
+  'Vegetarian', 'Non-Vegetarian'
+];
+
+const FOOD_PREFS = [
+  {
+    category: 'Protein Sources',
+    items: ['Chicken', 'Eggs', 'Fish', 'Paneer', 'Tofu', 'Whey Protein', 'Soya Chunks', 'Lentils/Dal']
+  },
+  {
+    category: 'Carbohydrates',
+    items: ['Rice', 'Brown Rice', 'Oats', 'Roti', 'Dosa', 'Idli', 'Sweet Potato', 'Quinoa']
+  },
+  {
+    category: 'Fats',
+    items: ['Peanut Butter', 'Almonds', 'Cashews', 'Olive Oil', 'Ghee', 'Avocado']
+  },
+  {
+    category: 'Fruits & Vegetables',
+    items: ['Banana', 'Apple', 'Orange', 'Watermelon', 'Broccoli', 'Spinach', 'Beans', 'Carrot']
+  }
+];
+
+const BUDGETS = ['Budget Friendly', 'Moderate', 'Premium'];
+const MEALS = [3, 4, 5, 6];
+const WORKOUT_TYPES = ['Gym', 'Home Workout', 'No Workout'];
+const WORKOUT_DAYS = [0, 3, 4, 5, 6, 7];
+
 
 const BarcodeScanner = dynamic(() => import('@/components/shared/BarcodeScanner'), { ssr: false });
 interface FoodItem {
@@ -22,22 +75,51 @@ interface FoodItem {
 
 export default function AIDietPlanner() {
   const [isMounted, setIsMounted] = useState(false);
+  const [isStateLoaded, setIsStateLoaded] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
 
-  useEffect(() => setIsMounted(true), []);
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('leanverse_diet_state');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.step) setStep(parsed.step);
+        if (parsed.age) setAge(parsed.age);
+        if (parsed.gender) setGender(parsed.gender);
+        if (parsed.height) setHeight(parsed.height);
+        if (parsed.weight) setWeight(parsed.weight);
+        if (parsed.goal) setGoal(parsed.goal);
+        if (parsed.activity) setActivity(parsed.activity);
+        if (parsed.dietStyles) setDietStyles(parsed.dietStyles);
+      }
+    } catch {}
+    setIsMounted(true);
+  }, []);
 
   // Input states
   const [step, setStep] = useState(1);
-  const [age, setAge] = useState(25);
+  const [age, setAge] = useState<number | string>(25);
   const [gender, setGender] = useState('male');
-  const [height, setHeight] = useState(170); // cm
-  const [weight, setWeight] = useState(70); // kg
+  const [height, setHeight] = useState<number | string>(170); // cm
+  const [weight, setWeight] = useState<number | string>(70); // kg
   const [goal, setGoal] = useState('fatloss');
   const [activity, setActivity] = useState('moderate');
   const [budget, setBudget] = useState('medium');
+  const [timeline, setTimeline] = useState(90);
+  const [dietStyles, setDietStyles] = useState<string[]>([]);
   const [foodPref, setFoodPref] = useState('vegetarian');
   const [allergies, setAllergies] = useState('');
+
+  // Sync state to sessionStorage whenever it changes
+  useEffect(() => {
+    if (!isMounted) return;
+    try {
+      sessionStorage.setItem('leanverse_diet_state', JSON.stringify({
+        step, age, gender, height, weight, goal, activity, dietStyles
+      }));
+    } catch {}
+  }, [isMounted, step, age, gender, height, weight, goal, activity, dietStyles]);
   
   // Selected ingredients at home
   const [selectedFoods, setSelectedFoods] = useState<string[]>([]);
@@ -80,9 +162,11 @@ export default function AIDietPlanner() {
 
   // Generated Plan State
   const [planGenerated, setPlanGenerated] = useState(false);
+  const [premiumPlans, setPremiumPlans] = useState<any[]>([]);
+  const [planSelectionMode, setPlanSelectionMode] = useState<'ai' | 'premium' | null>(null);
   const [generating, setGenerating] = useState(false);
 
-  // ── Macro Search State ────────────────────────────────────────────────────
+  // ΓöÇΓöÇ Macro Search State ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   const [macroQuery, setMacroQuery] = useState('');
   const [macroLoading, setMacroLoading] = useState(false);
   const [macroError, setMacroError] = useState('');
@@ -153,7 +237,7 @@ Built with LeanVerse AI`;
     }
   };
 
-  const shareText = encodeURIComponent("I just built my custom AI Diet Plan on LeanVerse! 🔥");
+  const shareText = encodeURIComponent("I just built my custom AI Diet Plan on LeanVerse! ≡ƒöÑ");
   const shareWhatsapp = `https://wa.me/?text=${shareText}`;
   const shareX = `https://twitter.com/intent/tweet?text=${shareText}`;
   const getActiveDateStr = (offset: number) => {
@@ -164,6 +248,34 @@ Built with LeanVerse AI`;
   const activeDateStr = getActiveDateStr(viewDateOffset);
 
   // Tracks which food items have been eaten (checked off) for the active date
+  
+  // Safe math bounds to prevent NaN or crashes if DOM validation is bypassed
+  const safeWeight = Math.max(30, Number(weight) || 30);
+  const safeHeight = Math.max(50, Number(height) || 150);
+  const safeAge = Math.max(10, Number(age) || 20);
+
+  const bmr = Math.round(
+    gender === 'male' 
+      ? 10 * safeWeight + 6.25 * safeHeight - 5 * safeAge + 5
+      : 10 * safeWeight + 6.25 * safeHeight - 5 * safeAge - 161
+  );
+  
+  const actMult = ACTIVITY_LEVELS.find(a => a.id === activity)?.mult || 1.55;
+  const tdee = Math.round(bmr * actMult);
+  
+  const bmi = (safeWeight / Math.pow(safeHeight / 100, 2)).toFixed(1);
+  const bmiCategory = 
+    parseFloat(bmi) < 18.5 ? 'Underweight' :
+    parseFloat(bmi) < 25 ? 'Normal Weight' :
+    parseFloat(bmi) < 30 ? 'Overweight' : 'Obese';
+
+  const getTargetCalories = () => {
+    if (goal === 'fat_loss') return tdee - 500;
+    if (goal === 'muscle_gain') return tdee + 300;
+    if (goal === 'recomp') return tdee - 200;
+    return tdee;
+  };
+
   const [eatenMeals, setEatenMeals] = useState<Record<string, boolean>>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -229,9 +341,9 @@ Built with LeanVerse AI`;
     setShowScanner(false);
     // Mock barcode database mapping for premium demo
     const mockDb: Record<string, any> = {
-      '0123456789': { cals: 190, protein: 21, carbs: 22, fat: 8, alternative: 'MusclePharm Combat Crunch', icon: '🍫', category: 'post-workout', unit: 'bar', baseQty: 1 },
-      '8901030911': { cals: 100, protein: 15, carbs: 10, fat: 0, alternative: 'Chobani Zero Sugar', icon: '🥣', category: 'breakfast', unit: 'cup', baseQty: 1 },
-      'DEFAULT': { cals: 250, protein: 10, carbs: 30, fat: 10, alternative: 'Healthy Snack', icon: '📦', category: 'pre-workout', unit: 'serving', baseQty: 1 }
+      '0123456789': { cals: 190, protein: 21, carbs: 22, fat: 8, alternative: 'MusclePharm Combat Crunch', icon: '≡ƒì½', category: 'post-workout', unit: 'bar', baseQty: 1 },
+      '8901030911': { cals: 100, protein: 15, carbs: 10, fat: 0, alternative: 'Chobani Zero Sugar', icon: '≡ƒÑú', category: 'breakfast', unit: 'cup', baseQty: 1 },
+      'DEFAULT': { cals: 250, protein: 10, carbs: 30, fat: 10, alternative: 'Healthy Snack', icon: '≡ƒôª', category: 'pre-workout', unit: 'serving', baseQty: 1 }
     };
     
     const scannedName = mockDb[decodedText] ? (decodedText === '0123456789' ? 'Quest Protein Bar' : 'Greek Yogurt (Oikos)') : `Scanned Item (${decodedText.slice(-4)})`;
@@ -300,9 +412,12 @@ Built with LeanVerse AI`;
         setMealAssignments(saved.mealAssignments);
       }
       
+      if (typeof saved.step === 'number') setStep(saved.step);
       if (saved.planGenerated === true) setPlanGenerated(true);
     } catch {
       // corrupted data — start fresh
+    } finally {
+      setIsStateLoaded(true);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -311,14 +426,14 @@ Built with LeanVerse AI`;
 
   // Save full plan state whenever it changes
   useEffect(() => {
-    if (!planGenerated) return; // only save once a plan has been generated
+    if (!isStateLoaded) return;
     try {
-      const toSave = { age, gender, height, weight, goal, activity, budget, foodPref, allergies, selectedFoods, customQty, mealAssignments, planGenerated };
+      const toSave = { age, gender, height, weight, goal, activity, budget, foodPref, allergies, selectedFoods, customQty, mealAssignments, planGenerated, step };
       localStorage.setItem(DIET_PLAN_KEY, JSON.stringify(toSave));
     } catch {
       // quota exceeded or private mode — ignore
     }
-  }, [age, gender, height, weight, goal, activity, budget, foodPref, allergies, selectedFoods, customQty, mealAssignments, planGenerated]);
+  }, [age, gender, height, weight, goal, activity, budget, foodPref, allergies, selectedFoods, customQty, mealAssignments, planGenerated, step]);
 
   const toggleEaten = (item: string) => {
     setEatenMeals(prev => {
@@ -330,10 +445,84 @@ Built with LeanVerse AI`;
     });
   };
 
-  // Common food data database — sourced from centralized lib/foodDatabase.ts
-  const commonFoods = foodDatabase;
 
-  const allFoods = { ...commonFoods, ...customFoodsDatabase };
+
+  const [dbFoods, setDbFoods] = useState<Record<string, any>>({});
+  
+  useEffect(() => {
+    fetch(`/api/admin/foods?t=${Date.now()}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.foods) {
+          const formatted = data.foods.reduce((acc: any, f: any) => {
+            acc[f.name.toLowerCase().replace(/[^a-z0-9]/g, '_')] = {
+              cals: f.calories,
+              protein: f.protein,
+              carbs: f.carbs,
+              fat: f.fat,
+              alternative: 'Various',
+              icon: f.emoji || '❓',
+              category: f.mealTypes?.map((m: string) => m.toLowerCase().replace(' ', '-')) || ['lunch', 'dinner'],
+              unit: f.servingUnit || '1 serving',
+              baseQty: 1,
+              dietStyles: f.dietStyle || []
+            };
+            return acc;
+          }, {});
+          setDbFoods(formatted);
+        }
+      }).catch(err => console.error(err));
+
+    fetch(`/api/admin/diet-plans?t=${Date.now()}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.plans) setPremiumPlans(data.plans);
+      }).catch(err => console.error(err));
+  }, []);
+
+  const allFoods: any = new Proxy({ ...customFoodsDatabase, ...dbFoods }, { 
+    get: (target: any, prop) => { 
+      if (typeof prop === 'string' && prop in target) return target[prop]; 
+      return { cals: 0, protein: 0, carbs: 0, fat: 0, baseQty: 100, category: ['unmapped'], icon: '❓', hidden: true }; 
+    } 
+  });
+
+  const handleSelectPremiumPlan = (plan: any) => {
+    setGenerating(true);
+    const calsTarget = getDietCalorieTarget();
+    const scaleFactor = plan.targetCalories > 0 ? calsTarget / plan.targetCalories : 1;
+    
+    const newSelectedFoods: string[] = [];
+    const newCustomQty: Record<string, number> = {};
+    const newMealAssignments: Record<string, string> = {};
+
+    plan.meals.forEach((meal: any) => {
+      const mealName = meal.name.toLowerCase();
+      meal.foods.forEach((f: any) => {
+        if (!f.foodItem) return;
+        const foodBaseName = f.foodItem.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        const compositeKey = `${foodBaseName}|${mealName}`;
+        
+        const baseQty = parseFloat(f.foodItem.servingUnit) || 100;
+        const scaledTotalQty = Math.round((f.quantity * baseQty) * scaleFactor);
+
+        if (!newSelectedFoods.includes(compositeKey)) {
+          newSelectedFoods.push(compositeKey);
+        }
+        newCustomQty[compositeKey] = scaledTotalQty;
+        newMealAssignments[compositeKey] = mealName;
+      });
+    });
+
+    setSelectedFoods(newSelectedFoods);
+    setCustomQty(newCustomQty);
+    setEatenMeals({});
+    
+    setTimeout(() => {
+      setGenerating(false);
+      setPlanGenerated(true);
+    }, 1000);
+  };
 
   // Monitor selected ingredients and compute macro alerts
   useEffect(() => {
@@ -372,6 +561,12 @@ Built with LeanVerse AI`;
     setProteinTip(tips.join(' | '));
   }, [selectedFoods]);
 
+  const toggleDietStyle = (style: string) => {
+    setDietStyles(prev => 
+      prev.includes(style) ? prev.filter(s => s !== style) : [...prev, style]
+    );
+  };
+
   const toggleFood = (food: string) => {
     const compositeKey = `${food}|${activeMealTab}`;
     setSelectedFoods((prev) => {
@@ -398,7 +593,7 @@ Built with LeanVerse AI`;
         carbs: parseFloat(cfCarbs),
         fat: parseFloat(cfFats),
         alternative: 'Custom Entry',
-        icon: '🍽️',
+        icon: '≡ƒì╜∩╕Å',
         category: cfMeal,
         unit: 'g',
         baseQty: 100
@@ -428,6 +623,24 @@ Built with LeanVerse AI`;
       router.push('/login');
       return;
     }
+
+    const nAge = Number(age);
+    const nWeight = Number(weight);
+    const nHeight = Number(height);
+
+    if (nAge < 10 || nAge > 120) {
+      alert('Please enter a valid age between 10 and 120.');
+      return;
+    }
+    if (nWeight < 30 || nWeight > 300) {
+      alert('Please enter a valid weight between 30kg and 300kg.');
+      return;
+    }
+    if (nHeight < 100 || nHeight > 250) {
+      alert('Please enter a valid height between 100cm and 250cm.');
+      return;
+    }
+
     setGenerating(true);
     setCustomQty({}); // reset custom adjustments on new generation
     setEatenMeals({}); // reset eaten state on new generation
@@ -446,7 +659,7 @@ Built with LeanVerse AI`;
 
   const getDietCalorieTarget = () => {
     // Mifflin-St Jeor estimate
-    let base = 10 * weight + 6.25 * height - 5 * age + (gender === 'male' ? 5 : -161);
+    let base = 10 * Number(weight) + 6.25 * Number(height) - 5 * Number(age) + (gender === 'male' ? 5 : -161);
     const mult = activity === 'extreme' ? 1.9 : activity === 'heavy' ? 1.725 : activity === 'moderate' ? 1.55 : 1.375;
     let tdee = Math.round(base * mult);
 
@@ -457,9 +670,30 @@ Built with LeanVerse AI`;
   };
 
   const calsTarget = getDietCalorieTarget();
-  const proteinTarget = Math.round(weight * 2.0); // 2g per kg
+  
+  // Protein logic: use Lean Body Mass (LBM) for obese individuals to avoid dangerous protein levels
+  let proteinTarget = Math.round(Number(weight) * 2.0); // Default 2g per kg
+  const currentBmi = Number(weight) / Math.pow(Number(height) / 100, 2);
+  if (currentBmi > 30) {
+    // Estimate body fat percentage (rough formula)
+    const bodyFatPct = (1.20 * currentBmi) + (0.23 * Number(age)) - (10.8 * (gender === 'male' ? 1 : 0)) - 5.4;
+    const lbm = Number(weight) * (1 - (bodyFatPct / 100));
+    proteinTarget = Math.round(lbm * 2.2); // 2.2g per kg of LBM
+  }
+  
+  // Ensure protein doesn't exceed 35% of daily calories to protect renal function
+  const maxProteinCals = calsTarget * 0.35;
+  if (proteinTarget * 4 > maxProteinCals) {
+    proteinTarget = Math.round(maxProteinCals / 4);
+  }
+  
+  // Absolute maximum protein ceiling to prevent kidney strain in extreme obesity scenarios
+  if (proteinTarget > 250) {
+    proteinTarget = 250;
+  }
+
   const fatsTarget = Math.round((calsTarget * 0.25) / 9);
-  const carbsTarget = Math.round((calsTarget - (proteinTarget * 4 + fatsTarget * 9)) / 4);
+  const carbsTarget = Math.max(0, Math.round((calsTarget - (proteinTarget * 4 + fatsTarget * 9)) / 4));
 
   // Iterative Proportional Fitting Solver for perfectly balanced macros
   const rawQtys: Record<string, number> = {};
@@ -498,9 +732,17 @@ Built with LeanVerse AI`;
 
   const getSmartDefaultQty = (item: string) => {
     const baseFood = item.split('|')[0];
+    const unit = (allFoods[baseFood]?.unit || '').toLowerCase();
+    const isDiscrete = unit.includes('slice') || unit.includes('egg') || unit.includes('piece') || unit.includes('roti') || unit.includes('chapati') || unit.includes('idli') || unit.includes('dosa');
+    
     let correctedQty = rawQtys[item] * allFoods[baseFood].baseQty;
-    correctedQty = Math.max(correctedQty, 1); // Minimum 1g/1ml
-    return Math.round(correctedQty); // Exact integer
+    
+    if (isDiscrete) {
+      return Math.max(Math.round(correctedQty), 1);
+    }
+    
+    correctedQty = Math.max(correctedQty, 0.1); // Minimum 0.1
+    return Math.round(correctedQty * 10) / 10; // 1 decimal place
   };
 
   // Calculate actual dynamically adjusted macros
@@ -563,11 +805,11 @@ Built with LeanVerse AI`;
 
   if (!isMounted) return null;
 
+  
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       {!planGenerated ? (
         <div id="blueprint-card" className="glass rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200/20 dark:border-white/10 max-w-2xl mx-auto scroll-mt-24">
-          {/* Header */}
           <div className="flex items-center space-x-3 mb-6">
             <div className="p-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white">
               <Apple className="w-6 h-6 animate-pulse" />
@@ -581,167 +823,283 @@ Built with LeanVerse AI`;
               </p>
             </div>
           </div>
-
-          {/* Form Wizard Navigation */}
-          <div className="flex items-center space-x-2 mb-8">
-            <div className={`h-1.5 flex-1 rounded-full ${step >= 1 ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-white/10'}`} />
-            <div className={`h-1.5 flex-1 rounded-full ${step >= 2 ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-white/10'}`} />
-            <div className={`h-1.5 flex-1 rounded-full ${step >= 3 ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-white/10'}`} />
+          <div className="max-w-xs mx-auto mt-6 bg-slate-100 dark:bg-white/5 rounded-full h-1.5 overflow-hidden mb-8">
+            <div className="bg-emerald-500 h-full transition-all duration-500" style={{ width: `${(step / 6) * 100}%` }} />
+          </div>
+{/* Step 1: Biometrics */}
+      {step === 1 && (
+        <div className="glass rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200/20 dark:border-white/10 animate-fade-in max-w-xl mx-auto">
+          <h2 className="text-xl font-black mb-6 flex items-center"><User className="w-5 h-5 mr-2 text-emerald-500" /> Body Metrics & Activity</h2>
+          
+          <div className="grid grid-cols-2 gap-4 mb-5">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Age</label>
+              <input type="number" inputMode="numeric" pattern="[0-9]*" min="10" value={age} onChange={e => setAge(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                className="w-full bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 font-black text-base sm:text-sm focus:outline-none focus:border-emerald-500 transition-colors" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Gender</label>
+              <select value={gender} onChange={e => setGender(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 font-black focus:outline-none focus:border-emerald-500 transition-colors">
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
           </div>
 
-          {/* Step 1: Personal Biometrics */}
-          {step === 1 && (
-            <div className="space-y-5 animate-fade-in">
-              <span className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-4">Step 1: Your Biometrics</span>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400 block ml-1">Age</label>
-                  <input
-                    type="number" min="0"
-                    value={age}
-                    onChange={(e) => setAge(parseInt(e.target.value) || 0)}
-                    className="w-full bg-slate-100/50 dark:bg-white/5 border border-slate-300/20 dark:border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <span className="text-xs font-bold text-slate-400 block ml-1">Gender</span>
-                  <select
-                    value={gender}
-                    onChange={(e) => setGender(e.target.value)}
-                    className="w-full bg-slate-100/50 dark:bg-zinc-900 border border-slate-300/20 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-emerald-500"
-                  >
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                  </select>
-                </div>
-              </div>
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Height (cm)</label>
+              <input type="number" inputMode="numeric" pattern="[0-9]*" min="50" value={height} onChange={e => setHeight(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                className="w-full bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 font-black text-base sm:text-sm focus:outline-none focus:border-emerald-500 transition-colors" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Weight (kg)</label>
+              <input type="number" inputMode="numeric" pattern="[0-9]*" min="30" value={weight} onChange={e => setWeight(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                className="w-full bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 font-black text-base sm:text-sm focus:outline-none focus:border-emerald-500 transition-colors" />
+            </div>
+          </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400 block ml-1">Height (cm)</label>
-                  <input
-                    type="number" min="0"
-                    value={height}
-                    onChange={(e) => setHeight(parseInt(e.target.value) || 0)}
-                    className="w-full bg-slate-100/50 dark:bg-white/5 border border-slate-300/20 dark:border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400 block ml-1">Weight (kg)</label>
-                  <input
-                    type="number" min="0"
-                    value={weight}
-                    onChange={(e) => setWeight(parseInt(e.target.value) || 0)}
-                    className="w-full bg-slate-100/50 dark:bg-white/5 border border-slate-300/20 dark:border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
-                  />
-                </div>
-              </div>
+          <div className="space-y-1.5 mb-8">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Activity Level</label>
+            <div className="space-y-2">
+              {ACTIVITY_LEVELS.map(act => (
+                <button key={act.id} onClick={() => setActivity(act.id)}
+                  className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all ${activity === act.id ? 'border-emerald-500 bg-emerald-500/5' : 'border-slate-100 dark:border-white/5 hover:border-emerald-500/50'}`}>
+                  <div className="flex justify-between items-center">
+                    <span className={`font-black ${activity === act.id ? 'text-emerald-500' : 'text-slate-700 dark:text-slate-200'}`}>{act.label}</span>
+                    <span className="text-xs font-medium text-slate-400">{act.desc}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
 
-              <button
-                type="button"
-                onClick={() => setStep(2)}
-                className="w-full mt-6 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition-all flex items-center justify-center space-x-1 cursor-pointer"
-              >
-                <span>Continue</span>
-                <ChevronRight className="w-4 h-4" />
+          <button onClick={() => setStep(2)} className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl transition-all flex items-center justify-center">
+            Calculate My Maintenance Calories <ChevronRight className="w-5 h-5 ml-1" />
+          </button>
+        </div>
+      )}
+
+      {/* Step 2: Maintenance Calories & TDEE (The Hook) */}
+      {step === 2 && (
+        <div className="animate-fade-in space-y-6 max-w-2xl mx-auto">
+          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-6 text-center">
+            <Info className="w-8 h-8 text-emerald-500 mx-auto mb-3" />
+            <h2 className="text-xl font-black text-emerald-600 dark:text-emerald-400 mb-2">Your Profile Analysis</h2>
+            <p className="text-sm text-emerald-700 dark:text-emerald-300 font-medium leading-relaxed">
+              Based on your age, weight, and activity level, your body needs approximately <strong className="text-lg">{tdee} calories</strong> per day to maintain your current weight. Let's look at your baseline metrics before we set a goal.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="glass p-4 rounded-2xl border border-slate-200/20 dark:border-white/10 text-center">
+              <span className="text-[10px] uppercase font-black text-slate-400 block mb-1">BMI</span>
+              <span className="text-xl font-black text-slate-800 dark:text-white block">{bmi}</span>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-block mt-1 ${bmiCategory === 'Normal Weight' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>{bmiCategory}</span>
+            </div>
+            <div className="glass p-4 rounded-2xl border border-slate-200/20 dark:border-white/10 text-center">
+              <span className="text-[10px] uppercase font-black text-slate-400 block mb-1">BMR</span>
+              <span className="text-xl font-black text-slate-800 dark:text-white block">{bmr}</span>
+              <span className="text-xs font-medium text-slate-500 mt-1 block">kcal/day</span>
+            </div>
+            <div className="glass p-4 rounded-2xl border border-slate-200/20 dark:border-white/10 text-center sm:col-span-2 bg-slate-800 text-white dark:bg-white/5 border-none">
+              <span className="text-[10px] uppercase font-black text-emerald-400 block mb-1">Maintenance (TDEE)</span>
+              <span className="text-3xl font-black block">{tdee}</span>
+              <span className="text-xs font-medium text-slate-300 mt-1 block">Calories to stay exactly {weight}kg</span>
+            </div>
+          </div>
+
+          <div className="glass rounded-3xl p-6 shadow-2xl border border-slate-200/20 dark:border-white/10">
+            <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wide mb-4 flex items-center">
+              <TrendingDown className="w-4 h-4 mr-2 text-emerald-500" /> Weight Projection Matrix
+            </h3>
+            <div className="space-y-2">
+              {[
+                { label: 'Lose 0.75 kg/week', cal: tdee - 750, color: 'text-emerald-500' },
+                { label: 'Lose 0.5 kg/week', cal: tdee - 500, color: 'text-emerald-500' },
+                { label: 'Lose 0.25 kg/week', cal: tdee - 250, color: 'text-emerald-500' },
+                { label: 'Maintain Current Weight', cal: tdee, color: 'text-slate-400' },
+                { label: 'Gain 0.25 kg/week', cal: tdee + 250, color: 'text-amber-500' },
+                { label: 'Gain 0.5 kg/week', cal: tdee + 500, color: 'text-amber-500' },
+              ].map((proj, i) => (
+                <div key={i} className="flex justify-between items-center p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                  <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{proj.label}</span>
+                  <span className={`text-sm font-black ${proj.color}`}>{proj.cal} kcal/day</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button onClick={() => setStep(1)} className="px-6 py-4 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-200 dark:hover:bg-white/10 transition-colors">
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button onClick={() => setStep(3)} className="flex-1 py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl transition-all flex items-center justify-center">
+              Choose My Goal <ChevronRight className="w-5 h-5 ml-1" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 3: Goal Selection */}
+      {step === 3 && (
+        <div className="glass rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200/20 dark:border-white/10 animate-fade-in max-w-xl mx-auto">
+          <h2 className="text-xl font-black mb-6 flex items-center"><Target className="w-5 h-5 mr-2 text-emerald-500" /> What is your primary goal?</h2>
+          <div className="grid grid-cols-1 gap-3 mb-8">
+            {GOALS.map(g => {
+              const Icon = g.icon;
+              const active = goal === g.id;
+              return (
+                <button key={g.id} onClick={() => setGoal(g.id)} aria-pressed={active}
+                  className={`flex items-center p-4 rounded-2xl border-2 transition-all text-left ${active ? 'border-emerald-500 bg-emerald-500/5' : 'border-slate-100 dark:border-white/5 hover:border-emerald-500/30'}`}>
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 shrink-0 ${active ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-white/10 text-slate-400'}`}>
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className={`font-black text-lg ${active ? 'text-emerald-500' : 'text-slate-800 dark:text-slate-200'}`}>{g.label}</h3>
+                    <p className="text-xs text-slate-500 font-medium mt-0.5">{g.desc}</p>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+          <div className="flex gap-3">
+            <button onClick={() => setStep(2)} className="px-6 py-4 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-200 transition-colors"><ChevronLeft className="w-5 h-5" /></button>
+            <button onClick={() => setStep(4)} className="flex-1 py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl transition-all">Continue</button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 4: Timeline */}
+      {step === 4 && (
+        <div className="glass rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200/20 dark:border-white/10 animate-fade-in max-w-xl mx-auto">
+          <h2 className="text-xl font-black mb-2 flex items-center"><CalendarDays className="w-5 h-5 mr-2 text-emerald-500" /> Transformation Timeline</h2>
+          <p className="text-sm text-slate-500 font-medium mb-6">How quickly do you want to reach your goal?</p>
+          
+          <div className="grid grid-cols-2 gap-3 mb-8">
+            {TIMELINES.map(t => (
+              <button key={t.id} onClick={() => setTimeline(t.id)} aria-pressed={timeline === t.id}
+                className={`py-4 rounded-2xl border-2 transition-all font-black ${timeline === t.id ? 'border-emerald-500 bg-emerald-500/10 text-emerald-500' : 'border-slate-100 dark:border-white/5 text-slate-600 dark:text-slate-300 hover:border-emerald-500/30'}`}>
+                {t.label}
               </button>
+            ))}
+          </div>
+
+          <div className="bg-emerald-500/10 p-5 rounded-2xl border border-emerald-500/20 mb-8 flex items-start">
+            <Sparkles className="w-5 h-5 text-emerald-500 mr-3 shrink-0 mt-0.5" />
+            <div>
+              <span className="text-[10px] uppercase font-black text-emerald-600 block mb-1">AI Estimation</span>
+              <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400">
+                In {timeline} days, you can expect to {goal === 'fat_loss' ? 'lose' : goal === 'muscle_gain' ? 'gain' : 'transform'} approximately 
+                <span className="text-lg ml-1">
+                  {goal === 'maintenance' ? 'your physique with better definition' : 
+                   goal === 'recomp' ? 'fat while building new muscle tissue' : 
+                   `${Math.abs(Math.round(((tdee - getTargetCalories()) * 7 / 7700) * (timeline / 7)))} - ${Math.abs(Math.round(((tdee - getTargetCalories()) * 7 / 7700) * (timeline / 7)) + 2)} kg`}
+                </span>
+              </p>
             </div>
-          )}
+          </div>
 
-          {/* Step 2: Goal & Preferences */}
-          {step === 2 && (
-            <div className="space-y-5 animate-fade-in">
-              <span className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-4">Step 2: Goal & Habits</span>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <span className="text-xs font-bold text-slate-400 block ml-1">Target Goal</span>
-                  <select
-                    value={goal}
-                    onChange={(e) => setGoal(e.target.value)}
-                    className="w-full bg-slate-100/50 dark:bg-zinc-900 border border-slate-300/20 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-emerald-500"
-                  >
-                    <option value="fatloss">Fat Loss</option>
-                    <option value="leanbulk">Lean Bulk</option>
-                    <option value="muscle">Muscle Gain</option>
-                    <option value="maintenance">Maintenance</option>
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-xs font-bold text-slate-400 block ml-1">Diet Style</span>
-                  <select
-                    value={foodPref}
-                    onChange={(e) => setFoodPref(e.target.value)}
-                    className="w-full bg-slate-100/50 dark:bg-zinc-900 border border-slate-300/20 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-emerald-500"
-                  >
-                    <option value="vegetarian">Vegetarian</option>
-                    <option value="vegan">Vegan</option>
-                    <option value="nonveg">Non-Veg</option>
-                    <option value="southindian">South Indian</option>
-                    <option value="northindian">North Indian</option>
-                    <option value="telugumeals">Telugu Meals</option>
-                    <option value="keto">Keto Diet</option>
-                  </select>
-                </div>
-              </div>
+          <div className="flex gap-3 sticky bottom-4 z-10 pt-4">
+            <button onClick={() => setStep(3)} className="px-6 py-4 rounded-xl bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-200 transition-colors shadow-lg"><ChevronLeft className="w-5 h-5" /></button>
+            <button onClick={() => setStep(5)} className="flex-1 py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl transition-all shadow-lg shadow-emerald-500/20">Continue</button>
+          </div>
+        </div>
+      )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <span className="text-xs font-bold text-slate-400 block ml-1">Activity Multiplier</span>
-                  <select
-                    value={activity}
-                    onChange={(e) => setActivity(e.target.value)}
-                    className="w-full bg-slate-100/50 dark:bg-zinc-900 border border-slate-300/20 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-emerald-500"
-                  >
-                    <option value="normal">Normal (weekly once)</option>
-                    <option value="moderate">Moderate (3-4 days a week)</option>
-                    <option value="heavy">Heavy (5-6 days)</option>
-                    <option value="extreme">Extreme (7 days)</option>
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-xs font-bold text-slate-400 block ml-1">Allergies (e.g. Gluten, Nuts)</span>
-                  <input
-                    type="text"
-                    placeholder="None"
-                    value={allergies}
-                    onChange={(e) => setAllergies(e.target.value)}
-                    className="w-full bg-slate-100/50 dark:bg-white/5 border border-slate-300/20 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-emerald-500"
-                  />
-                </div>
-              </div>
-
-              <div className="flex space-x-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="flex-1 py-3 bg-slate-200/50 dark:bg-white/5 text-slate-600 dark:text-slate-350 hover:bg-slate-200 dark:hover:bg-white/10 rounded-2xl font-bold transition-all cursor-pointer"
-                >
-                  Back
+      {/* Step 5: Diet Style */}
+      {step === 5 && (
+        <div className="glass rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200/20 dark:border-white/10 animate-fade-in max-w-xl mx-auto">
+          <h2 className="text-xl font-black mb-2 flex items-center"><UtensilsCrossed className="w-5 h-5 mr-2 text-emerald-500" /> Diet Style Preferences</h2>
+          <p className="text-sm text-slate-500 font-medium mb-6">Select all that apply.</p>
+          
+          <div className="flex flex-wrap gap-2 mb-8">
+            {DIET_STYLES.map(style => {
+              const active = dietStyles.includes(style);
+              return (
+                <button key={style} onClick={() => toggleDietStyle(style)}
+                  className={`px-4 py-2.5 rounded-full border-2 text-sm font-bold transition-all flex items-center ${active ? 'border-emerald-500 bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-emerald-500/50'}`}>
+                  {active && <Check className="w-4 h-4 mr-1" />}
+                  {style}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setStep(3)}
-                  className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl transition-all cursor-pointer flex items-center justify-center space-x-1"
-                >
-                  <span>Continue</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          )}
+              )
+            })}
+          </div>
 
-          {/* Step 3: Raw Foods Available & Immediate Warn Logic */}
-          {step === 3 && (
-            <div className="space-y-5 animate-fade-in">
-              <span className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1">Step 3: Your Food Preferences</span>
+          <div className="flex gap-3 sticky bottom-4 z-10 pt-4">
+            <button onClick={() => setStep(4)} className="px-6 py-4 rounded-xl bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-200 transition-colors shadow-lg"><ChevronLeft className="w-5 h-5" /></button>
+            <button onClick={() => setStep(6)} disabled={dietStyles.length === 0} className="flex-1 py-4 bg-emerald-500 disabled:opacity-50 hover:bg-emerald-600 text-white font-black rounded-xl transition-all shadow-lg shadow-emerald-500/20">Continue</button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 6: Branching Logic */}
+      {step === 6 && !planSelectionMode && (
+        <div className="glass rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200/20 dark:border-white/10 animate-fade-in max-w-xl mx-auto text-center">
+          <h2 className="text-2xl font-black mb-6 text-slate-800 dark:text-white">How would you like to build your plan?</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <button onClick={() => setPlanSelectionMode('premium')} className="p-6 rounded-2xl border-2 border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/5 hover:border-emerald-500 hover:bg-emerald-500/5 transition-all text-left">
+              <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mb-4">
+                <Star className="w-6 h-6 text-amber-500" />
+              </div>
+              <h3 className="font-black text-lg mb-1 text-slate-800 dark:text-white">Premium Plans</h3>
+              <p className="text-xs text-slate-500 font-medium leading-relaxed">Choose an expertly crafted plan. It will automatically scale perfectly to your target.</p>
+            </button>
+            
+            <button onClick={() => setPlanSelectionMode('ai')} className="p-6 rounded-2xl border-2 border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/5 hover:border-cyan-500 hover:bg-cyan-500/5 transition-all text-left">
+              <div className="w-12 h-12 rounded-full bg-cyan-500/10 flex items-center justify-center mb-4">
+                <Sparkles className="w-6 h-6 text-cyan-500" />
+              </div>
+              <h3 className="font-black text-lg mb-1 text-slate-800 dark:text-white">Custom AI Plan</h3>
+              <p className="text-xs text-slate-500 font-medium leading-relaxed">Pick your exact favorite ingredients. The AI will compute perfect macros for you from scratch.</p>
+            </button>
+          </div>
+          <button onClick={() => setStep(5)} className="px-8 py-3 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-200 transition-colors">Back</button>
+        </div>
+      )}
+
+      {step === 6 && planSelectionMode === 'premium' && (
+        <div className="glass rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200/20 dark:border-white/10 animate-fade-in max-w-2xl mx-auto">
+          <h2 className="text-xl font-black mb-2 flex items-center text-slate-800 dark:text-white"><Star className="w-6 h-6 mr-2 text-amber-500" /> LeanVerse Premium Plans</h2>
+          <p className="text-sm text-slate-500 font-medium mb-6">Our Auto-Scaling Engine will mathematically adjust these pre-made plans to perfectly hit your exact TDEE calories.</p>
+          
+          <div className="space-y-3 mb-8">
+            {premiumPlans.length === 0 ? (
+              <p className="text-center text-slate-400 py-10 font-medium bg-slate-50 dark:bg-white/5 rounded-2xl">No premium plans available right now.</p>
+            ) : (
+              premiumPlans.map(plan => (
+                <button key={plan._id} onClick={() => handleSelectPremiumPlan(plan)}
+                  className="w-full text-left p-4 bg-white dark:bg-zinc-800 border-2 border-slate-100 dark:border-white/5 rounded-2xl flex justify-between items-center hover:border-emerald-500 hover:shadow-lg transition-all group">
+                  <div>
+                    <h3 className="font-black text-slate-800 dark:text-white text-lg">{plan.name}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-md">{plan.goal}</span>
+                      <span className="text-xs font-bold text-slate-400">{plan.durationDays} Days</span>
+                      <span className="text-xs font-bold text-amber-500">• Auto-Scales</span>
+                    </div>
+                  </div>
+                  <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-zinc-900 flex items-center justify-center group-hover:bg-emerald-500 transition-colors">
+                    <ChevronRight className="text-slate-400 group-hover:text-white transition-colors" />
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+          
+          <button onClick={() => setPlanSelectionMode(null)} className="px-8 py-3 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-200 transition-colors">Back</button>
+        </div>
+      )}
+
+      {step === 6 && planSelectionMode === 'ai' && (
+        <div className="space-y-5 animate-fade-in">
+              <span className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1">Step 6: Your Food Preferences</span>
               <p className="text-xs text-slate-500 mb-4">We are creating a highly-customized diet plan specifically for you. Select the exact foods you want to eat for each meal below, and our AI will calculate the perfect portions to hit your goals!</p>
               
               <div className="flex space-x-3 mb-6">
                 <button
                   type="button"
-                  onClick={() => setStep(2)}
+                  onClick={() => setStep(5)}
                   className="flex-1 py-3 bg-slate-200/50 dark:bg-white/5 text-slate-600 dark:text-slate-350 rounded-2xl font-bold transition-all cursor-pointer"
                 >
                   Back
@@ -794,7 +1152,7 @@ Built with LeanVerse AI`;
                   placeholder={`Search foods to add to ${activeMealTab}...`}
                   value={searchFood}
                   onChange={(e) => setSearchFood(e.target.value)}
-                  className="flex-1 bg-slate-100/50 dark:bg-white/5 border border-slate-300/20 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-emerald-500 font-bold"
+                  className="flex-1 bg-slate-100/50 dark:bg-white/5 border border-slate-300/20 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-base sm:text-sm focus:outline-none focus:border-emerald-500 font-bold"
                 />
                 <button
                   type="button"
@@ -810,8 +1168,26 @@ Built with LeanVerse AI`;
                 {Object.keys(allFoods)
                   .filter((food) => {
                     if (allFoods[food].hidden) return false;
-                    const matchesSearch = food.includes(searchFood.toLowerCase().trim());
-                    const matchesTab = allFoods[food].category === activeMealTab;
+
+                    let matchesDiet = true;
+                    if (dietStyles.includes('Vegetarian') && !dietStyles.includes('Non-Vegetarian')) {
+                      const fStyles = allFoods[food].dietStyles;
+                      if (fStyles && fStyles.length > 0) {
+                        matchesDiet = fStyles.includes('Vegetarian');
+                      } else {
+                        matchesDiet = !['chicken', 'fish', 'egg', 'beef', 'mutton', 'pork'].some(meat => food.toLowerCase().includes(meat));
+                      }
+                    }
+                    if (!matchesDiet) return false;
+
+                    const matchesSearch = food.toLowerCase().includes(searchFood.toLowerCase().trim());
+                    const foodCat = allFoods[food].category;
+                    const matchesTab = Array.isArray(foodCat) 
+                      ? foodCat.some(c => c?.toLowerCase() === activeMealTab.toLowerCase())
+                      : typeof foodCat === 'string'
+                        ? foodCat.toLowerCase() === activeMealTab.toLowerCase()
+                        : false;
+                    
                     // If the user is actively searching, show all matches regardless of category
                     if (searchFood.trim() !== '') return matchesSearch;
                     // Otherwise, only show foods belonging to the active meal tab
@@ -885,11 +1261,18 @@ Built with LeanVerse AI`;
 
             <div className="flex space-x-3.5 no-print">
               <button
-                onClick={() => { setPlanGenerated(false); try { localStorage.removeItem(DIET_PLAN_KEY); } catch {} }}
+                onClick={() => { setPlanGenerated(false); setStep(6); setPlanSelectionMode('ai'); }}
                 className="px-4 py-2.5 rounded-xl border border-slate-300/10 bg-slate-100/50 dark:bg-white/5 hover:bg-emerald-500/10 text-slate-500 dark:text-slate-300 hover:text-emerald-500 font-bold transition-all cursor-pointer flex items-center space-x-1 text-sm"
               >
                 <RefreshCw className="w-4 h-4" />
-                <span>Modify Data</span>
+                <span>Adjust Foods</span>
+              </button>
+              <button
+                onClick={() => { setPlanGenerated(false); setStep(1); setSelectedFoods([]); setCustomQty({}); setMealAssignments({}); try { localStorage.removeItem(DIET_PLAN_KEY); } catch {} }}
+                className="px-4 py-2.5 rounded-xl border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold transition-all cursor-pointer flex items-center space-x-1 text-sm"
+              >
+                <X className="w-4 h-4" />
+                <span>Reset</span>
               </button>
               <button
                 onClick={handleCopyGrocery}
@@ -899,98 +1282,6 @@ Built with LeanVerse AI`;
                 <span>{copiedGrocery ? 'Copied' : 'Grocery List'}</span>
               </button>
             </div>
-          </div>
-
-          {/* ── AI Macro Search Widget ──────────────────────────────────── */}
-          <div className="glass rounded-3xl p-6 border border-slate-200/10 space-y-5 relative overflow-hidden no-print">
-            <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/5 rounded-full blur-[60px] -z-10" />
-
-            <div className="flex items-center space-x-2">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-lg shadow-emerald-500/20">
-                <Search className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm">AI Macro Search</h3>
-                <p className="text-[10px] text-slate-400">Search any food and add it directly to your meal plan</p>
-              </div>
-            </div>
-
-            <form onSubmit={searchMacros} className="flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                <input
-                  type="text"
-                  placeholder='Try "shawarma", "peanut butter", "biryani"…'
-                  value={macroQuery}
-                  onChange={(e) => setMacroQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-3 rounded-2xl bg-slate-100/60 dark:bg-white/5 border border-slate-200/30 dark:border-white/10 text-sm font-semibold text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={macroLoading || !macroQuery.trim()}
-                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 disabled:opacity-40 text-white font-black text-sm shadow-lg transition-all active:scale-95 cursor-pointer whitespace-nowrap"
-              >
-                {macroLoading ? (
-                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin block" />
-                ) : 'Search'}
-              </button>
-            </form>
-
-            {macroError && (
-              <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs font-bold text-red-500">
-                <X className="w-4 h-4 shrink-0" />
-                {macroError}
-              </div>
-            )}
-
-            {macroResult && (
-              <div className="space-y-4 animate-fade-in">
-                <div className="grid grid-cols-4 gap-2">
-                  {[
-                    { label: 'Calories', value: macroResult.calories, unit: 'kcal', color: 'text-emerald-500' },
-                    { label: 'Protein',  value: macroResult.protein,  unit: 'g',    color: 'text-blue-500' },
-                    { label: 'Carbs',    value: macroResult.carbs,    unit: 'g',    color: 'text-amber-500' },
-                    { label: 'Fats',     value: macroResult.fats,     unit: 'g',    color: 'text-rose-500' },
-                  ].map(({ label, value, unit, color }) => (
-                    <div key={label} className="bg-slate-100/60 dark:bg-white/5 rounded-2xl p-3 text-center border border-slate-200/20 dark:border-white/5">
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-1">{label}</span>
-                      <span className={`text-lg font-black ${color} block leading-none`}>{value}</span>
-                      <span className="text-[9px] text-slate-400 font-bold">{unit}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {macroResult.ingredients.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {macroResult.ingredients.map((item, i) => (
-                      <span key={i} className="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold rounded-full border border-emerald-500/15">
-                        {item}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Add to Meal Slot:</span>
-                  <div className="flex flex-wrap gap-2">
-                    {['breakfast', 'lunch', 'pre-workout', 'post-workout', 'dinner'].map((slot) => (
-                      <button
-                        key={slot}
-                        onClick={() => addMacroResultToPlan(slot)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all capitalize cursor-pointer border ${
-                          macroAddedKey === slot
-                            ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm'
-                            : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 border-slate-200/30 dark:border-white/10 hover:border-emerald-500/40 hover:text-emerald-500'
-                        }`}
-                      >
-                        {macroAddedKey === slot ? '✓ Added' : `+ ${slot.replace('-', ' ')}`}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Macro Breakdown cards */}
@@ -1035,6 +1326,16 @@ Built with LeanVerse AI`;
               </span>
             </div>
           </div>
+
+          {/* Over Target Warning */}
+          {(isOver(actualCals, calsTarget) || isOver(actualProtein, proteinTarget * 1.3) || isOver(actualCarbs, carbsTarget) || isOver(actualFats, fatsTarget)) && (
+            <div className="mt-4 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-start space-x-3 text-amber-600 dark:text-amber-400 animate-fade-in print-hide">
+              <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+              <div className="text-sm font-bold leading-snug">
+                Note: Some of your macros exceed the target values. Please use the <span className="font-black text-amber-500">-</span> and <span className="font-black text-amber-500">+</span> buttons on individual food items to fine-tune your portions until you hit your targets!
+              </div>
+            </div>
+          )}
 
           {/* Core Meals Schedules */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -1112,28 +1413,23 @@ Built with LeanVerse AI`;
                             <span className="text-sm font-black text-slate-800 dark:text-slate-100">Add Custom Item to {mealStr.replace('-', ' ')}</span>
                             <button type="button" onClick={() => setShowCustomForm(null)} className="text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer">Cancel</button>
                           </div>
-                          
-                          <div className="grid grid-cols-2 gap-3">
-                            <input type="text" placeholder="Food Name (e.g. Mom's Pasta)" value={cfName} onChange={(e) => setCfName(e.target.value)} required className="col-span-2 bg-white dark:bg-zinc-900 border border-slate-300/20 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold focus:outline-none focus:border-emerald-500" />
-                            
-                            <div className="space-y-1">
-                              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Cals (kcal)</label>
-                              <input type="number" min="0" placeholder="0" value={cfCals} onChange={(e) => setCfCals(e.target.value)} required className="w-full bg-white dark:bg-zinc-900 border border-slate-300/20 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold focus:outline-none focus:border-emerald-500" />
+                          <div className="grid grid-cols-2 gap-3 mb-4">
+                            <input type="text" placeholder="Food Name (e.g. Mom's Pasta)" value={cfName} onChange={(e) => setCfName(e.target.value)} required className="col-span-2 bg-white dark:bg-zinc-900 border border-slate-300/20 dark:border-white/10 rounded-xl px-3 py-2 text-base sm:text-sm font-bold focus:outline-none focus:border-emerald-500" />
+                            <div className="col-span-2 flex space-x-2">
+                              <input type="number" inputMode="numeric" pattern="[0-9]*" min="0" placeholder="0" value={cfCals} onChange={(e) => setCfCals(e.target.value)} required className="w-full bg-white dark:bg-zinc-900 border border-slate-300/20 dark:border-white/10 rounded-xl px-3 py-2 text-base sm:text-sm font-bold focus:outline-none focus:border-emerald-500" />
+                              <span className="flex-shrink-0 flex items-center justify-center bg-slate-100 dark:bg-white/5 text-slate-500 text-xs font-bold rounded-xl px-4">kcal</span>
                             </div>
-                            
                             <div className="space-y-1">
                               <label className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest ml-1">Protein (g)</label>
-                              <input type="number" min="0" step="0.1" placeholder="0" value={cfProtein} onChange={(e) => setCfProtein(e.target.value)} required className="w-full bg-emerald-500/5 border border-emerald-500/20 rounded-xl px-3 py-2 text-sm font-bold focus:outline-none focus:border-emerald-500" />
+                              <input type="number" inputMode="decimal" min="0" step="0.1" placeholder="0" value={cfProtein} onChange={(e) => setCfProtein(e.target.value)} required className="w-full bg-emerald-500/5 border border-emerald-500/20 rounded-xl px-3 py-2 text-base sm:text-sm font-bold focus:outline-none focus:border-emerald-500" />
                             </div>
-                            
                             <div className="space-y-1">
                               <label className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest ml-1">Carbs (g)</label>
-                              <input type="number" min="0" step="0.1" placeholder="0" value={cfCarbs} onChange={(e) => setCfCarbs(e.target.value)} required className="w-full bg-cyan-500/5 border border-cyan-500/20 rounded-xl px-3 py-2 text-sm font-bold focus:outline-none focus:border-cyan-500" />
+                              <input type="number" inputMode="decimal" min="0" step="0.1" placeholder="0" value={cfCarbs} onChange={(e) => setCfCarbs(e.target.value)} required className="w-full bg-cyan-500/5 border border-cyan-500/20 rounded-xl px-3 py-2 text-base sm:text-sm font-bold focus:outline-none focus:border-cyan-500" />
                             </div>
-                            
                             <div className="space-y-1">
                               <label className="text-[10px] font-bold text-amber-500 uppercase tracking-widest ml-1">Fats (g)</label>
-                              <input type="number" min="0" step="0.1" placeholder="0" value={cfFats} onChange={(e) => setCfFats(e.target.value)} required className="w-full bg-amber-500/5 border border-amber-500/20 rounded-xl px-3 py-2 text-sm font-bold focus:outline-none focus:border-amber-500" />
+                              <input type="number" inputMode="decimal" min="0" step="0.1" placeholder="0" value={cfFats} onChange={(e) => setCfFats(e.target.value)} required className="w-full bg-amber-500/5 border border-amber-500/20 rounded-xl px-3 py-2 text-base sm:text-sm font-bold focus:outline-none focus:border-amber-500" />
                             </div>
                           </div>
 
@@ -1159,13 +1455,20 @@ Built with LeanVerse AI`;
                             const finalCarbs = Math.round(fData.carbs * itemMultiplier);
                             const finalFat = Math.round(fData.fat * itemMultiplier);
 
-                            const stepSize = (fData.unit.startsWith('g') || fData.unit === 'ml') ? 10 : 1;
+                            const isGrams = fData.unit === 'g' || fData.unit === 'ml';
+                            const u = (fData.unit || '').toLowerCase();
+                            const isDiscrete = u.includes('slice') || u.includes('egg') || u.includes('piece') || u.includes('roti') || u.includes('chapati') || u.includes('idli') || u.includes('dosa');
+                            const stepSize = isGrams ? 10 : (isDiscrete ? 1 : 0.1);
 
                             const adjustQty = (amount: number) => {
-                              setCustomQty((prev) => ({
-                                ...prev,
-                                [item]: Math.max(1, (prev[item] !== undefined ? prev[item] : defaultQty) + amount),
-                              }));
+                              setCustomQty((prev) => {
+                                const current = prev[item] !== undefined ? prev[item] : defaultQty;
+                                const next = isDiscrete ? Math.round(current + amount) : Math.round((current + amount) * 10) / 10;
+                                return {
+                                  ...prev,
+                                  [item]: Math.max(isGrams || isDiscrete ? 1 : 0.1, next),
+                                };
+                              });
                             };
 
                             const eaten = !!eatenMeals[item];
@@ -1196,15 +1499,16 @@ Built with LeanVerse AI`;
                                     <span className={`font-bold block leading-tight truncate ${eaten ? 'line-through text-slate-400' : 'text-slate-800 dark:text-slate-100'}`}>{baseFood.toUpperCase()}</span>
                                     <div className="flex items-center space-x-1.5 mt-1">
                                       <button aria-label="Decrease quantity" onClick={() => adjustQty(-stepSize)} className="w-5 h-5 flex items-center justify-center rounded-md bg-slate-200/80 dark:bg-white/10 text-slate-500 hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors cursor-pointer leading-none font-black text-sm">-</button>
-                                      <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest min-w-[45px] text-center">{exactQty} {fData.unit}</span>
+                                      <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest min-w-[25px] text-center">{exactQty}</span>
                                       <button aria-label="Increase quantity" onClick={() => adjustQty(stepSize)} className="w-5 h-5 flex items-center justify-center rounded-md bg-slate-200/80 dark:bg-white/10 text-slate-500 hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors cursor-pointer leading-none font-black text-sm">+</button>
+                                      <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest ml-1">{fData.unit}</span>
                                     </div>
                                   </div>
                                 </div>
                                 <div className="text-right ml-2">
                                   <span className="font-mono text-sm font-black text-slate-800 dark:text-slate-100 block leading-tight">{finalCals} <span className="text-[10px] text-slate-400">kcal</span></span>
                                   <span className="font-mono text-[10px] font-bold text-slate-500 block">
-                                    {finalProtein}g P • {finalCarbs}g C • {finalFat}g F
+                                    {finalProtein}g P ΓÇó {finalCarbs}g C ΓÇó {finalFat}g F
                                   </span>
                                 </div>
                               </li>
@@ -1221,7 +1525,7 @@ Built with LeanVerse AI`;
             {/* Side column: MacroRings + Swaps + Grocery + Supplements */}
             <div className="lg:col-span-4 space-y-6 print-card">
 
-              {/* Macro Rings — Eaten Progress */}
+              {/* Macro Rings ΓÇö Eaten Progress */}
               <div className="glass p-6 rounded-3xl border border-slate-200/10 flex flex-col items-center space-y-3">
                 <span className="text-xs font-black text-slate-400 uppercase tracking-widest block self-start">Today's Eaten Progress</span>
                 <MacroRings
@@ -1324,108 +1628,19 @@ Built with LeanVerse AI`;
             </div>
           </div>
 
-          {/* ── AI Macro Search Widget ──────────────────────────────────── */}
-          <div className="glass rounded-3xl p-6 border border-slate-200/10 space-y-5 relative overflow-hidden no-print">
-            <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/5 rounded-full blur-[60px] -z-10" />
-
-            <div className="flex items-center space-x-2">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-lg shadow-emerald-500/20">
-                <Search className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm">AI Macro Search</h3>
-                <p className="text-[10px] text-slate-400">Search any food and add it directly to your meal plan</p>
-              </div>
-            </div>
-
-            <form onSubmit={searchMacros} className="flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                <input
-                  type="text"
-                  placeholder='Try "shawarma", "peanut butter", "biryani"…'
-                  value={macroQuery}
-                  onChange={(e) => setMacroQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-3 rounded-2xl bg-slate-100/60 dark:bg-white/5 border border-slate-200/30 dark:border-white/10 text-sm font-semibold text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={macroLoading || !macroQuery.trim()}
-                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 disabled:opacity-40 text-white font-black text-sm shadow-lg transition-all active:scale-95 cursor-pointer whitespace-nowrap"
-              >
-                {macroLoading ? (
-                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin block" />
-                ) : 'Search'}
-              </button>
-            </form>
-
-            {macroError && (
-              <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs font-bold text-red-500">
-                <X className="w-4 h-4 shrink-0" />
-                {macroError}
-              </div>
-            )}
-
-            {macroResult && (
-              <div className="space-y-4 animate-fade-in">
-                {/* Macro cards */}
-                <div className="grid grid-cols-4 gap-2">
-                  {[
-                    { label: 'Calories', value: macroResult.calories, unit: 'kcal', color: 'text-emerald-500' },
-                    { label: 'Protein',  value: macroResult.protein,  unit: 'g',    color: 'text-blue-500' },
-                    { label: 'Carbs',    value: macroResult.carbs,    unit: 'g',    color: 'text-amber-500' },
-                    { label: 'Fats',     value: macroResult.fats,     unit: 'g',    color: 'text-rose-500' },
-                  ].map(({ label, value, unit, color }) => (
-                    <div key={label} className="bg-slate-100/60 dark:bg-white/5 rounded-2xl p-3 text-center border border-slate-200/20 dark:border-white/5">
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-1">{label}</span>
-                      <span className={`text-lg font-black ${color} block leading-none`}>{value}</span>
-                      <span className="text-[9px] text-slate-400 font-bold">{unit}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Detected Items */}
-                {macroResult.ingredients.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {macroResult.ingredients.map((item, i) => (
-                      <span key={i} className="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold rounded-full border border-emerald-500/15">
-                        {item}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {/* Add to Meal Plan */}
-                <div className="space-y-2">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Add to Meal Slot:</span>
-                  <div className="flex flex-wrap gap-2">
-                    {['breakfast', 'lunch', 'pre-workout', 'post-workout', 'dinner'].map((slot) => (
-                      <button
-                        key={slot}
-                        onClick={() => addMacroResultToPlan(slot)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all capitalize cursor-pointer border ${
-                          macroAddedKey === slot
-                            ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm'
-                            : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 border-slate-200/30 dark:border-white/10 hover:border-emerald-500/40 hover:text-emerald-500'
-                        }`}
-                      >
-                        {macroAddedKey === slot ? '✓ Added' : `+ ${slot.replace('-', ' ')}`}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* Actions Bar */}
           <div className="flex flex-col sm:flex-row gap-4 mt-8 print-hide">
             <button 
-              onClick={() => { setPlanGenerated(false); setStep(3); }}
+              onClick={() => { setPlanGenerated(false); setStep(6); setPlanSelectionMode('ai'); }}
               className="flex-1 py-4 bg-slate-200/50 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 rounded-2xl font-bold text-sm flex items-center justify-center space-x-2 transition-all border border-slate-300/10 cursor-pointer"
             >
-              <span>Modify Parameters</span>
+              <span>Adjust Foods</span>
+            </button>
+            <button 
+              onClick={() => { setPlanGenerated(false); setStep(1); setSelectedFoods([]); setCustomQty({}); setMealAssignments({}); try { localStorage.removeItem(DIET_PLAN_KEY); } catch {} }}
+              className="flex-1 py-4 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-2xl font-bold text-sm flex items-center justify-center space-x-2 transition-all border border-red-500/20 cursor-pointer"
+            >
+              <span>Start New Plan</span>
             </button>
             
             <div className="flex gap-4">

@@ -6,20 +6,25 @@ import Link from 'next/link';
 
 export default function BodyFatCalculator() {
   const [gender, setGender] = useState<'male' | 'female'>('male');
-  const [height, setHeight] = useState(170); // cm
-  const [neck, setNeck] = useState(38); // cm
-  const [waist, setWaist] = useState(82); // cm
-  const [hip, setHip] = useState(90); // cm (used for females)
+  const [height, setHeight] = useState<number | ''>(170); // cm
+  const [neck, setNeck] = useState<number | ''>(38); // cm
+  const [waist, setWaist] = useState<number | ''>(82); // cm
+  const [hip, setHip] = useState<number | ''>(90); // cm (used for females)
 
   const [bodyFat, setBodyFat] = useState(15.4);
   const [category, setCategory] = useState('Fit');
 
   useEffect(() => {
+    const hNum = Number(height) || 1;
+    const nNum = Number(neck) || 1;
+    const wNum = Number(waist) || 1;
+    const hipNum = Number(hip) || 1;
+
     // US Navy Body Fat Formulas (using inches)
-    const hInch = height / 2.54;
-    const nInch = neck / 2.54;
-    const wInch = waist / 2.54;
-    const hipInch = hip / 2.54;
+    const hInch = hNum / 2.54;
+    const nInch = nNum / 2.54;
+    const wInch = wNum / 2.54;
+    const hipInch = hipNum / 2.54;
 
     let bfVal = 15;
 
@@ -141,7 +146,7 @@ export default function BodyFatCalculator() {
                 <input
                   type="number" min="0"
                   value={height}
-                  onChange={(e) => setHeight(Math.max(1, parseInt(e.target.value) || 0))}
+                  onChange={(e) => setHeight(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
                   className="w-full bg-slate-100/50 dark:bg-white/5 border border-slate-300/20 dark:border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
                 />
               </div>
@@ -151,7 +156,7 @@ export default function BodyFatCalculator() {
                 <input
                   type="number" min="0"
                   value={neck}
-                  onChange={(e) => setNeck(Math.max(1, parseInt(e.target.value) || 0))}
+                  onChange={(e) => setNeck(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
                   className="w-full bg-slate-100/50 dark:bg-white/5 border border-slate-300/20 dark:border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
                 />
               </div>
@@ -164,7 +169,7 @@ export default function BodyFatCalculator() {
                 <input
                   type="number" min="0"
                   value={waist}
-                  onChange={(e) => setWaist(Math.max(1, parseInt(e.target.value) || 0))}
+                  onChange={(e) => setWaist(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
                   className="w-full bg-slate-100/50 dark:bg-white/5 border border-slate-300/20 dark:border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
                 />
               </div>
@@ -175,7 +180,7 @@ export default function BodyFatCalculator() {
                   <input
                     type="number" min="0"
                     value={hip}
-                    onChange={(e) => setHip(Math.max(1, parseInt(e.target.value) || 0))}
+                    onChange={(e) => setHip(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
                     className="w-full bg-slate-100/50 dark:bg-white/5 border border-slate-300/20 dark:border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold animate-fade-in"
                   />
                 </div>

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import User from '@/lib/models/User';
+import jwt from 'jsonwebtoken';
 
 export async function POST(req: Request) {
   try {
@@ -36,9 +37,29 @@ export async function POST(req: Request) {
       tier: newUser.tier,
       streak: newUser.streak,
       badges: newUser.badges,
+      avatar: newUser.avatar
     };
 
-    return NextResponse.json({ success: true, user: userSession });
+    const token = jwt.sign(
+      { id: newUser._id.toString(), role: newUser.role },
+      process.env.JWT_SECRET || 'fallback_secret_please_change_in_production',
+      { expiresIn: '7d' }
+    );
+
+    const response = NextResponse.json({ success: true, user: userSession }, { status: 201 });
+    
+    // Set secure HttpOnly cookie
+    response.cookies.set({
+      name: 'leanverse_token',
+      value: token,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7 // 7 days
+    });
+
+    return response;
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
   }

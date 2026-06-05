@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Apple, Dumbbell, Activity, Heart, Shield, Mail } from 'lucide-react';
 
 export default function Footer() {
@@ -31,12 +32,17 @@ export default function Footer() {
       { name: 'Water Intake Calculator', path: '/calculators/water' },
     ],
     company: [
-      { name: 'About & Contact', path: '/about' },
+      { name: 'About Us', path: '/about' },
+      { name: 'Contact Us', path: '/contact' },
       { name: 'Pricing Plans', path: '/pricing' },
       { name: 'Fitness Blog', path: '/blog' },
-      { name: 'Privacy Policy & Terms', path: '/privacy' },
     ],
   };
+
+  const pathname = usePathname();
+
+  // Hide on admin routes
+  if (pathname?.startsWith('/admin')) return null;
 
   return (
     <footer className="border-t border-slate-200/10 dark:border-white/5 bg-slate-900 text-slate-400 py-16 no-print">
@@ -130,10 +136,11 @@ export default function Footer() {
           <p className="max-w-3xl mx-auto leading-relaxed">
             Disclaimer: LeanVerse is an AI fitness resource. The generated plans, macros, and diet routines are optimized mathematical estimates. Consult with a qualified physician before initiating any intensive athletic or dietary changes.
           </p>
-          <div className="flex justify-center space-x-6">
+          <div className="flex justify-center space-x-6 flex-wrap gap-y-2">
             <span>© {new Date().getFullYear()} LeanVerse. All rights reserved.</span>
             <Link href="/privacy" className="hover:underline">Privacy Policy</Link>
-            <Link href="/privacy#terms" className="hover:underline">Terms of Service</Link>
+            <Link href="/terms" className="hover:underline">Terms of Service</Link>
+            <Link href="/disclaimer" className="hover:underline">Medical Disclaimer</Link>
           </div>
         </div>
       </div>

@@ -15,7 +15,7 @@ export default function UserDashboard() {
   
   // Local state for dashboard logging metrics
   const [weightInput, setWeightInput] = useState('');
-  const [waterCups, setWaterCups] = useState(4);
+  const [waterCups, setWaterCups] = useState(0);
   const [loggedWeight, setLoggedWeight] = useState([74.5, 74.0, 73.6, 73.1, 72.8]);
   const [caloriesLogged, setCaloriesLogged] = useState(0);
   const [activeCalorieGoal, setActiveCalorieGoal] = useState(2000);
@@ -154,6 +154,12 @@ export default function UserDashboard() {
         setActiveCalorieGoal(targets.calories);
         setTargetMacros({ protein: targets.protein, carbs: targets.carbs, fats: targets.fats });
       }
+
+      // Load Water Cups
+      const waterRaw = localStorage.getItem(getUserStorageKey(`leanverse_water_cups_${today}`));
+      if (waterRaw) {
+        setWaterCups(parseInt(waterRaw, 10));
+      }
     } catch (e) {
       // ignore
     }
@@ -172,7 +178,25 @@ export default function UserDashboard() {
   };
 
   const incrementWater = () => {
-    setWaterCups((prev) => prev + 1);
+    setWaterCups((prev) => {
+      const next = Math.min(prev + 1, 8);
+      try {
+        const today = formatLocalDate();
+        localStorage.setItem(getUserStorageKey(`leanverse_water_cups_${today}`), String(next));
+      } catch (e) {}
+      return next;
+    });
+  };
+
+  const decrementWater = () => {
+    setWaterCups((prev) => {
+      const next = Math.max(prev - 1, 0);
+      try {
+        const today = formatLocalDate();
+        localStorage.setItem(getUserStorageKey(`leanverse_water_cups_${today}`), String(next));
+      } catch (e) {}
+      return next;
+    });
   };
 
   // SVG Chart rendering dimensions
@@ -387,13 +411,32 @@ export default function UserDashboard() {
               ))}
             </div>
 
-            <button
-              onClick={incrementWater}
-              className="w-full py-2 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white text-xs font-bold rounded-xl flex items-center justify-center space-x-1.5 cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Log Water Cup (250ml)</span>
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={decrementWater}
+                className="w-10 py-2 bg-slate-200/50 dark:bg-white/5 hover:bg-slate-300/50 dark:hover:bg-white/10 text-slate-500 font-bold rounded-xl flex items-center justify-center cursor-pointer"
+                title="Remove Cup"
+              >
+                <span className="text-sm font-black">-</span>
+              </button>
+              <button
+                onClick={incrementWater}
+                disabled={waterCups >= 8}
+                className={`flex-1 py-2 text-white text-xs font-bold rounded-xl flex items-center justify-center space-x-1.5 transition-all ${waterCups >= 8 ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'bg-gradient-to-r from-emerald-500 to-cyan-500 cursor-pointer'}`}
+              >
+                {waterCups >= 8 ? (
+                  <>
+                    <Trophy className="w-3.5 h-3.5" />
+                    <span>Goal Completed!</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Log Water Cup (250ml)</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
