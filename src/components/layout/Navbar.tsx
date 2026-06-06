@@ -42,9 +42,8 @@ export default function Navbar() {
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Diet Planner', path: '/diet-planner', icon: Apple },
-    { name: 'Workout Planner', path: '/workout-planner', icon: Dumbbell },
-
-    { name: 'Recipes', path: '/recipes', icon: Trophy },
+    { name: 'Personal Records', path: '/personal-records', icon: Trophy },
+    { name: 'Recipes', path: '/recipes', icon: Flame },
     { name: 'Store', path: '/store', icon: ShoppingBag },
     { name: 'Blog', path: '/blog' },
     { name: 'Pricing', path: '/pricing' },
@@ -91,7 +90,7 @@ export default function Navbar() {
                   className={`relative px-3 py-2 rounded-full text-sm font-semibold tracking-wide transition-all ${
                     isActive(link.path)
                       ? 'text-emerald-500 dark:text-emerald-400 font-bold'
-                      : 'text-slate-600 hover:text-emerald-500 dark:text-slate-300 dark:hover:text-emerald-400'
+                      : 'text-slate-800 hover:text-emerald-500 dark:text-slate-300 dark:hover:text-emerald-400'
                   }`}
                 >
                   {isActive(link.path) && (
@@ -113,7 +112,7 @@ export default function Navbar() {
                   className={`flex items-center space-x-1 px-3 py-2 rounded-full text-sm font-semibold tracking-wide transition-all cursor-pointer ${
                     pathname.startsWith('/calculators')
                       ? 'text-emerald-500 dark:text-emerald-400 font-bold bg-emerald-500/10 dark:bg-emerald-500/20'
-                      : 'text-slate-600 hover:text-emerald-500 dark:text-slate-300 dark:hover:text-emerald-400'
+                      : 'text-slate-800 hover:text-emerald-500 dark:text-slate-300 dark:hover:text-emerald-400'
                   }`}
                 >
                   <Calculator className="w-4 h-4 mr-1" />
@@ -167,11 +166,18 @@ export default function Navbar() {
             {isMounted && (user ? (
               <div className="flex items-center space-x-2 lg:space-x-3">
                 <Link 
+                  href="/workout-planner"
+                  className="flex items-center space-x-1.5 px-3 py-2 rounded-full bg-cyan-500 hover:bg-cyan-600 dark:bg-cyan-600 dark:hover:bg-cyan-500 text-white text-sm font-bold transition-all shadow-lg hover:shadow-cyan-500/20"
+                >
+                  <Dumbbell className="w-4 h-4" />
+                  <span className="hidden sm:inline">Active Workout</span>
+                </Link>
+                <Link 
                   href="/dashboard"
                   className="flex items-center space-x-1.5 px-3 py-2 rounded-full bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white text-sm font-bold transition-all shadow-lg hover:shadow-emerald-500/20"
                 >
                   <LayoutDashboard className="w-4 h-4" />
-                  <span>Dashboard</span>
+                  <span className="hidden sm:inline">Dashboard</span>
                 </Link>
                 {user.role === 'admin' && (
                   <Link 
@@ -245,7 +251,7 @@ export default function Navbar() {
                   className={`px-4 py-2.5 rounded-2xl text-base font-semibold transition-all ${
                     isActive(link.path)
                       ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400'
-                      : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/20 dark:hover:bg-white/5'
+                      : 'text-slate-800 dark:text-slate-200 hover:bg-slate-200/20 dark:hover:bg-white/5'
                   }`}
                 >
                   {link.name}
@@ -262,7 +268,7 @@ export default function Navbar() {
                       className={`px-3 py-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all truncate block ${
                         isActive(calc.path)
                           ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400'
-                          : 'text-slate-600 hover:text-emerald-500 dark:text-slate-300 dark:hover:text-emerald-400 hover:bg-slate-200/10 dark:hover:bg-white/5'
+                          : 'text-slate-800 hover:text-emerald-500 dark:text-slate-300 dark:hover:text-emerald-400 hover:bg-slate-200/10 dark:hover:bg-white/5'
                       }`}
                       title={calc.name.replace(' Calculator', '')}
                     >
@@ -275,6 +281,12 @@ export default function Navbar() {
               <div className="border-t border-slate-200/10 dark:border-white/5 my-2 pt-4 flex flex-col items-center">
                 {user ? (
                   <div className="w-full space-y-2 text-center">
+                    <Link 
+                      href="/workout-planner"
+                      className="block w-full py-3 rounded-2xl bg-cyan-500 text-white font-bold shadow-md"
+                    >
+                      Active Workout
+                    </Link>
                     <Link 
                       href="/dashboard"
                       className="block w-full py-3 rounded-2xl bg-emerald-500 text-white font-bold shadow-md"

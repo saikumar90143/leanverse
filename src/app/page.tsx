@@ -13,26 +13,38 @@ import {
 import AdContainer from '@/components/ads/AdContainer';
 import { getStreak, getLifetimeVolume, getLevelProgress } from '@/lib/gamification';
 import { useAuth } from '@/components/layout/AuthProvider';
+import { getUserStorageKey } from '@/lib/storage';
 
 export default function HomePage() {
   const router = useRouter();
   const { user } = useAuth();
 
   // Quick Start Wizard State
+  const [qsMode, setQsMode] = useState('ai');
   const [qsGoal, setQsGoal] = useState('muscle');
   const [qsLocation, setQsLocation] = useState('gym');
   const [qsExperience, setQsExperience] = useState('beginner');
   const [qsDuration, setQsDuration] = useState(60);
   const [qsDaysPerWeek, setQsDaysPerWeek] = useState(4);
+  const [qsTimelineDays, setQsTimelineDays] = useState(90);
 
   const handleQuickStart = (overrides?: { goal?: string, location?: string, experience?: string, timelineDays?: number }) => {
-    // Store pending configuration in localStorage to be picked up by the planner after login
     try {
+      // Check if user already has an active plan
+      const storageKey = getUserStorageKey('leanverse_transformation');
+      if (localStorage.getItem(storageKey)) {
+        if (confirm('You already have an active transformation plan! Please go to the planner to view it or discard it first before creating a new one. Go to Planner now?')) {
+          router.push('/workout-planner');
+        }
+        return;
+      }
+
+      // Store pending configuration in localStorage to be picked up by the planner after login
       localStorage.setItem('leanverse_pending_wizard', JSON.stringify({
-          goal: overrides?.goal || qsGoal,
+          goal: qsMode === 'custom' ? 'custom plan' : (overrides?.goal || qsGoal),
           location: overrides?.location || qsLocation,
           experience: overrides?.experience || qsExperience,
-          timelineDays: overrides?.timelineDays || 90,
+          timelineDays: overrides?.timelineDays || qsTimelineDays,
           duration: qsDuration,
           daysPerWeek: qsDaysPerWeek,
           autoGenerate: true
@@ -142,65 +154,100 @@ export default function HomePage() {
                 </span>
               </div>
 
+              <div className="flex bg-slate-100 dark:bg-white/5 p-1 rounded-xl mb-6 border border-slate-200/50 dark:border-white/10">
+                <button onClick={() => setQsMode('ai')} className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${qsMode === 'ai' ? 'bg-white dark:bg-slate-800 text-emerald-500 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>AI Generated</button>
+                <button onClick={() => setQsMode('custom')} className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${qsMode === 'custom' ? 'bg-white dark:bg-slate-800 text-emerald-500 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>Custom Build</button>
+              </div>
+
               <div className="space-y-5">
-                {/* Goal */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">1. Primary Goal</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    <button onClick={() => setQsGoal('fatloss')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsGoal === 'fatloss' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10'}`}>Lose Fat</button>
-                    <button onClick={() => setQsGoal('muscle')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsGoal === 'muscle' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10'}`}>Build Muscle</button>
-                    <button onClick={() => setQsGoal('custom plan')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsGoal === 'custom plan' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10'}`}>Custom Plan</button>
-                  </div>
-                </div>
-
-                {/* Location */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">2. Workout Location</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button onClick={() => setQsLocation('gym')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsLocation === 'gym' ? 'bg-cyan-500/10 border-cyan-500 text-cyan-600 dark:text-cyan-400' : 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10'}`}>Commercial Gym</button>
-                    <button onClick={() => setQsLocation('home')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsLocation === 'home' ? 'bg-cyan-500/10 border-cyan-500 text-cyan-600 dark:text-cyan-400' : 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10'}`}>Home Workout</button>
-                  </div>
-                </div>
-
-                {/* Experience */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">3. Experience Level</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {['beginner', 'intermediate', 'advanced'].map(exp => (
-                      <button key={exp} onClick={() => setQsExperience(exp)} className={`py-2 px-2 rounded-xl font-bold text-xs border transition-all capitalize ${qsExperience === exp ? 'bg-purple-500/10 border-purple-500 text-purple-600 dark:text-purple-400' : 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10'}`}>
-                        {exp}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Duration */}
+                {/* Goal (AI Only) */}
+                {qsMode === 'ai' && (
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">4. Duration</label>
-                    <select value={qsDuration} onChange={(e) => setQsDuration(parseInt(e.target.value))} className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:border-emerald-500">
-                      <option value={30}>30 min</option>
-                      <option value={45}>45 min</option>
-                      <option value={60}>60 min</option>
-                      <option value={90}>90 min</option>
-                    </select>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">1. Primary Goal</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <button onClick={() => setQsGoal('fatloss')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsGoal === 'fatloss' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10'}`}>Lose Fat</button>
+                      <button onClick={() => setQsGoal('muscle')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsGoal === 'muscle' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10'}`}>Build Muscle</button>
+                    </div>
                   </div>
+                )}
 
-                  {/* Days per week */}
+                {/* Location (AI Only) */}
+                {qsMode === 'ai' && (
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">5. Days/Week</label>
-                    <select value={qsDaysPerWeek} onChange={(e) => setQsDaysPerWeek(parseInt(e.target.value))} className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:border-emerald-500">
-                      <option value={3}>3 Days</option>
-                      <option value={4}>4 Days</option>
-                      <option value={5}>5 Days</option>
-                      <option value={6}>6 Days</option>
-                    </select>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">2. Workout Location</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button onClick={() => setQsLocation('gym')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsLocation === 'gym' ? 'bg-cyan-500/10 border-cyan-500 text-cyan-600 dark:text-cyan-400' : 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10'}`}>Commercial Gym</button>
+                      <button onClick={() => setQsLocation('home')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsLocation === 'home' ? 'bg-cyan-500/10 border-cyan-500 text-cyan-600 dark:text-cyan-400' : 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10'}`}>Home Workout</button>
+                    </div>
                   </div>
+                )}
+
+                {/* Timeline (Both Modes) */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    {qsMode === 'ai' ? '3. Timeline' : '1. Transformation Period'}
+                  </label>
+                  <select value={qsTimelineDays} onChange={(e) => setQsTimelineDays(parseInt(e.target.value))} className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:border-emerald-500">
+                    <option value={30}>30 Days</option>
+                    <option value={60}>60 Days</option>
+                    <option value={90}>90 Days</option>
+                    <option value={120}>120 Days</option>
+                  </select>
                 </div>
+
+                {/* AI Only Options */}
+                {qsMode === 'ai' && (
+                  <>
+                    {/* Experience */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">4. Experience Level</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {['beginner', 'intermediate', 'advanced'].map(exp => (
+                          <button key={exp} onClick={() => setQsExperience(exp)} className={`py-2 px-2 rounded-xl font-bold text-xs border transition-all capitalize ${qsExperience === exp ? 'bg-purple-500/10 border-purple-500 text-purple-600 dark:text-purple-400' : 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10'}`}>
+                            {exp}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Duration */}
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">5. Duration</label>
+                        <select value={qsDuration} onChange={(e) => setQsDuration(parseInt(e.target.value))} className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:border-emerald-500">
+                          <option value={30}>30 min</option>
+                          <option value={45}>45 min</option>
+                          <option value={60}>60 min</option>
+                          <option value={90}>90 min</option>
+                        </select>
+                      </div>
+
+                      {/* Days per week */}
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">6. Days/Week</label>
+                        <select value={qsDaysPerWeek} onChange={(e) => setQsDaysPerWeek(parseInt(e.target.value))} className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:border-emerald-500">
+                          <option value={3}>3 Days</option>
+                          <option value={4}>4 Days</option>
+                          <option value={5}>5 Days</option>
+                          <option value={6}>6 Days</option>
+                        </select>
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <button onClick={() => handleQuickStart()} className="w-full mt-4 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-black text-lg rounded-xl shadow-lg transition-transform active:scale-95 flex justify-center items-center gap-2">
-                  <Sparkles className="w-5 h-5" />
-                  Generate AI Transformation
+                  {qsMode === 'ai' ? (
+                    <>
+                      <Sparkles className="w-5 h-5" />
+                      Generate AI Transformation
+                    </>
+                  ) : (
+                    <>
+                      <Dumbbell className="w-5 h-5" />
+                      Build Custom Plan
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -231,6 +278,50 @@ export default function HomePage() {
             )}
 
           </div>
+        </div>
+      </section>
+
+      {/* 1.5. PRODUCT SCREENS CAROUSEL */}
+      <section className="py-24 bg-slate-50 dark:bg-zinc-900/50 overflow-hidden border-t border-slate-200/50 dark:border-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 text-center space-y-4">
+          <span className="text-xs font-black text-emerald-500 uppercase tracking-widest block">Real Product Experience</span>
+          <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white">Inside LeanVerse</h2>
+          <p className="text-slate-600 dark:text-slate-400 font-medium">Swipe to see exactly what you get when you start your transformation.</p>
+        </div>
+
+        <div className="flex overflow-x-auto pb-12 pt-4 px-4 sm:px-6 lg:px-8 snap-x snap-mandatory gap-8 max-w-7xl mx-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {[
+            {
+              title: "AI Diet Planner",
+              desc: "Generate meal plans based on your calories, food preferences, budget, and fitness goals.",
+              img: "/images/diet_mockup.png"
+            },
+            {
+              title: "Smart Workout Generator",
+              desc: "Daily workouts generated based on your goal, location, experience level, and transformation timeline.",
+              img: "/images/workout_mockup.png"
+            },
+            {
+              title: "Progress Tracking",
+              desc: "Track weight, body measurements, workout streaks, and transformation progress.",
+              img: "/images/progress_tracking.png"
+            },
+            {
+              title: "Calorie & Macro Tracking",
+              desc: "Know exactly how much protein, carbs, fats, and calories you need every day.",
+              img: "/images/macro_tracking.png"
+            }
+          ].map((screen, i) => (
+            <div key={i} className="snap-center shrink-0 w-[85vw] sm:w-[350px] md:w-[400px] flex flex-col items-center group">
+              <div className="relative w-full aspect-[3/4] sm:aspect-[4/5] rounded-[2.5rem] overflow-hidden mb-6 group-hover:-translate-y-2 transition-all duration-500 shadow-2xl shadow-emerald-500/5 bg-slate-900/20 border border-slate-200/50 dark:border-white/5">
+                <Image src={screen.img} alt={screen.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+              </div>
+              <div className="text-center px-4">
+                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">{screen.title}</h3>
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">{screen.desc}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -601,26 +692,24 @@ export default function HomePage() {
       </section>
 
       {/* 9. FINAL CTA & FOOTER SEO */}
-      <section className="bg-slate-900 py-24 text-center px-4 relative overflow-hidden">
+      <section className="bg-slate-100 dark:bg-slate-900 py-24 text-center px-4 relative overflow-hidden">
         <div className="absolute inset-0 z-0">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl h-[400px] bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 rounded-full blur-[100px]" />
         </div>
         <div className="relative z-10 max-w-3xl mx-auto space-y-8">
-          <h2 className="text-4xl md:text-6xl font-black text-white leading-tight">Your Transformation <br/>Starts Today</h2>
-          <p className="text-lg text-slate-400 font-medium">Join thousands of users following personalized fitness plans built specifically for their unique goals, diets, and environments.</p>
+          <h2 className="text-4xl md:text-6xl font-black text-slate-900 dark:text-white leading-tight">Your Transformation <br/>Starts Today</h2>
+          <p className="text-lg text-slate-600 dark:text-slate-400 font-medium">Join thousands of users following personalized fitness plans built specifically for their unique goals, diets, and environments.</p>
           <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
             <Link href="/diet-planner" className="px-8 py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-black text-lg transition-all shadow-xl shadow-emerald-500/25 flex items-center justify-center space-x-2"><span>Generate Diet Plan</span> <ArrowRight className="w-5 h-5" /></Link>
-            <Link href="/calculators/maintenance" className="px-8 py-4 rounded-2xl bg-white/5 backdrop-blur-md hover:bg-white/10 text-white font-bold text-lg transition-all border border-white/10 flex items-center justify-center shadow-lg">Calculate Calories</Link>
+            <Link href="/calculators/maintenance" className="px-8 py-4 rounded-2xl bg-slate-200 hover:bg-slate-300 dark:bg-white/5 dark:backdrop-blur-md dark:hover:bg-white/10 text-slate-900 dark:text-white font-bold text-lg transition-all border border-slate-300 dark:border-white/10 flex items-center justify-center shadow-lg">Calculate Calories</Link>
           </div>
         </div>
-      </section>
-
-      {/* Footer SEO Links */}
-      <footer className="bg-slate-950 py-12 px-4 sm:px-6 lg:px-8 border-t border-white/5 text-center md:text-left">
+      </section>      {/* Footer SEO Links */}
+      <footer className="bg-slate-50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8 border-t border-slate-200 dark:border-white/5 text-center md:text-left">
         <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
           <div className="space-y-4">
-            <h5 className="text-white font-black uppercase text-sm tracking-wider">Features</h5>
-            <ul className="space-y-2 text-slate-400 text-sm font-medium">
+            <h5 className="text-slate-800 dark:text-white font-black uppercase text-sm tracking-wider">Features</h5>
+            <ul className="space-y-2 text-slate-600 dark:text-slate-400 text-sm font-medium">
               <li><Link href="/workout-planner" className="hover:text-emerald-500 transition-colors">AI Workout Generator</Link></li>
               <li><Link href="/diet-planner" className="hover:text-emerald-500 transition-colors">Indian Diet Planner</Link></li>
               <li><Link href="/calculators" className="hover:text-emerald-500 transition-colors">Fitness Calculators</Link></li>
@@ -628,8 +717,8 @@ export default function HomePage() {
             </ul>
           </div>
           <div className="space-y-4">
-            <h5 className="text-white font-black uppercase text-sm tracking-wider">Calculators</h5>
-            <ul className="space-y-2 text-slate-400 text-sm font-medium">
+            <h5 className="text-slate-800 dark:text-white font-black uppercase text-sm tracking-wider">Calculators</h5>
+            <ul className="space-y-2 text-slate-600 dark:text-slate-400 text-sm font-medium">
               <li><Link href="/calculators/bmi" className="hover:text-emerald-500 transition-colors">BMI Calculator</Link></li>
               <li><Link href="/calculators/maintenance" className="hover:text-emerald-500 transition-colors">TDEE Calculator</Link></li>
               <li><Link href="/calculators/macro" className="hover:text-emerald-500 transition-colors">Macro Calculator</Link></li>
@@ -637,21 +726,21 @@ export default function HomePage() {
             </ul>
           </div>
           <div className="space-y-4">
-            <h5 className="text-white font-black uppercase text-sm tracking-wider">Goals</h5>
-            <ul className="space-y-2 text-slate-400 text-sm font-medium">
-              <li><span className="cursor-pointer hover:text-emerald-500 transition-colors">Lose Belly Fat</span></li>
-              <li><span className="cursor-pointer hover:text-emerald-500 transition-colors">Build Muscle Fast</span></li>
-              <li><span className="cursor-pointer hover:text-emerald-500 transition-colors">Home Workouts</span></li>
-              <li><span className="cursor-pointer hover:text-emerald-500 transition-colors">Gym Workout Plans</span></li>
+            <h5 className="text-slate-800 dark:text-white font-black uppercase text-sm tracking-wider">Goals</h5>
+            <ul className="space-y-2 text-slate-600 dark:text-slate-400 text-sm font-medium">
+              <li><Link href="/workout-planner" className="hover:text-emerald-500 transition-colors">Build Muscle</Link></li>
+              <li><Link href="/workout-planner" className="hover:text-emerald-500 transition-colors">Lose Fat</Link></li>
+              <li><Link href="/workout-planner" className="hover:text-emerald-500 transition-colors">Recomposition</Link></li>
+              <li><Link href="/workout-planner" className="hover:text-emerald-500 transition-colors">General Fitness</Link></li>
             </ul>
           </div>
           <div className="space-y-4">
-            <h5 className="text-white font-black uppercase text-sm tracking-wider">Legal</h5>
-            <ul className="space-y-2 text-slate-400 text-sm font-medium">
+            <h5 className="text-slate-800 dark:text-white font-black uppercase text-sm tracking-wider">Legal</h5>
+            <ul className="space-y-2 text-slate-600 dark:text-slate-400 text-sm font-medium">
+              <li><Link href="/terms" className="hover:text-emerald-500 transition-colors">Terms of Service</Link></li>
               <li><Link href="/privacy" className="hover:text-emerald-500 transition-colors">Privacy Policy</Link></li>
-              <li><Link href="/about" className="hover:text-emerald-500 transition-colors">Terms of Service</Link></li>
-              <li><Link href="/about" className="hover:text-emerald-500 transition-colors">About Us</Link></li>
-              <li><Link href="/about" className="hover:text-emerald-500 transition-colors">Contact</Link></li>
+              <li><Link href="/disclaimer" className="hover:text-emerald-500 transition-colors">Disclaimer</Link></li>
+              <li><Link href="/contact" className="hover:text-emerald-500 transition-colors">Contact Us</Link></li>
             </ul>
           </div>
         </div>

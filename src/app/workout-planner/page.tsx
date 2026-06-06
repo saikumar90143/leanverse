@@ -191,7 +191,13 @@ export default function AIWorkoutPlanner() {
         equipment: location === 'gym' ? ['gym', 'barbell', 'dumbbells', 'cables', 'bodyweight'] : equipment
       };
       
-      let newState = generateTransformationJourney(profile);
+      let preservedStats = undefined;
+      try {
+        const preservedStr = localStorage.getItem(getUserStorageKey('leanverse_preserved_stats'));
+        if (preservedStr) preservedStats = JSON.parse(preservedStr);
+      } catch {}
+
+      let newState = generateTransformationJourney(profile, preservedStats);
       newState.schedule[0] = populateExercisesForDay(newState, 0, dbExercises); // Populate day 1
       setState(newState);
       setLoading(false);
@@ -390,11 +396,55 @@ export default function AIWorkoutPlanner() {
     setState(newState);
   };
 
+  const handleMakeRestDay = () => {
+    if (!state) return;
+    const displayDayIndex = viewDayIndex >= 0 ? viewDayIndex : (state.currentDay - 1);
+    if (displayDayIndex < state.currentDay - 1) return; // Cannot modify past days
+    
+    if (!confirm('Are you sure you want to make this a rest day? Any exercises for this day will be removed.')) return;
+    
+    const newState = { ...state, schedule: [...state.schedule] };
+    const day = { ...newState.schedule[displayDayIndex] };
+    day.isRestDay = true;
+    day.mainExercises = [];
+    day.warmup = ['Hydration', 'Light stretching', 'Walking'];
+    newState.schedule[displayDayIndex] = day;
+    setState(newState);
+  };
+
+  const handleMakeWorkoutDay = () => {
+    if (!state) return;
+    const displayDayIndex = viewDayIndex >= 0 ? viewDayIndex : (state.currentDay - 1);
+    if (displayDayIndex < state.currentDay - 1) return; 
+    
+    const newState = { ...state, schedule: [...state.schedule] };
+    const day = { ...newState.schedule[displayDayIndex] };
+    day.isRestDay = false;
+    newState.schedule[displayDayIndex] = day;
+    setState(newState);
+  };
+
   const resetJourney = () => {
     if (confirm('Are you sure you want to discard your current transformation journey? All progress will be lost.')) {
-      setState(null);
-      setStep(1);
+      if (state) {
+        try {
+          const preserved = {
+            xp: state.xp,
+            level: state.level,
+            levelName: state.levelName,
+            streak: state.streak,
+            longestStreak: state.longestStreak,
+            badges: state.badges,
+            exerciseHistory: state.exerciseHistory,
+            workoutsCompleted: state.workoutsCompleted,
+            workoutsSkipped: state.workoutsSkipped
+          };
+          localStorage.setItem(getUserStorageKey('leanverse_preserved_stats'), JSON.stringify(preserved));
+        } catch {}
+      }
       localStorage.removeItem(getUserStorageKey('leanverse_transformation'));
+      localStorage.removeItem('leanverse_pending_wizard');
+      window.location.href = '/';
     }
   };
 
@@ -500,7 +550,6 @@ export default function AIWorkoutPlanner() {
                 <option value="leanbulk">Lean Bulk</option>
                 <option value="strength">Strength</option>
                 <option value="recomp">Body Recomposition</option>
-                <option value="custom plan">Custom Plan (Track Your Own)</option>
               </select>
             </div>
             <div className="space-y-1">
@@ -719,10 +768,19 @@ export default function AIWorkoutPlanner() {
                   <button 
                     onClick={handleCompleteWorkout} 
                     disabled={isAlreadyWorkedOutToday}
-                    className={`px-8 py-4 font-bold rounded-2xl shadow-lg transition-all cursor-pointer text-lg ${isAlreadyWorkedOutToday ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-emerald-500 hover:bg-emerald-600 text-white'}`}
+                    className={`px-8 py-4 font-bold rounded-2xl shadow-lg transition-all cursor-pointer text-lg mb-4 block mx-auto ${isAlreadyWorkedOutToday ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-emerald-500 hover:bg-emerald-600 text-white'}`}
                   >
                     {isAlreadyWorkedOutToday ? 'Come Back Tomorrow!' : 'Mark Rest Day Complete (+50 XP)'}
                   </button>
+                  
+                  {!isPastDay && (
+                    <button 
+                      onClick={handleMakeWorkoutDay}
+                      className="text-xs font-bold text-slate-400 hover:text-emerald-500 transition-colors underline underline-offset-4"
+                    >
+                      Wait, I want to workout today instead
+                    </button>
+                  )}
                 </div>
               ) : (
                 <>
@@ -858,13 +916,22 @@ export default function AIWorkoutPlanner() {
                     )}
                     
                     {!isPastDay && (
-                      <button 
-                        onClick={() => setShowExerciseSearch(true)}
-                        className="w-full py-3 rounded-xl border-2 border-dashed border-slate-300 dark:border-white/10 text-slate-500 font-bold text-xs hover:border-emerald-500/50 hover:text-emerald-500 hover:bg-emerald-500/5 transition-all flex items-center justify-center space-x-1 cursor-pointer"
-                      >
-                        <Plus className="w-4 h-4" />
-                        <span>Add Extra Exercise</span>
-                      </button>
+                      <div className="flex flex-col sm:flex-row gap-3 w-full">
+                        <button 
+                          onClick={() => setShowExerciseSearch(true)}
+                          className="flex-1 py-3 rounded-xl border-2 border-dashed border-slate-300 dark:border-white/10 text-slate-500 font-bold text-xs hover:border-emerald-500/50 hover:text-emerald-500 hover:bg-emerald-500/5 transition-all flex items-center justify-center space-x-1 cursor-pointer"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>Add Extra Exercise</span>
+                        </button>
+                        <button 
+                          onClick={handleMakeRestDay}
+                          className="flex-1 py-3 rounded-xl border-2 border-dashed border-slate-300 dark:border-white/10 text-slate-500 font-bold text-xs hover:border-blue-500/50 hover:text-blue-500 hover:bg-blue-500/5 transition-all flex items-center justify-center space-x-2 cursor-pointer"
+                        >
+                          <span className="text-base leading-none">🧘</span>
+                          <span>Make Rest Day</span>
+                        </button>
+                      </div>
                     )}
                   </div>
 

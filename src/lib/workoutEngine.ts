@@ -133,7 +133,7 @@ const getPhaseForDay = (day: number, total: number) => {
 };
 
 // Generate a brand new Transformation Journey
-export function generateTransformationJourney(profile: UserProfile): TransformationState {
+export function generateTransformationJourney(profile: UserProfile, preservedStats?: any): TransformationState {
   const totalDays = profile.timelineDays;
   const schedule: DailyWorkout[] = [];
 
@@ -149,6 +149,10 @@ export function generateTransformationJourney(profile: UserProfile): Transformat
     let warmup = ['Jumping Jacks (2 mins)', 'Dynamic Stretching (3 mins)'];
     let cooldown = ['Static Stretching (5 mins)'];
     let finisher = 'Core Plank Challenge (3 sets x 60s)';
+    
+    if (profile.goal === 'fatloss' && !isRest && !isCardio) {
+      finisher = '15 mins Cardio Finisher (Treadmill, Cycling, or Stairmaster)';
+    }
     
     if (isRest) {
       warmup = [];
@@ -183,16 +187,16 @@ export function generateTransformationJourney(profile: UserProfile): Transformat
     startDate: new Date().toISOString(),
     currentDay: 1,
     totalDays,
-    xp: 0,
-    level: 1,
-    levelName: 'Rookie',
-    streak: 0,
-    longestStreak: 0,
-    badges: [],
+    xp: preservedStats?.xp || 0,
+    level: preservedStats?.level || 1,
+    levelName: preservedStats?.levelName || 'Rookie',
+    streak: preservedStats?.streak || 0,
+    longestStreak: preservedStats?.longestStreak || 0,
+    badges: preservedStats?.badges || [],
     schedule,
-    exerciseHistory: {},
-    workoutsCompleted: 0,
-    workoutsSkipped: 0
+    exerciseHistory: preservedStats?.exerciseHistory || {},
+    workoutsCompleted: preservedStats?.workoutsCompleted || 0,
+    workoutsSkipped: preservedStats?.workoutsSkipped || 0
   };
 }
 
