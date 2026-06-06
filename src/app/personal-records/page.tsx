@@ -13,6 +13,7 @@ interface PRData {
  imageUrl?: string;
  maxWeight: number;
  maxReps: number;
+ maxRepsAtMaxWeight: number;
  estimated1RM: number;
  lastPerformed: string;
 }
@@ -93,6 +94,7 @@ export default function PersonalRecordsPage() {
  imageUrl: (meta as any).imageUrl,
  maxWeight,
  maxReps: absoluteMaxReps,
+ maxRepsAtMaxWeight,
  estimated1RM: Math.round(est1RM),
  lastPerformed
  });
@@ -210,10 +212,10 @@ export default function PersonalRecordsPage() {
  </div>
  </div>
  <div className="bg-secondary/50 dark:bg-card rounded-2xl p-3 border border-border/50 dark:border-border">
- <span className="text-[10px] font-bold text-muted uppercase block mb-1">Est. 1RM</span>
+ <span className="text-[10px] font-bold text-muted uppercase block mb-1">Reps</span>
  <div className="flex items-end gap-1">
- <span className="text-2xl font-black text-emerald-500 leading-none">{pr.estimated1RM}</span>
- <span className="text-xs font-bold text-emerald-500/50 pb-0.5">kg</span>
+ <span className="text-2xl font-black text-emerald-500 leading-none">{pr.maxRepsAtMaxWeight}</span>
+ <span className="text-xs font-bold text-emerald-500/50 pb-0.5">reps</span>
  </div>
  </div>
  </>
