@@ -55,7 +55,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   return (
     <article className="max-w-5xl mx-auto px-4 py-8 space-y-8">
       {/* Return link */}
-      <Link href="/blog" className="inline-flex items-center space-x-1.5 text-xs font-bold text-slate-500 hover:text-emerald-500 transition-colors mb-2 no-print">
+      <Link href="/blog" className="inline-flex items-center space-x-1.5 text-xs font-bold text-muted hover:text-emerald-500 transition-colors mb-2 no-print">
         <ArrowLeft className="w-3.5 h-3.5" />
         <span>Back to Blog Listings</span>
       </Link>
@@ -63,13 +63,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       {/* Header Info */}
       <div className="space-y-4">
         <span className="text-xs font-black uppercase text-emerald-500 px-3 py-1 bg-emerald-500/10 rounded-full">{article.category}</span>
-        <h1 className="text-2xl sm:text-4xl font-black text-slate-800 dark:text-slate-100 leading-tight">
+        <h1 className="text-2xl sm:text-4xl font-black text-foreground leading-tight">
           {article.title}
         </h1>
-        <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-500">
-          <span className="flex items-center"><User className="w-4 h-4 mr-1 text-slate-400" /> {article.author}</span>
-          {article.date && <span className="flex items-center"><Calendar className="w-4 h-4 mr-1 text-slate-400" /> {article.date}</span>}
-          <span className="flex items-center"><Clock className="w-4 h-4 mr-1 text-slate-400" /> 5 min read</span>
+        <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-muted">
+          <span className="flex items-center"><User className="w-4 h-4 mr-1 text-muted" /> {article.author}</span>
+          {article.date && <span className="flex items-center"><Calendar className="w-4 h-4 mr-1 text-muted" /> {article.date}</span>}
+          <span className="flex items-center"><Clock className="w-4 h-4 mr-1 text-muted" /> 5 min read</span>
         </div>
       </div>
 
@@ -90,14 +90,14 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         {/* Blog Body text */}
         <div className="lg:col-span-8 space-y-6">
           <div className="w-full overflow-x-auto pb-4">
-            <div className="prose dark:prose-invert max-w-none text-sm leading-relaxed text-slate-600 dark:text-slate-350 space-y-5
-                prose-h2:text-lg prose-h2:font-black prose-h2:text-slate-800 dark:prose-h2:text-slate-100 prose-h2:mt-6 prose-h2:mb-3
-                prose-h3:text-sm prose-h3:font-black prose-h3:text-slate-800 dark:prose-h3:text-slate-150 prose-h3:mt-4 prose-h3:mb-2
+            <div className="prose dark:prose-invert max-w-none text-sm leading-relaxed text-muted dark:text-slate-350 space-y-5
+                prose-h2:text-lg prose-h2:font-black prose-h2:text-foreground dark:prose-h2:text-slate-100 prose-h2:mt-6 prose-h2:mb-3
+                prose-h3:text-sm prose-h3:font-black prose-h3:text-foreground dark:prose-h3:text-slate-150 prose-h3:mt-4 prose-h3:mb-2
                 prose-p:mb-4
                 prose-ol:list-decimal prose-ol:pl-5 prose-ol:space-y-1.5
                 prose-ul:list-disc prose-ul:pl-5 prose-ul:space-y-1.5
                 prose-li:pl-1
-                prose-img:rounded-2xl prose-img:border prose-img:border-slate-200/10 prose-img:shadow-md
+                prose-img:rounded-2xl prose-img:border prose-img:border-border/10 prose-img:shadow-md
                 prose-strong:font-extrabold prose-strong:text-slate-850 dark:prose-strong:text-slate-200">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {article.content}
@@ -106,7 +106,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           </div>
 
           {/* Dynamic Ad container in middle of text */}
-          <div className="border-t border-b border-slate-200/10 py-4 my-8">
+          <div className="border-t border-b border-border/10 py-4 my-8">
             <AdContainer slot="blog-article-inline" format="horizontal" />
           </div>
         </div>
@@ -115,16 +115,16 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         <div className="lg:col-span-4 space-y-6">
           <div className="sticky top-24 space-y-6">
             {/* Table of Contents */}
-            <div className="glass p-6 rounded-3xl border border-slate-200/10 space-y-4">
-              <div className="flex items-center space-x-2 border-b border-slate-200/10 pb-3">
+            <div className="glass p-6 rounded-3xl border border-border/10 space-y-4">
+              <div className="flex items-center space-x-2 border-b border-border/10 pb-3">
                 <BookOpen className="w-4 h-4 text-emerald-500" />
-                <span className="text-xs font-black text-slate-400 uppercase tracking-widest block">Table of Contents</span>
+                <span className="text-xs font-black text-muted uppercase tracking-widest block">Table of Contents</span>
               </div>
-              <ul className="space-y-3 text-xs font-bold text-slate-500">
+              <ul className="space-y-3 text-xs font-bold text-muted">
                 {headings.length > 0 ? headings.map((h: string, i: number) => (
                   <li key={i} className="hover:text-emerald-500 cursor-pointer transition-colors line-clamp-1">{i+1}. {h}</li>
                 )) : (
-                  <li className="text-slate-400">No sections available</li>
+                  <li className="text-muted">No sections available</li>
                 )}
               </ul>
             </div>
@@ -136,17 +136,17 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       </div>
 
       {/* Suggested related posts bottom */}
-      <section className="border-t border-slate-200/10 pt-10 mt-12 space-y-6">
-        <h3 className="text-base font-black text-slate-800 dark:text-slate-100">Related Articles You May Like</h3>
+      <section className="border-t border-border/10 pt-10 mt-12 space-y-6">
+        <h3 className="text-base font-black text-foreground">Related Articles You May Like</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {related.map((rel) => (
-            <div key={rel.slug} className="glass p-5 rounded-2xl border border-slate-200/10 flex items-start space-x-3.5 hover:border-emerald-500/20 transition-all">
+            <div key={rel.slug} className="glass p-5 rounded-2xl border border-border/10 flex items-start space-x-3.5 hover:border-emerald-500/20 transition-all">
               <div className="relative w-16 h-16 shrink-0">
                 <Image src={rel.coverImage} alt={rel.title} fill sizes="64px" className="object-cover rounded-xl" />
               </div>
               <div className="space-y-1">
-                <span className="text-[9px] text-slate-400 font-extrabold uppercase">{rel.category}</span>
-                <Link href={`/blog/${rel.slug}`} className="font-extrabold text-slate-800 dark:text-slate-100 text-xs hover:text-emerald-500 block line-clamp-2 leading-snug">
+                <span className="text-[9px] text-muted font-extrabold uppercase">{rel.category}</span>
+                <Link href={`/blog/${rel.slug}`} className="font-extrabold text-foreground text-xs hover:text-emerald-500 block line-clamp-2 leading-snug">
                   {rel.title}
                 </Link>
               </div>

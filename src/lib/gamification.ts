@@ -18,7 +18,7 @@ export interface Level {
 }
 
 export const LEVELS: Level[] = [
-  { name: 'Beginner',     emoji: '🌱', color: 'text-slate-400',   bgColor: 'bg-slate-400/10',   borderColor: 'border-slate-400/30',   minVolume: 0,     maxVolume: 1000 },
+  { name: 'Beginner',     emoji: '🌱', color: 'text-muted',   bgColor: 'bg-slate-400/10',   borderColor: 'border-border/30',   minVolume: 0,     maxVolume: 1000 },
   { name: 'Intermediate', emoji: '💪', color: 'text-blue-400',    bgColor: 'bg-blue-400/10',    borderColor: 'border-blue-400/30',    minVolume: 1001,  maxVolume: 5000 },
   { name: 'Advanced',     emoji: '🔥', color: 'text-orange-400',  bgColor: 'bg-orange-400/10',  borderColor: 'border-orange-400/30',  minVolume: 5001,  maxVolume: 15000 },
   { name: 'Elite',        emoji: '⚡', color: 'text-emerald-400', bgColor: 'bg-emerald-400/10', borderColor: 'border-emerald-400/30', minVolume: 15001, maxVolume: null },

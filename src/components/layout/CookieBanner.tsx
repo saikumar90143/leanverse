@@ -31,7 +31,7 @@ export default function CookieBanner() {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-[9999] p-4 sm:p-6 no-print">
       <div className="max-w-5xl mx-auto glass shadow-2xl border border-emerald-500/30 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="text-sm text-slate-700 dark:text-slate-300 flex-1">
+        <div className="text-sm text-foreground dark:text-muted flex-1">
           <p>
             <span className="font-bold text-emerald-600 dark:text-emerald-400">We use cookies 🍪</span>
             <br className="sm:hidden" /> We use cookies to personalize content, provide social media features, and analyze our traffic. By clicking "Accept", you consent to our use of cookies.
@@ -41,7 +41,7 @@ export default function CookieBanner() {
         <div className="flex gap-3 w-full sm:w-auto shrink-0">
           <button 
             onClick={() => setIsVisible(false)}
-            className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl font-bold text-xs bg-slate-200/50 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-700 dark:text-slate-200 transition-colors"
+            className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl font-bold text-xs bg-secondary/50 dark:bg-card/10 hover:bg-slate-300 dark:hover:bg-card/20 text-foreground transition-colors"
           >
             Decline
           </button>

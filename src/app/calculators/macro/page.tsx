@@ -48,23 +48,23 @@ export default function MacroCalculator() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Return link */}
-      <Link href="/" className="inline-flex items-center space-x-1.5 text-xs font-bold text-slate-500 hover:text-emerald-500 transition-colors mb-6 no-print">
+      <Link href="/" className="inline-flex items-center space-x-1.5 text-xs font-bold text-muted hover:text-emerald-500 transition-colors mb-6 no-print">
         <ArrowLeft className="w-3.5 h-3.5" />
         <span>Back to LeanVerse Home</span>
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Core inputs card */}
-        <div className="lg:col-span-7 glass rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200/20 dark:border-white/10">
+        <div className="lg:col-span-7 glass rounded-3xl p-6 sm:p-8 shadow-2xl border border-border/20 dark:border-border">
           <div className="flex items-center space-x-3 mb-6">
             <div className="p-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white">
               <Apple className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-black tracking-wide text-slate-800 dark:text-slate-100">
+              <h1 className="text-xl sm:text-2xl font-black tracking-wide text-foreground">
                 Macro split Calculator
               </h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-xs text-muted mt-0.5">
                 Calculate daily targets for Protein, Carbs, and Fats.
               </p>
             </div>
@@ -74,7 +74,7 @@ export default function MacroCalculator() {
             {/* Calories count slider */}
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-bold text-slate-600 dark:text-slate-300">Daily Calorie Target</span>
+                <span className="text-sm font-bold text-muted">Daily Calorie Target</span>
                 <span className="text-sm font-black text-emerald-500 dark:text-emerald-400">{calories} Kcal</span>
               </div>
               <input
@@ -84,21 +84,21 @@ export default function MacroCalculator() {
                 step="50"
                 value={calories}
                 onChange={(e) => setCalories(parseInt(e.target.value))}
-                className="w-full h-2 bg-slate-200 dark:bg-white/10 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                className="w-full h-2 bg-secondary dark:bg-card/10 rounded-lg appearance-none cursor-pointer accent-emerald-500"
               />
             </div>
 
             {/* Diet preferences toggles */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-400 block ml-1">Macro Strategy Preset</label>
-              <div className="grid grid-cols-3 gap-2 p-1 bg-slate-200/40 dark:bg-white/5 border border-slate-200/10 rounded-2xl">
+              <label className="text-xs font-bold text-muted block ml-1">Macro Strategy Preset</label>
+              <div className="grid grid-cols-3 gap-2 p-1 bg-secondary/40 dark:bg-card/5 border border-border/10 rounded-2xl">
                 <button
                   type="button"
                   onClick={() => setDietStyle('balanced')}
                   className={`py-3 px-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
                     dietStyle === 'balanced'
                       ? 'bg-emerald-500 text-white shadow-md'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-255'
+                      : 'text-muted hover:text-slate-255'
                   }`}
                 >
                   Balanced (30/40/30)
@@ -109,7 +109,7 @@ export default function MacroCalculator() {
                   className={`py-3 px-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
                     dietStyle === 'lowcarb'
                       ? 'bg-emerald-500 text-white shadow-md'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-255'
+                      : 'text-muted hover:text-slate-255'
                   }`}
                 >
                   Keto / Low Carb
@@ -120,7 +120,7 @@ export default function MacroCalculator() {
                   className={`py-3 px-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
                     dietStyle === 'highprotein'
                       ? 'bg-emerald-500 text-white shadow-md'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-255'
+                      : 'text-muted hover:text-slate-255'
                   }`}
                 >
                   High Protein (40/35/25)
@@ -132,10 +132,10 @@ export default function MacroCalculator() {
 
         {/* Dynamic visual dashboard outputs */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="glass rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200/20 dark:border-white/10 relative overflow-hidden flex flex-col items-center">
+          <div className="glass rounded-3xl p-6 sm:p-8 shadow-2xl border border-border/20 dark:border-border relative overflow-hidden flex flex-col items-center">
             <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-2xl -z-10 animate-pulse" />
             
-            <span className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-4">Grams Breakdown</span>
+            <span className="text-xs font-black text-muted uppercase tracking-widest block mb-4">Grams Breakdown</span>
 
             {/* Circular Donut Diagram */}
             <div className="relative w-40 h-40 flex items-center justify-center mb-6">
@@ -164,40 +164,40 @@ export default function MacroCalculator() {
                 />
               </svg>
               <div className="absolute flex flex-col items-center">
-                <span className="text-xs font-black text-slate-400 uppercase">Protein Target</span>
+                <span className="text-xs font-black text-muted uppercase">Protein Target</span>
                 <span className="text-2xl font-black text-emerald-500">{protein.grams}g</span>
               </div>
             </div>
 
             {/* Segment legends with specific numbers */}
-            <div className="w-full space-y-3.5 border-t border-slate-200/15 dark:border-white/5 pt-6">
+            <div className="w-full space-y-3.5 border-t border-border/15 dark:border-border pt-6">
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 rounded bg-emerald-500" />
-                  <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Protein ({protein.pct}%)</span>
+                  <span className="text-xs font-bold text-muted">Protein ({protein.pct}%)</span>
                 </div>
-                <div className="text-right font-extrabold text-sm text-slate-800 dark:text-slate-200">
-                  {protein.grams}g <span className="text-[10px] text-slate-400 font-bold ml-1">({protein.cals} kcal)</span>
+                <div className="text-right font-extrabold text-sm text-foreground">
+                  {protein.grams}g <span className="text-[10px] text-muted font-bold ml-1">({protein.cals} kcal)</span>
                 </div>
               </div>
 
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 rounded bg-cyan-500" />
-                  <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Carbohydrates ({carbs.pct}%)</span>
+                  <span className="text-xs font-bold text-muted">Carbohydrates ({carbs.pct}%)</span>
                 </div>
-                <div className="text-right font-extrabold text-sm text-slate-800 dark:text-slate-200">
-                  {carbs.grams}g <span className="text-[10px] text-slate-400 font-bold ml-1">({carbs.cals} kcal)</span>
+                <div className="text-right font-extrabold text-sm text-foreground">
+                  {carbs.grams}g <span className="text-[10px] text-muted font-bold ml-1">({carbs.cals} kcal)</span>
                 </div>
               </div>
 
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 rounded bg-amber-500" />
-                  <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Fats ({fats.pct}%)</span>
+                  <span className="text-xs font-bold text-muted">Fats ({fats.pct}%)</span>
                 </div>
-                <div className="text-right font-extrabold text-sm text-slate-800 dark:text-slate-200">
-                  {fats.grams}g <span className="text-[10px] text-slate-400 font-bold ml-1">({fats.cals} kcal)</span>
+                <div className="text-right font-extrabold text-sm text-foreground">
+                  {fats.grams}g <span className="text-[10px] text-muted font-bold ml-1">({fats.cals} kcal)</span>
                 </div>
               </div>
             </div>
@@ -206,12 +206,12 @@ export default function MacroCalculator() {
       </div>
 
       {/* SEO guidelines on macros */}
-      <section className="mt-16 border-t border-slate-200/10 pt-10 space-y-6">
-        <h2 className="text-lg font-black text-slate-800 dark:text-slate-100 flex items-center">
+      <section className="mt-16 border-t border-border/10 pt-10 space-y-6">
+        <h2 className="text-lg font-black text-foreground flex items-center">
           <Heart className="w-5 h-5 mr-2 text-rose-500" />
           The Science of Macronutrient Ratios
         </h2>
-        <div className="prose dark:prose-invert text-sm text-slate-500 dark:text-slate-400 space-y-4 leading-relaxed">
+        <div className="prose dark:prose-invert text-sm text-muted space-y-4 leading-relaxed">
           <p>
             While hitting your daily calorie target determines weight changes, the **macronutrient ratio (macro split)** dictates the composition of that weight shift (e.g. losing adipose fat tissue vs. conserving or synthesizing skeletal muscle tissue).
           </p>

@@ -117,16 +117,16 @@ function LoginForm() {
       {/* Background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] max-w-[100vw] h-[400px] bg-emerald-500/10 dark:bg-emerald-500/20 rounded-full blur-[80px] -z-10 pointer-events-none overflow-hidden" />
 
-      <div className="w-full max-w-md glass rounded-3xl p-8 shadow-2xl border border-slate-200/20 dark:border-white/10">
+      <div className="w-full max-w-md glass rounded-3xl p-8 shadow-2xl border border-border/20 dark:border-border">
 
         {/* Toggle Tabs */}
-        <div className="grid grid-cols-2 bg-slate-200/50 dark:bg-white/5 rounded-2xl p-1 mb-8 border border-slate-200/15 dark:border-white/5">
+        <div className="grid grid-cols-2 bg-secondary/50 dark:bg-card/5 rounded-2xl p-1 mb-8 border border-border/15 dark:border-border">
           <button
             onClick={() => { setActiveTab('signin'); setError(''); }}
             className={`py-3 text-sm font-black rounded-xl transition-all cursor-pointer ${
               activeTab === 'signin'
                 ? 'bg-emerald-500 text-white shadow-md'
-                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+                : 'text-muted hover:text-foreground dark:text-muted dark:hover:text-slate-200'
             }`}
           >
             Sign In
@@ -136,7 +136,7 @@ function LoginForm() {
             className={`py-3 text-sm font-black rounded-xl transition-all cursor-pointer ${
               activeTab === 'signup'
                 ? 'bg-emerald-500 text-white shadow-md'
-                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+                : 'text-muted hover:text-foreground dark:text-muted dark:hover:text-slate-200'
             }`}
           >
             Sign Up
@@ -145,11 +145,11 @@ function LoginForm() {
 
         {/* Brand Banner */}
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-black tracking-wide text-slate-800 dark:text-slate-100 flex items-center justify-center">
+          <h2 className="text-2xl font-black tracking-wide text-foreground flex items-center justify-center">
             {activeTab === 'signin' ? 'Welcome Back' : 'Create Account'}
             <Sparkles className="w-5 h-5 ml-1.5 text-emerald-400 animate-bounce" />
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-muted mt-1">
             {activeTab === 'signin'
               ? 'Sign in to access your custom AI diet & workouts'
               : 'Join LeanVerse to kickstart your sustainable habits'}
@@ -169,10 +169,10 @@ function LoginForm() {
           id="google-signin-btn"
           onClick={handleGoogleSignIn}
           disabled={googleLoading}
-          className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-2xl border border-slate-300/40 dark:border-white/10 bg-white/80 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-sm font-bold transition-all shadow-sm hover:shadow-md cursor-pointer active:scale-[0.98] mb-5 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-2xl border border-border/40 dark:border-border bg-card/80 dark:bg-card/5 hover:bg-card dark:hover:bg-card/10 text-foreground text-sm font-bold transition-all shadow-sm hover:shadow-md cursor-pointer active:scale-[0.98] mb-5 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {googleLoading ? (
-            <div className="w-5 h-5 border-2 border-slate-300 border-t-emerald-500 rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-border border-t-emerald-500 rounded-full animate-spin" />
           ) : (
             <GoogleIcon />
           )}
@@ -181,55 +181,55 @@ function LoginForm() {
 
         {/* Divider */}
         <div className="flex items-center gap-3 mb-5">
-          <div className="flex-1 h-px bg-slate-200/40 dark:bg-white/10" />
-          <span className="text-xs text-slate-400 font-semibold">or continue with email</span>
-          <div className="flex-1 h-px bg-slate-200/40 dark:bg-white/10" />
+          <div className="flex-1 h-px bg-secondary/40 dark:bg-card/10" />
+          <span className="text-xs text-muted font-semibold">or continue with email</span>
+          <div className="flex-1 h-px bg-secondary/40 dark:bg-card/10" />
         </div>
 
         {/* Email / Password Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           {activeTab === 'signup' && (
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-400 block ml-1">Full Name</label>
+              <label className="text-xs font-bold text-muted block ml-1">Full Name</label>
               <div className="relative">
-                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                 <input
                   type="text"
                   placeholder="Enter your name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-slate-100/50 dark:bg-white/5 border border-slate-300/20 dark:border-white/10 rounded-2xl pl-10 pr-4 py-3 text-base sm:text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-2xl pl-10 pr-4 py-3 text-base sm:text-sm text-foreground focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
             </div>
           )}
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-400 block ml-1">Email Address</label>
+            <label className="text-xs font-bold text-muted block ml-1">Email Address</label>
             <div className="relative">
-              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
               <input
                 type="email"
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full bg-slate-100/50 dark:bg-white/5 border border-slate-300/20 dark:border-white/10 rounded-2xl pl-10 pr-4 py-3 text-base sm:text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                className="w-full bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-2xl pl-10 pr-4 py-3 text-base sm:text-sm text-foreground focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-400 block ml-1">Password</label>
+            <label className="text-xs font-bold text-muted block ml-1">Password</label>
             <div className="relative">
-              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
               <input
                 type="password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full bg-slate-100/50 dark:bg-white/5 border border-slate-300/20 dark:border-white/10 rounded-2xl pl-10 pr-4 py-3 text-base sm:text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                className="w-full bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-2xl pl-10 pr-4 py-3 text-base sm:text-sm text-foreground focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
               />
             </div>
           </div>

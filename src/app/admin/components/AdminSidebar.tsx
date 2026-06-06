@@ -84,7 +84,7 @@ export default function AdminSidebar({ active, onSelect, isOpen, onClose }: Prop
                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer group ${
                   isActive
                     ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
-                    : 'text-zinc-400 hover:bg-white/5 hover:text-white border border-transparent'
+                    : 'text-zinc-400 hover:bg-card/5 hover:text-white border border-transparent'
                 }`}
               >
                 <div className="flex items-center space-x-2.5">
@@ -108,7 +108,7 @@ export default function AdminSidebar({ active, onSelect, isOpen, onClose }: Prop
         <div className="p-4 border-t border-white/5">
           <Link
             href="/"
-            className="flex items-center space-x-2 px-3 py-2 rounded-xl text-xs font-bold text-zinc-500 hover:text-white hover:bg-white/5 transition-all"
+            className="flex items-center space-x-2 px-3 py-2 rounded-xl text-xs font-bold text-zinc-500 hover:text-white hover:bg-card/5 transition-all"
           >
             <Settings className="w-4 h-4" />
             <span>Back to Site</span>

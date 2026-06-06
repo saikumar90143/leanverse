@@ -91,23 +91,23 @@ export default function BodyFatCalculator() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Return link */}
-      <Link href="/" className="inline-flex items-center space-x-1.5 text-xs font-bold text-slate-500 hover:text-emerald-500 transition-colors mb-6 no-print">
+      <Link href="/" className="inline-flex items-center space-x-1.5 text-xs font-bold text-muted hover:text-emerald-500 transition-colors mb-6 no-print">
         <ArrowLeft className="w-3.5 h-3.5" />
         <span>Back to LeanVerse Home</span>
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Core inputs card */}
-        <div className="lg:col-span-7 glass rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200/20 dark:border-white/10">
+        <div className="lg:col-span-7 glass rounded-3xl p-6 sm:p-8 shadow-2xl border border-border/20 dark:border-border">
           <div className="flex items-center space-x-3 mb-6">
             <div className="p-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white">
               <Scale className="w-6 h-6 animate-pulse" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-black tracking-wide text-slate-800 dark:text-slate-100">
+              <h1 className="text-xl sm:text-2xl font-black tracking-wide text-foreground">
                 Body Fat Calculator
               </h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-xs text-muted mt-0.5">
                 Calculate your precise fat percentage using the Navy Circumference Method.
               </p>
             </div>
@@ -116,13 +116,13 @@ export default function BodyFatCalculator() {
           <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
             {/* Gender toggle */}
             <div className="space-y-1.5">
-              <span className="text-xs font-bold text-slate-400 block ml-1">Gender</span>
-              <div className="grid grid-cols-2 gap-3 p-1 bg-slate-200/50 dark:bg-white/5 border border-slate-200/10 rounded-2xl">
+              <span className="text-xs font-bold text-muted block ml-1">Gender</span>
+              <div className="grid grid-cols-2 gap-3 p-1 bg-secondary/50 dark:bg-card/5 border border-border/10 rounded-2xl">
                 <button
                   type="button"
                   onClick={() => setGender('male')}
                   className={`py-2 text-sm font-black rounded-xl cursor-pointer transition-all ${
-                    gender === 'male' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-500 dark:text-slate-400'
+                    gender === 'male' ? 'bg-emerald-500 text-white shadow-md' : 'text-muted'
                   }`}
                 >
                   Male
@@ -131,7 +131,7 @@ export default function BodyFatCalculator() {
                   type="button"
                   onClick={() => setGender('female')}
                   className={`py-2 text-sm font-black rounded-xl cursor-pointer transition-all ${
-                    gender === 'female' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-500 dark:text-slate-400'
+                    gender === 'female' ? 'bg-emerald-500 text-white shadow-md' : 'text-muted'
                   }`}
                 >
                   Female
@@ -142,22 +142,22 @@ export default function BodyFatCalculator() {
             {/* Height and Neck Inputs */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-400 block ml-1">Height (cm)</label>
+                <label className="text-xs font-bold text-muted block ml-1">Height (cm)</label>
                 <input
                   type="number" min="0"
                   value={height}
                   onChange={(e) => setHeight(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                  className="w-full bg-slate-100/50 dark:bg-white/5 border border-slate-300/20 dark:border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
+                  className="w-full bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-400 block ml-1">Neck Circumference (cm)</label>
+                <label className="text-xs font-bold text-muted block ml-1">Neck Circumference (cm)</label>
                 <input
                   type="number" min="0"
                   value={neck}
                   onChange={(e) => setNeck(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                  className="w-full bg-slate-100/50 dark:bg-white/5 border border-slate-300/20 dark:border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
+                  className="w-full bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
                 />
               </div>
             </div>
@@ -165,33 +165,33 @@ export default function BodyFatCalculator() {
             {/* Waist and Hip Inputs */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-400 block ml-1">Waist Circumference (cm)</label>
+                <label className="text-xs font-bold text-muted block ml-1">Waist Circumference (cm)</label>
                 <input
                   type="number" min="0"
                   value={waist}
                   onChange={(e) => setWaist(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                  className="w-full bg-slate-100/50 dark:bg-white/5 border border-slate-300/20 dark:border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
+                  className="w-full bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
                 />
               </div>
 
               {gender === 'female' ? (
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400 block ml-1">Hip Circumference (cm)</label>
+                  <label className="text-xs font-bold text-muted block ml-1">Hip Circumference (cm)</label>
                   <input
                     type="number" min="0"
                     value={hip}
                     onChange={(e) => setHip(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                    className="w-full bg-slate-100/50 dark:bg-white/5 border border-slate-300/20 dark:border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold animate-fade-in"
+                    className="w-full bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold animate-fade-in"
                   />
                 </div>
               ) : (
                 <div className="space-y-1 opacity-40">
-                  <label className="text-xs font-bold text-slate-400 block ml-1">Hip Circumference (cm)</label>
+                  <label className="text-xs font-bold text-muted block ml-1">Hip Circumference (cm)</label>
                   <input
                     type="text"
                     disabled
                     value="Not required for males"
-                    className="w-full bg-slate-200/50 dark:bg-white/5 border border-slate-300/20 dark:border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none font-bold text-slate-400"
+                    className="w-full bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-xl px-3 py-2 text-xs focus:outline-none font-bold text-muted"
                   />
                 </div>
               )}
@@ -201,24 +201,24 @@ export default function BodyFatCalculator() {
 
         {/* Calculations Display Output */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="glass rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200/20 dark:border-white/10 relative overflow-hidden flex flex-col items-center justify-center">
+          <div className="glass rounded-3xl p-6 sm:p-8 shadow-2xl border border-border/20 dark:border-border relative overflow-hidden flex flex-col items-center justify-center">
             <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-2xl -z-10" />
 
-            <span className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Calculated body fat</span>
+            <span className="text-xs font-black text-muted uppercase tracking-widest block mb-2">Calculated body fat</span>
             
             {/* Massive Percentage Display */}
             <div className="text-center py-6">
-              <span className="text-6xl font-black tracking-tight text-slate-800 dark:text-slate-100">{bodyFat}%</span>
+              <span className="text-6xl font-black tracking-tight text-foreground">{bodyFat}%</span>
               <span className={`text-lg font-bold uppercase block mt-2 ${getCategoryColor()}`}>{category}</span>
             </div>
 
             {/* Custom suggestion alert block */}
-            <div className="w-full border-t border-slate-200/15 dark:border-white/5 pt-6 space-y-4">
+            <div className="w-full border-t border-border/15 dark:border-border pt-6 space-y-4">
               <div className="flex items-start space-x-2.5">
                 <Heart className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
                 <div>
-                  <span className="text-xs font-extrabold text-slate-400 uppercase tracking-wider block">Composition Advice</span>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mt-1">
+                  <span className="text-xs font-extrabold text-muted uppercase tracking-wider block">Composition Advice</span>
+                  <p className="text-xs text-muted leading-relaxed mt-1">
                     {getBfAdvice()}
                   </p>
                 </div>
@@ -229,12 +229,12 @@ export default function BodyFatCalculator() {
       </div>
 
       {/* SEO guidelines on Navy Body Fat Method */}
-      <section className="mt-16 border-t border-slate-200/10 pt-10 space-y-6">
-        <h2 className="text-lg font-black text-slate-800 dark:text-slate-100 flex items-center">
+      <section className="mt-16 border-t border-border/10 pt-10 space-y-6">
+        <h2 className="text-lg font-black text-foreground flex items-center">
           <Activity className="w-5 h-5 mr-2 text-cyan-400" />
           The US Navy Circumference Method
         </h2>
-        <div className="prose dark:prose-invert text-sm text-slate-500 dark:text-slate-400 space-y-4 leading-relaxed">
+        <div className="prose dark:prose-invert text-sm text-muted space-y-4 leading-relaxed">
           <p>
             The **US Navy Circumference Method** is a standardized body composition estimation formula designed to determine an individual\'s relative percentage of skeletal fat to lean muscle tissue without the need for expensive DEXA scans or hydrostatic weighing.
           </p>

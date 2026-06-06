@@ -49,10 +49,10 @@ export default function GoogleSuccessPage() {
         <div className="absolute inset-0 rounded-full bg-emerald-500/10 blur-2xl -z-10" />
       </div>
       <div className="text-center">
-        <h1 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-2">
+        <h1 className="text-2xl font-black text-foreground mb-2">
           Google Sign-In Successful!
         </h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm">
+        <p className="text-muted text-sm">
           Setting up your session, redirecting to dashboard…
         </p>
       </div>

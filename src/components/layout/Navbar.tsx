@@ -10,6 +10,7 @@ import {
   Dumbbell, Apple, Trophy, ShoppingBag, LayoutDashboard, LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getUserStorageKey } from '@/lib/storage';
 
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
@@ -20,10 +21,29 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [calcDropdownOpen, setCalcDropdownOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [hasActiveWorkout, setHasActiveWorkout] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    const checkActiveWorkout = () => {
+      if (!user) {
+        setHasActiveWorkout(false);
+        return;
+      }
+      const key = getUserStorageKey('leanverse_transformation');
+      const state = localStorage.getItem(key);
+      setHasActiveWorkout(!!state);
+    };
+    checkActiveWorkout();
+    
+    // Listen to storage events (cross-tab) and custom events (same-tab)
+    window.addEventListener('storage', checkActiveWorkout);
+    window.addEventListener('leanverse_state_changed', checkActiveWorkout);
+    return () => {
+      window.removeEventListener('storage', checkActiveWorkout);
+      window.removeEventListener('leanverse_state_changed', checkActiveWorkout);
+    };
+  }, [user]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -75,7 +95,7 @@ export default function Navbar() {
             <Link href="/" className="flex items-center space-x-2 shrink-0">
               <img src="/icon.svg" alt="LeanVerse Logo" className="w-8 h-8 sm:w-9 sm:h-9 shrink-0" />
               <span className="text-xl sm:text-2xl font-black tracking-wider bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent leading-none pb-1">
-                LEAN<span className="font-light text-slate-800 dark:text-slate-100">VERSE</span>
+                LEAN<span className="font-light text-foreground">VERSE</span>
               </span>
             </Link>
           </div>
@@ -90,7 +110,7 @@ export default function Navbar() {
                   className={`relative px-3 py-2 rounded-full text-sm font-semibold tracking-wide transition-all ${
                     isActive(link.path)
                       ? 'text-emerald-500 dark:text-emerald-400 font-bold'
-                      : 'text-slate-800 hover:text-emerald-500 dark:text-slate-300 dark:hover:text-emerald-400'
+                      : 'text-foreground hover:text-emerald-500 dark:text-muted dark:hover:text-emerald-400'
                   }`}
                 >
                   {isActive(link.path) && (
@@ -112,7 +132,7 @@ export default function Navbar() {
                   className={`flex items-center space-x-1 px-3 py-2 rounded-full text-sm font-semibold tracking-wide transition-all cursor-pointer ${
                     pathname.startsWith('/calculators')
                       ? 'text-emerald-500 dark:text-emerald-400 font-bold bg-emerald-500/10 dark:bg-emerald-500/20'
-                      : 'text-slate-800 hover:text-emerald-500 dark:text-slate-300 dark:hover:text-emerald-400'
+                      : 'text-foreground hover:text-emerald-500 dark:text-muted dark:hover:text-emerald-400'
                   }`}
                 >
                   <Calculator className="w-4 h-4 mr-1" />
@@ -125,13 +145,13 @@ export default function Navbar() {
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute left-1/2 -translate-x-1/2 mt-2 w-56 rounded-2xl py-2 shadow-2xl border border-slate-200/20 dark:border-white/10 bg-slate-50/98 dark:bg-slate-950/98 backdrop-blur-xl"
+                      className="absolute left-1/2 -translate-x-1/2 mt-2 w-56 rounded-2xl py-2 shadow-2xl border border-border/20 dark:border-border bg-background/98 dark:bg-background/98 backdrop-blur-xl"
                     >
                       {calculators.map((calc) => (
                         <Link
                           key={calc.path}
                           href={calc.path}
-                          className="block px-4 py-2 text-sm text-slate-700 hover:bg-emerald-500/10 dark:text-slate-300 dark:hover:bg-emerald-400/20 hover:text-emerald-500 dark:hover:text-emerald-400 font-medium transition-all"
+                          className="block px-4 py-2 text-sm text-foreground hover:bg-emerald-500/10 dark:text-muted dark:hover:bg-emerald-400/20 hover:text-emerald-500 dark:hover:text-emerald-400 font-medium transition-all"
                         >
                           {calc.name}
                         </Link>
@@ -148,10 +168,10 @@ export default function Navbar() {
             {/* Theme Toggle Button */}
             <button 
               onClick={toggleTheme}
-              className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full glass hover:bg-slate-200/20 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 cursor-pointer transition-all active:scale-95"
+              className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full glass hover:bg-secondary/20 dark:hover:bg-card/10 text-foreground dark:text-muted cursor-pointer transition-all active:scale-95"
               aria-label="Toggle Theme"
             >
-              {isMounted ? (theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-slate-700" />) : <div className="w-5 h-5" />}
+              {isMounted ? (theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-foreground" />) : <div className="w-5 h-5" />}
             </button>
 
             {/* Streak Counter if logged in */}
@@ -165,13 +185,15 @@ export default function Navbar() {
             {/* User Session Widget */}
             {isMounted && (user ? (
               <div className="flex items-center space-x-2 lg:space-x-3">
-                <Link 
-                  href="/workout-planner"
-                  className="flex items-center space-x-1.5 px-3 py-2 rounded-full bg-cyan-500 hover:bg-cyan-600 dark:bg-cyan-600 dark:hover:bg-cyan-500 text-white text-sm font-bold transition-all shadow-lg hover:shadow-cyan-500/20"
-                >
-                  <Dumbbell className="w-4 h-4" />
-                  <span className="hidden sm:inline">Active Workout</span>
-                </Link>
+                {hasActiveWorkout && (
+                  <Link 
+                    href="/workout-planner"
+                    className="flex items-center space-x-1.5 px-3 py-2 rounded-full bg-cyan-500 hover:bg-cyan-600 dark:bg-cyan-600 dark:hover:bg-cyan-500 text-white text-sm font-bold transition-all shadow-lg hover:shadow-cyan-500/20"
+                  >
+                    <Dumbbell className="w-4 h-4" />
+                    <span className=" sm:inline">Active Workout</span>
+                  </Link>
+                )}
                 <Link 
                   href="/dashboard"
                   className="flex items-center space-x-1.5 px-3 py-2 rounded-full bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white text-sm font-bold transition-all shadow-lg hover:shadow-emerald-500/20"
@@ -189,7 +211,7 @@ export default function Navbar() {
                 )}
                 <button 
                   onClick={logout}
-                  className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full glass text-slate-500 hover:text-red-500 hover:bg-red-500/10 dark:text-slate-400 dark:hover:text-red-400 dark:hover:bg-red-500/20 transition-all cursor-pointer"
+                  className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full glass text-muted hover:text-red-500 hover:bg-red-500/10 dark:text-muted dark:hover:text-red-400 dark:hover:bg-red-500/20 transition-all cursor-pointer"
                   title="Sign Out"
                   aria-label="Sign Out"
                 >
@@ -217,14 +239,14 @@ export default function Navbar() {
             )}
             <button
               onClick={toggleTheme}
-              className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full glass text-slate-700 dark:text-slate-300"
+              className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full glass text-foreground dark:text-muted"
               aria-label="Toggle Theme"
             >
-              {isMounted ? (theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-slate-700" />) : <div className="w-5 h-5" />}
+              {isMounted ? (theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-foreground" />) : <div className="w-5 h-5" />}
             </button>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full glass text-slate-700 dark:text-slate-300"
+              className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full glass text-foreground dark:text-muted"
               aria-label="Toggle Mobile Menu"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -241,7 +263,7 @@ export default function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden bg-white dark:bg-slate-900 border-t border-slate-200/20 dark:border-white/10 mt-3 max-h-[85vh] overflow-y-auto shadow-2xl rounded-b-3xl"
+            className="lg:hidden bg-card dark:bg-secondary border-t border-border/20 dark:border-border mt-3 max-h-[85vh] overflow-y-auto shadow-2xl rounded-b-3xl"
           >
             <div className="px-4 pt-2 pb-6 space-y-2 flex flex-col">
               {navLinks.map((link) => (
@@ -251,15 +273,15 @@ export default function Navbar() {
                   className={`px-4 py-2.5 rounded-2xl text-base font-semibold transition-all ${
                     isActive(link.path)
                       ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400'
-                      : 'text-slate-800 dark:text-slate-200 hover:bg-slate-200/20 dark:hover:bg-white/5'
+                      : 'text-foreground hover:bg-secondary/20 dark:hover:bg-card/5'
                   }`}
                 >
                   {link.name}
                 </Link>
               ))}
 
-              <div className="border-t border-slate-200/10 dark:border-white/5 my-2 pt-2">
-                <span className="px-4 text-xs font-extrabold text-slate-400 uppercase tracking-widest block mb-2">Calculators</span>
+              <div className="border-t border-border/10 dark:border-border my-2 pt-2">
+                <span className="px-4 text-xs font-extrabold text-muted uppercase tracking-widest block mb-2">Calculators</span>
                 <div className="grid grid-cols-2 gap-1.5 px-2">
                   {calculators.map((calc) => (
                     <Link
@@ -268,7 +290,7 @@ export default function Navbar() {
                       className={`px-3 py-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all truncate block ${
                         isActive(calc.path)
                           ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400'
-                          : 'text-slate-800 hover:text-emerald-500 dark:text-slate-300 dark:hover:text-emerald-400 hover:bg-slate-200/10 dark:hover:bg-white/5'
+                          : 'text-foreground hover:text-emerald-500 dark:text-muted dark:hover:text-emerald-400 hover:bg-secondary/10 dark:hover:bg-card/5'
                       }`}
                       title={calc.name.replace(' Calculator', '')}
                     >
@@ -278,15 +300,17 @@ export default function Navbar() {
                 </div>
               </div>
 
-              <div className="border-t border-slate-200/10 dark:border-white/5 my-2 pt-4 flex flex-col items-center">
+              <div className="border-t border-border/10 dark:border-border my-2 pt-4 flex flex-col items-center">
                 {user ? (
                   <div className="w-full space-y-2 text-center">
-                    <Link 
-                      href="/workout-planner"
-                      className="block w-full py-3 rounded-2xl bg-cyan-500 text-white font-bold shadow-md"
-                    >
-                      Active Workout
-                    </Link>
+                    {hasActiveWorkout && (
+                      <Link 
+                        href="/workout-planner"
+                        className="block w-full py-3 rounded-2xl bg-cyan-500 text-white font-bold shadow-md"
+                      >
+                        Active Workout
+                      </Link>
+                    )}
                     <Link 
                       href="/dashboard"
                       className="block w-full py-3 rounded-2xl bg-emerald-500 text-white font-bold shadow-md"
@@ -303,7 +327,7 @@ export default function Navbar() {
                     )}
                     <button 
                       onClick={logout}
-                      className="block w-full text-sm font-semibold text-slate-400 hover:text-red-500 py-2"
+                      className="block w-full text-sm font-semibold text-muted hover:text-red-500 py-2"
                     >
                       Sign Out
                     </button>

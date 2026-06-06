@@ -104,10 +104,10 @@ export default function MacroRings({
 
         {/* Center label */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className={`text-2xl font-black leading-none ${overallPct > 100 ? 'text-red-500' : 'text-slate-800 dark:text-slate-100'}`}>
+          <span className={`text-2xl font-black leading-none ${overallPct > 100 ? 'text-red-500' : 'text-foreground'}`}>
             {overallPct}%
           </span>
-          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+          <span className="text-[9px] font-bold text-muted uppercase tracking-widest mt-0.5">
             {overallPct > 100 ? 'Over!' : 'eaten'}
           </span>
         </div>
@@ -117,15 +117,15 @@ export default function MacroRings({
       <div className="flex items-center space-x-4 text-[10px] font-bold">
         <div className="flex items-center space-x-1">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 block" />
-          <span className="text-slate-500">Protein {protein}g</span>
+          <span className="text-muted">Protein {protein}g</span>
         </div>
         <div className="flex items-center space-x-1">
           <span className="w-2.5 h-2.5 rounded-full bg-cyan-500 block" />
-          <span className="text-slate-500">Carbs {carbs}g</span>
+          <span className="text-muted">Carbs {carbs}g</span>
         </div>
         <div className="flex items-center space-x-1">
           <span className="w-2.5 h-2.5 rounded-full bg-amber-500 block" />
-          <span className="text-slate-500">Fats {fats}g</span>
+          <span className="text-muted">Fats {fats}g</span>
         </div>
       </div>
     </div>

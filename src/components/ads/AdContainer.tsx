@@ -68,15 +68,15 @@ export default function AdContainer({ slot = 'default', format = 'horizontal', c
   if (!isMounted) {
     return (
       <div className={`mx-auto my-6 flex flex-col items-center justify-center ${className} no-print`}>
-        <span className="text-[10px] uppercase tracking-wider text-slate-400 font-extrabold mb-1 opacity-0">
+        <span className="text-[10px] uppercase tracking-wider text-muted font-extrabold mb-1 opacity-0">
           Sponsored Advertisement
         </span>
         <div className={`relative flex flex-col items-center justify-center overflow-hidden ${getFormatClasses()}`}>
-          <div className="absolute inset-0 -z-10 glass border border-slate-200/10 rounded-2xl bg-slate-100/30 dark:bg-white/5 flex flex-col items-center justify-center text-center p-4">
-            <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
+          <div className="absolute inset-0 -z-10 glass border border-border/10 rounded-2xl bg-secondary/30 dark:bg-card/5 flex flex-col items-center justify-center text-center p-4">
+            <span className="text-xs font-bold text-muted">
               Ad Space
             </span>
-            <p className="text-[10px] text-slate-500 max-w-[250px] mt-1 leading-snug">
+            <p className="text-[10px] text-muted max-w-[250px] mt-1 leading-snug">
               Support LeanVerse by disabling your ad blocker.
             </p>
           </div>
@@ -87,7 +87,7 @@ export default function AdContainer({ slot = 'default', format = 'horizontal', c
 
   return (
     <div className={`mx-auto my-6 flex flex-col items-center justify-center ${className} no-print`}>
-      <span className="text-[10px] uppercase tracking-wider text-slate-400 font-extrabold mb-1">
+      <span className="text-[10px] uppercase tracking-wider text-muted font-extrabold mb-1">
         Sponsored Advertisement
       </span>
       <div className={`relative flex flex-col items-center justify-center overflow-hidden ${getFormatClasses()}`}>
@@ -102,11 +102,11 @@ export default function AdContainer({ slot = 'default', format = 'horizontal', c
         />
 
         {/* Fallback styling for when ad is empty or blocked */}
-        <div className="absolute inset-0 -z-10 glass border border-slate-200/10 rounded-2xl bg-slate-100/30 dark:bg-white/5 flex flex-col items-center justify-center text-center p-4">
-          <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
+        <div className="absolute inset-0 -z-10 glass border border-border/10 rounded-2xl bg-secondary/30 dark:bg-card/5 flex flex-col items-center justify-center text-center p-4">
+          <span className="text-xs font-bold text-muted">
             Ad Space
           </span>
-          <p className="text-[10px] text-slate-500 max-w-[250px] mt-1 leading-snug">
+          <p className="text-[10px] text-muted max-w-[250px] mt-1 leading-snug">
             Support LeanVerse by disabling your ad blocker.
           </p>
         </div>
@@ -114,7 +114,7 @@ export default function AdContainer({ slot = 'default', format = 'horizontal', c
         {/* Premium Upgrade Badge */}
         <Link 
           href="/pricing" 
-          className="absolute bottom-1 right-2 text-[9px] text-slate-400 hover:text-emerald-500 underline font-semibold transition-all cursor-pointer z-20"
+          className="absolute bottom-1 right-2 text-[9px] text-muted hover:text-emerald-500 underline font-semibold transition-all cursor-pointer z-20"
         >
           Remove Ads
         </Link>
