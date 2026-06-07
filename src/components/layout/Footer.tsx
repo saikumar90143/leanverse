@@ -17,133 +17,153 @@ export default function Footer() {
  }
  };
 
- const footerLinks = {
- features: [
- { name: 'AI Diet Planner', path: '/diet-planner', icon: Apple },
- { name: 'AI Workout Planner', path: '/workout-planner', icon: Dumbbell },
- { name: 'Fitness Recipes', path: '/recipes', icon: Heart },
- { name: 'Supplement Store', path: '/store', icon: Shield },
- ],
- calculators: [
- { name: 'BMI Calculator', path: '/calculators/bmi' },
- { name: 'Maintenance Calories', path: '/calculators/maintenance' },
- { name: 'Macro Calculator', path: '/calculators/macro' },
- { name: 'Body Fat Calculator', path: '/calculators/body-fat' },
- { name: 'Water Intake Calculator', path: '/calculators/water' },
- ],
- company: [
- { name: 'About Us', path: '/about' },
- { name: 'Contact Us', path: '/contact' },
- { name: 'Pricing Plans', path: '/pricing' },
- { name: 'Fitness Blog', path: '/blog' },
- ],
- };
+  const footerLinks = {
+    features: [
+      { name: 'Diet Planner', path: '/diet-planner', icon: Apple },
+      { name: 'Workout Planner', path: '/workout-planner', icon: Dumbbell },
+      { name: 'Healthy Recipes', path: '/recipes', icon: Heart },
+      { name: 'Supplements', path: '/store', icon: Shield },
+    ],
+    calculators: [
+      { name: 'BMI & Body Fat', path: '/calculators/body-fat' },
+      { name: 'Calories & Macros', path: '/calculators/macro' },
+      { name: 'Water Intake', path: '/calculators/water' },
+    ],
+    company: [
+      { name: 'About Us', path: '/about' },
+      { name: 'Contact', path: '/contact' },
+      { name: 'Pricing', path: '/pricing' },
+      { name: 'Blog', path: '/blog' },
+    ],
+    legal: [
+      { name: 'Terms of Service', path: '/terms' },
+      { name: 'Privacy Policy', path: '/privacy' },
+      { name: 'Medical Disclaimer', path: '/disclaimer' },
+    ],
+  };
 
  const pathname = usePathname();
 
  // Hide on admin routes
  if (pathname?.startsWith('/admin')) return null;
 
- return (
- <footer className="border-t border-border/10 dark:border-border bg-foreground text-muted py-16 no-print">
- <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
- <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
- {/* Logo & Pitch */}
- <div className="lg:col-span-2 space-y-6">
- <Link href="/" className="flex items-center space-x-2">
- <span className="text-2xl font-black tracking-wider bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent">
- LEAN<span className="font-light text-slate-100">VERSE</span>
- </span>
- </Link>
- <p className="text-sm text-muted max-w-sm leading-relaxed">
- LeanVerse is an advanced AI-powered Health & Fitness ecosystem. We deliver personalized, instant nutrition schedules, workout split cards, and precise calculators to support sustainable habit transformations.
- </p>
- {/* Newsletter */}
- <div className="space-y-3">
- <span className="text-sm font-bold text-slate-200 block">Join Our Weekly Fitness Newsletter</span>
- {subscribed ? (
- <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold py-2.5 px-4 rounded-xl max-w-sm">
- Welcome to the squad! Keep checking your inbox.
- </div>
- ) : (
- <form onSubmit={handleSubscribe} className="flex max-w-sm items-center glass border border-slate-700 rounded-xl overflow-hidden px-2 py-1">
- <Mail className="w-4 h-4 text-muted ml-2" />
- <input
- type="email"
- placeholder="Enter your email"
- value={email}
- onChange={(e) => setEmail(e.target.value)}
- required
- className="w-full bg-transparent border-0 py-2 px-3 text-slate-200 text-sm focus:ring-0 focus:outline-none"
- />
- <button
- type="submit"
- className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-4 rounded-lg cursor-pointer transition-all"
- >
- Subscribe
- </button>
- </form>
- )}
- </div>
- </div>
+  return (
+    <footer className="border-t border-border/20 dark:border-border bg-secondary dark:bg-background text-muted py-10 sm:py-16 no-print">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
- {/* Feature Links */}
- <div className="space-y-4">
- <span className="text-sm font-black text-slate-200 uppercase tracking-widest block">AI Features</span>
- <ul className="space-y-2.5 text-sm">
- {footerLinks.features.map((link) => (
- <li key={link.path}>
- <Link href={link.path} className="hover:text-emerald-400 transition-colors flex items-center space-x-1.5">
- <link.icon className="w-3.5 h-3.5" />
- <span>{link.name}</span>
- </Link>
- </li>
- ))}
- </ul>
- </div>
+        {/* Top: Logo + description + newsletter */}
+        <div className="flex flex-col sm:flex-row gap-6 sm:gap-10 mb-8 sm:mb-12">
+          <div className="flex-1 space-y-4">
+            <Link href="/" className="flex items-center space-x-2">
+              <span className="text-2xl font-black tracking-wider bg-gradient-to-r from-emerald-500 to-cyan-500 bg-clip-text text-transparent">
+                LEAN<span className="font-light text-foreground">VERSE</span>
+              </span>
+            </Link>
+            <p className="text-xs text-muted leading-relaxed max-w-sm">
+              AI-powered Health &amp; Fitness ecosystem delivering personalized nutrition, workout splits, and calculators for sustainable transformations.
+            </p>
+          </div>
 
- {/* Calculators links */}
- <div className="space-y-4">
- <span className="text-sm font-black text-slate-200 uppercase tracking-widest block">Tools</span>
- <ul className="space-y-2.5 text-sm">
- {footerLinks.calculators.map((link) => (
- <li key={link.path}>
- <Link href={link.path} className="hover:text-cyan-400 transition-colors">
- {link.name}
- </Link>
- </li>
- ))}
- </ul>
- </div>
+          {/* Newsletter */}
+          <div className="sm:w-72 space-y-2">
+            <span className="text-xs font-black text-foreground uppercase tracking-widest block">Weekly Fitness Newsletter</span>
+            {subscribed ? (
+              <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold py-2.5 px-4 rounded-xl">
+                Welcome to the squad! Check your inbox.
+              </div>
+            ) : (
+              <form onSubmit={handleSubscribe} className="flex items-center bg-background dark:bg-card/50 border border-border/50 rounded-xl overflow-hidden px-2 py-1">
+                <Mail className="w-4 h-4 text-muted ml-1 shrink-0" />
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full bg-transparent border-0 py-2 px-2 text-foreground text-sm focus:ring-0 focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold py-2 px-3 rounded-lg cursor-pointer transition-all shrink-0"
+                >
+                  Join
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
 
- {/* Corporate links */}
- <div className="space-y-4">
- <span className="text-sm font-black text-slate-200 uppercase tracking-widest block">Explore</span>
- <ul className="space-y-2.5 text-sm">
- {footerLinks.company.map((link) => (
- <li key={link.path}>
- <Link href={link.path} className="hover:text-slate-200 transition-colors">
- {link.name}
- </Link>
- </li>
- ))}
- </ul>
- </div>
- </div>
+        {/* Links: 2-col on mobile, 4-col on sm+ */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-10 mb-8 sm:mb-12 border-t border-border/10 pt-8">
+          {/* AI Features */}
+          <div className="space-y-3">
+            <span className="text-xs font-black text-foreground uppercase tracking-widest block">AI Features</span>
+            <ul className="space-y-2 text-xs">
+              {footerLinks.features.map((link) => (
+                <li key={link.path}>
+                  <Link href={link.path} className="text-muted hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors flex items-center space-x-1.5">
+                    <link.icon className="w-3 h-3 shrink-0" />
+                    <span>{link.name}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
 
- {/* Ad Placement & Disclaimer */}
- <div className="border-t border-slate-800 mt-12 pt-8 text-center space-y-4 text-xs text-muted">
- <p className="max-w-3xl mx-auto leading-relaxed">
- Disclaimer: LeanVerse is an AI fitness resource. The generated plans, macros, and diet routines are optimized mathematical estimates. Consult with a qualified physician before initiating any intensive athletic or dietary changes.
- </p>
- <div className="flex justify-center space-x-6 flex-wrap gap-y-2">
- <span>© {new Date().getFullYear()} LeanVerse. All rights reserved.</span>
- <Link href="/privacy" className="hover:underline">Privacy Policy</Link>
- <Link href="/terms" className="hover:underline">Terms of Service</Link>
- <Link href="/disclaimer" className="hover:underline">Medical Disclaimer</Link>
- </div>
- </div>
- </div>
- </footer>
- );
+          {/* Calculators */}
+          <div className="space-y-3">
+            <span className="text-xs font-black text-foreground uppercase tracking-widest block">Tools</span>
+            <ul className="space-y-2 text-xs">
+              {footerLinks.calculators.map((link) => (
+                <li key={link.path}>
+                  <Link href={link.path} className="text-muted hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Company */}
+          <div className="space-y-3">
+            <span className="text-xs font-black text-foreground uppercase tracking-widest block">Explore</span>
+            <ul className="space-y-2 text-xs">
+              {footerLinks.company.map((link) => (
+                <li key={link.path}>
+                  <Link href={link.path} className="text-muted hover:text-foreground transition-colors">
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Legal */}
+          <div className="space-y-3">
+            <span className="text-xs font-black text-foreground uppercase tracking-widest block">Legal</span>
+            <ul className="space-y-2 text-xs">
+              {footerLinks.legal.map((link) => (
+                <li key={link.path}>
+                  <Link href={link.path} className="text-muted hover:text-foreground transition-colors">
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="border-t border-border/10 pt-6 space-y-3 text-xs text-muted text-center">
+          <p className="leading-relaxed max-w-2xl mx-auto">
+            Disclaimer: LeanVerse is an AI fitness resource. Generated plans are optimized estimates. Consult a physician before any intensive athletic or dietary changes.
+          </p>
+          <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-1">
+            <span>© {new Date().getFullYear()} LeanVerse. All rights reserved.</span>
+          </div>
+        </div>
+
+      </div>
+    </footer>
+  );
 }

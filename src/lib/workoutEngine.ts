@@ -319,7 +319,37 @@ export function logWorkoutCompletion(
   day.completed = true;
   day.dateCompleted = new Date().toISOString();
   newState.workoutsCompleted++;
-  newState.streak++;
+
+  // Date-based streak logic: only count one streak increment per calendar day,
+  // and only if yesterday (or today already) was the previous completed day.
+  const today = new Date().toDateString();
+  const lastCompletedDay = newState.schedule
+    .slice(0, dayIndex)
+    .filter(d => d.completed && d.dateCompleted)
+    .sort((a, b) => new Date(b.dateCompleted!).getTime() - new Date(a.dateCompleted!).getTime())[0];
+
+  if (!lastCompletedDay) {
+    // First ever workout completed — streak starts at 1
+    newState.streak = 1;
+  } else {
+    const lastDate = new Date(lastCompletedDay.dateCompleted!).toDateString();
+    if (lastDate === today) {
+      // Already completed a workout today (e.g. rest day + workout) — don't double-count
+      // keep streak as-is
+    } else {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toDateString();
+      if (lastDate === yesterdayStr) {
+        // Consecutive day — increment streak
+        newState.streak++;
+      } else {
+        // Missed a day — reset streak to 1
+        newState.streak = 1;
+      }
+    }
+  }
+
   if (newState.streak > newState.longestStreak) newState.longestStreak = newState.streak;
   
   // Award XP

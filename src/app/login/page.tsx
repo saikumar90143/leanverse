@@ -53,6 +53,9 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
+  // Where to send user after login (defaults to /dashboard)
+  const redirectTo = searchParams.get('redirect') || '/dashboard';
+
   // Show Google OAuth error if redirected back with ?error=
   useEffect(() => {
     const errorParam = searchParams.get('error');
@@ -64,9 +67,9 @@ function LoginForm() {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      router.replace('/dashboard');
+      router.replace(redirectTo);
     }
-  }, [user, router]);
+  }, [user, router, redirectTo]);
 
   const triggerConfetti = () => {
     confetti({
@@ -86,7 +89,7 @@ function LoginForm() {
       const success = await login(email, password);
       if (success) {
         triggerConfetti();
-        setTimeout(() => router.push('/dashboard'), 800);
+        setTimeout(() => router.push(redirectTo), 800);
       } else {
         setError('Invalid email or password.');
       }
@@ -99,7 +102,7 @@ function LoginForm() {
       const success = await register(name, email, password);
       if (success) {
         triggerConfetti();
-        setTimeout(() => router.push('/dashboard'), 800);
+        setTimeout(() => router.push(redirectTo), 800);
       } else {
         setError('Failed to create account. Please try again.');
       }
@@ -109,7 +112,9 @@ function LoginForm() {
 
   const handleGoogleSignIn = () => {
     setGoogleLoading(true);
-    window.location.href = '/api/auth/google';
+    // Pass redirect param through to Google OAuth callback
+    const callbackRedirect = encodeURIComponent(redirectTo);
+    window.location.href = `/api/auth/google?redirect=${callbackRedirect}`;
   };
 
   return (

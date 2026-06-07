@@ -40,7 +40,7 @@ export default function WaterIntakeCalculator() {
 
   const handleAddCup = () => {
     if (!user) {
-      router.push('/login');
+      router.push('/login?redirect=%2Fcalculators%2Fwater');
       return;
     }
     setCupsConsumed((prev) => Math.min(prev + 1, cupsGoal));

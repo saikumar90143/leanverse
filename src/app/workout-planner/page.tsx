@@ -105,7 +105,7 @@ export default function AIWorkoutPlanner() {
 
  useEffect(() => {
  if (!authLoading && !user) {
- router.push('/login');
+ router.push('/login?redirect=%2Fworkout-planner');
  }
  }, [user, authLoading, router]);
 
@@ -668,60 +668,66 @@ export default function AIWorkoutPlanner() {
  return (
  <div className="space-y-8 animate-fade-in max-w-6xl mx-auto">
  {/* Dashboard Header */}
- <div className="glass rounded-3xl p-6 sm:p-8 border border-emerald-500/20 shadow-xl relative overflow-hidden">
- <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2"></div>
- 
- <div className="flex flex-col md:flex-row justify-between gap-6 relative z-10">
- <div>
- <div className="flex items-center space-x-2 text-emerald-500 font-extrabold text-xs uppercase tracking-widest mb-2">
- <Target className="w-4 h-4" />
- <span>{activeDay.phaseName}</span>
- </div>
- <h1 className="text-3xl sm:text-4xl font-black text-foreground mb-2">
- Day {state.currentDay} <span className="text-muted">/ {state.totalDays}</span>
- </h1>
- <p className="text-sm text-muted max-w-xl">
- Keep pushing. Your {state.profile.goal} transformation is {progressPercent}% complete.
- </p>
- </div>
- 
- <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full md:w-auto mt-6 md:mt-0">
- <div className="bg-secondary/50 dark:bg-card/5 p-4 rounded-2xl border border-border/50 dark:border-border">
- <div className="flex items-center space-x-1.5 text-amber-500 mb-1">
- <Flame className="w-4 h-4 fill-current" />
- <span className="text-xs font-bold uppercase tracking-wider">Streak</span>
- </div>
- <div className="text-2xl font-black text-foreground">{state.streak} Days</div>
- </div>
- <div className="bg-secondary/50 dark:bg-card/5 p-4 rounded-2xl border border-border/50 dark:border-border min-w-[120px]">
- <div className="flex items-center space-x-1.5 text-blue-500 mb-1">
- <Star className="w-4 h-4 fill-current" />
- <span className="text-xs font-bold uppercase tracking-wider">XP Points</span>
- </div>
- <div className="text-2xl font-black text-foreground">{state.xp}</div>
- </div>
- <div className="bg-gradient-to-br from-emerald-500 to-cyan-600 p-4 rounded-2xl shadow-lg text-white col-span-2 sm:col-span-1">
- <div className="flex items-center space-x-1.5 mb-1 text-emerald-100">
- <Shield className="w-4 h-4" />
- <span className="text-xs font-bold uppercase tracking-wider">Rank</span>
- </div>
- <div className="text-2xl font-black">{state.levelName}</div>
- </div>
- </div>
- </div>
+  <div className="glass rounded-3xl p-4 sm:p-8 border border-emerald-500/20 shadow-xl relative overflow-hidden">
+    <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2" />
 
- {/* Progress Bar */}
- <div className="mt-8">
- <div className="w-full h-2.5 bg-secondary dark:bg-card/10 rounded-full overflow-hidden">
- <div 
- className="h-full bg-gradient-to-r from-emerald-400 to-cyan-500 transition-all duration-1000 ease-out relative"
- style={{ width: `${progressPercent}%` }}
- >
- <div className="absolute top-0 right-0 bottom-0 w-20 bg-gradient-to-r from-transparent to-white/30"></div>
- </div>
- </div>
- </div>
- </div>
+    <div className="relative z-10 space-y-4">
+      {/* Top row: phase + day + description */}
+      <div>
+        <div className="flex items-center space-x-2 text-emerald-500 font-extrabold text-xs uppercase tracking-widest mb-1">
+          <Target className="w-3.5 h-3.5" />
+          <span>{activeDay.phaseName}</span>
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-black text-foreground">
+          Day {state.currentDay} <span className="text-muted">/ {state.totalDays}</span>
+        </h1>
+        <p className="text-xs text-muted mt-1">
+          {state.profile.goal} transformation &mdash; {progressPercent}% complete
+        </p>
+      </div>
+
+      {/* Stats: always 3 columns */}
+      <div className="grid grid-cols-3 gap-2">
+        <div className="bg-secondary/50 dark:bg-card/5 p-3 rounded-2xl border border-border/50 dark:border-border">
+          <div className="flex items-center space-x-1 text-amber-500 mb-1">
+            <Flame className="w-3.5 h-3.5 fill-current" />
+            <span className="text-[10px] font-bold uppercase tracking-wider">Streak</span>
+          </div>
+          <div className="text-xl font-black text-foreground">{state.streak}<span className="text-xs font-bold text-muted ml-1">d</span></div>
+        </div>
+        <div className="bg-secondary/50 dark:bg-card/5 p-3 rounded-2xl border border-border/50 dark:border-border">
+          <div className="flex items-center space-x-1 text-blue-500 mb-1">
+            <Star className="w-3.5 h-3.5 fill-current" />
+            <span className="text-[10px] font-bold uppercase tracking-wider">XP</span>
+          </div>
+          <div className="text-xl font-black text-foreground">{state.xp}</div>
+        </div>
+        <div className="bg-gradient-to-br from-emerald-500 to-cyan-600 p-3 rounded-2xl shadow-lg text-white">
+          <div className="flex items-center space-x-1 mb-1 text-emerald-100">
+            <Shield className="w-3.5 h-3.5" />
+            <span className="text-[10px] font-bold uppercase tracking-wider">Rank</span>
+          </div>
+          <div className="text-xl font-black">{state.levelName}</div>
+        </div>
+      </div>
+
+      {/* Progress Bar */}
+      <div>
+        <div className="flex justify-between text-[10px] font-bold text-muted mb-1">
+          <span>Journey Progress</span>
+          <span>{progressPercent}%</span>
+        </div>
+        <div className="w-full h-2.5 bg-secondary dark:bg-card/10 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-emerald-400 to-cyan-500 transition-all duration-1000 ease-out relative"
+            style={{ width: `${progressPercent}%` }}
+          >
+            <div className="absolute top-0 right-0 bottom-0 w-20 bg-gradient-to-r from-transparent to-white/30" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
  {/* Main Daily Mission */}
@@ -877,19 +883,21 @@ export default function AIWorkoutPlanner() {
  
  {/* Add/Remove Sets Controls */}
  {!isPastDay && !ex.completed && (
- <div className="flex justify-between items-center pt-2 px-1">
+ <div className="flex flex-wrap justify-center sm:justify-between items-center gap-2 pt-2 px-1">
  <button 
  onClick={() => handleUpdateSets(ex.id, -1)} 
  disabled={ex.targetSets <= 1}
- className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${ex.targetSets <= 1 ? 'opacity-30 cursor-not-allowed border-border text-muted' : 'border-red-500/20 text-red-500 hover:bg-red-500/10 cursor-pointer'}`}
+ className={`text-xs font-bold px-2 sm:px-3 py-1.5 rounded-lg border transition-all ${ex.targetSets <= 1 ? 'opacity-30 cursor-not-allowed border-border text-muted' : 'border-red-500/20 text-red-500 hover:bg-red-500/10 cursor-pointer'}`}
  >
  - Remove Set
  </button>
- <span className="text-[10px] font-black text-muted uppercase tracking-widest">{ex.targetSets} Sets Limit: 4</span>
+ <span className="text-[9px] sm:text-[10px] font-black text-muted uppercase tracking-widest text-center w-full sm:w-auto order-first sm:order-none mb-1 sm:mb-0">
+ {ex.targetSets} Sets <span className="hidden sm:inline">Limit: 4</span>
+ </span>
  <button 
  onClick={() => handleUpdateSets(ex.id, 1)} 
  disabled={ex.targetSets >= 4}
- className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${ex.targetSets >= 4 ? 'opacity-30 cursor-not-allowed border-border text-muted' : 'border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/10 cursor-pointer'}`}
+ className={`text-xs font-bold px-2 sm:px-3 py-1.5 rounded-lg border transition-all ${ex.targetSets >= 4 ? 'opacity-30 cursor-not-allowed border-border text-muted' : 'border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/10 cursor-pointer'}`}
  >
  + Add Set
  </button>
@@ -969,7 +977,7 @@ export default function AIWorkoutPlanner() {
  {/* Sidebar */}
  <div className="lg:col-span-4 space-y-6 order-first lg:order-last">
  {/* Options */}
- <div className="glass p-6 rounded-3xl border border-border/10 text-center">
+ <div className="glass p-3 lg:p-6 rounded-3xl border border-border/10 text-center">
  <button onClick={resetJourney} className="w-full py-3 rounded-xl border border-red-500/20 text-red-500 font-bold hover:bg-red-500/10 transition-all cursor-pointer text-sm">
  Abandon Journey & Reset
  </button>

@@ -67,10 +67,21 @@ function showInstallToast(deferredPrompt: any) {
   if (!deferredPrompt) return;
   if (typeof document === 'undefined') return;
 
-  // Don't show if already installed
+  // Don't show if already installed as PWA
   if (window.matchMedia('(display-mode: standalone)').matches) return;
 
-  // Don't show if toast already exists
+  // Don't show if user already dismissed within 30 days
+  const DISMISS_KEY = 'lv_install_dismissed_at';
+  const dismissedAt = localStorage.getItem(DISMISS_KEY);
+  if (dismissedAt) {
+    const daysSinceDismiss = (Date.now() - parseInt(dismissedAt)) / (1000 * 60 * 60 * 24);
+    if (daysSinceDismiss < 3) return;
+  }
+
+  // Don't show if user already installed
+  if (localStorage.getItem('lv_app_installed')) return;
+
+  // Don't show if toast already exists on this page
   if (document.getElementById('lv-install-toast')) return;
 
   const toast = document.createElement('div');
@@ -134,15 +145,26 @@ function showInstallToast(deferredPrompt: any) {
     removeToast();
     try {
       await deferredPrompt.prompt();
-      await deferredPrompt.userChoice;
+      const choice = await deferredPrompt.userChoice;
+      if (choice.outcome === 'accepted') {
+        // Mark as installed — never show again
+        localStorage.setItem('lv_app_installed', 'true');
+      } else {
+        // User declined install — treat same as dismiss
+        localStorage.setItem(DISMISS_KEY, Date.now().toString());
+      }
     } catch {
       // User declined or prompt failed — no action needed
     }
     deferredPrompt = null;
   });
 
-  dismissBtn?.addEventListener('click', removeToast);
+  dismissBtn?.addEventListener('click', () => {
+    // Remember dismissal for 30 days
+    localStorage.setItem(DISMISS_KEY, Date.now().toString());
+    removeToast();
+  });
 
-  // Auto-dismiss after 12 seconds
+  // Auto-dismiss after 12 seconds (but don't set the dismissed flag — let it show next session)
   setTimeout(removeToast, 12000);
 }

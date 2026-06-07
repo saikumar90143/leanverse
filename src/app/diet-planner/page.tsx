@@ -120,6 +120,11 @@ export default function AIDietPlanner() {
  }));
  } catch {}
  }, [isMounted, step, age, gender, height, weight, goal, activity, dietStyles]);
+
+ // Scroll to top on every step change
+ useEffect(() => {
+   window.scrollTo({ top: 0, behavior: 'smooth' });
+ }, [step]);
  
  // Selected ingredients at home
  const [selectedFoods, setSelectedFoods] = useState<string[]>([]);
@@ -379,6 +384,16 @@ Built with LeanVerse AI`;
  // Restore full saved plan on mount
  useEffect(() => {
  try {
+ // Migrate guest data → user key when user just logged in
+ const guestKey = 'leanverse_diet_plan_guest';
+ const userRaw = localStorage.getItem(DIET_PLAN_KEY);
+ const guestRaw = localStorage.getItem(guestKey);
+ if (!userRaw && guestRaw && DIET_PLAN_KEY !== guestKey) {
+ // Copy guest progress into user key, then clean up
+ localStorage.setItem(DIET_PLAN_KEY, guestRaw);
+ localStorage.removeItem(guestKey);
+ }
+
  const raw = localStorage.getItem(DIET_PLAN_KEY);
  if (!raw) return;
  const saved = JSON.parse(raw);
@@ -620,7 +635,7 @@ Built with LeanVerse AI`;
 
  const handleGenerate = () => {
  if (!user) {
- router.push('/login');
+ router.push('/login?redirect=%2Fdiet-planner');
  return;
  }
 

@@ -7,7 +7,7 @@ import { useTheme } from './ThemeProvider';
 import { useAuth } from './AuthProvider';
 import { 
   Sun, Moon, Menu, X, Flame, User, Calculator, 
-  Dumbbell, Apple, Trophy, ShoppingBag, LayoutDashboard, LogOut
+  Dumbbell, Apple, Trophy, ShoppingBag, LayoutDashboard, LogOut, Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getUserStorageKey } from '@/lib/storage';
@@ -22,6 +22,9 @@ export default function Navbar() {
   const [calcDropdownOpen, setCalcDropdownOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [hasActiveWorkout, setHasActiveWorkout] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -44,6 +47,39 @@ export default function Navbar() {
       window.removeEventListener('leanverse_state_changed', checkActiveWorkout);
     };
   }, [user]);
+
+  // PWA install prompt
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    // Already installed as PWA?
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstalled(true);
+      return;
+    }
+    if (localStorage.getItem('lv_app_installed')) {
+      setIsInstalled(true);
+      return;
+    }
+    // Pick up prompt that may have fired before component mounted
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((window as any).__lv_install_prompt) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setInstallPrompt((window as any).__lv_install_prompt);
+    }
+    const handler = (e: Event) => {
+      e.preventDefault();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).__lv_install_prompt = e;
+      setInstallPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener('appinstalled', () => {
+      setIsInstalled(true);
+      setInstallPrompt(null);
+      localStorage.setItem('lv_app_installed', 'true');
+    });
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -165,6 +201,28 @@ export default function Navbar() {
 
           {/* Right Area Widgets */}
           <div className="hidden lg:flex items-center justify-end space-x-2 lg:space-x-4 shrink-0">
+            {/* Install App Button — shows only when installable */}
+            {isMounted && installPrompt && !isInstalled && (
+              <button
+                onClick={async () => {
+                  try {
+                    await installPrompt.prompt();
+                    const choice = await installPrompt.userChoice;
+                    if (choice.outcome === 'accepted') {
+                      setIsInstalled(true);
+                      setInstallPrompt(null);
+                      localStorage.setItem('lv_app_installed', 'true');
+                    }
+                  } catch {}
+                }}
+                className="flex items-center space-x-1.5 px-3 py-2 rounded-full border border-emerald-500/40 text-emerald-600 dark:text-emerald-400 text-sm font-bold hover:bg-emerald-500/10 transition-all"
+                title="Install LeanVerse App"
+              >
+                <Download className="w-4 h-4" />
+                <span className="hidden xl:inline">Install App</span>
+              </button>
+            )}
+
             {/* Theme Toggle Button */}
             <button 
               onClick={toggleTheme}
@@ -220,7 +278,7 @@ export default function Navbar() {
               </div>
             ) : (
               <Link 
-                href="/login"
+                href={`/login?redirect=${encodeURIComponent(pathname)}`}
                 className="flex items-center space-x-1.5 px-6 py-2.5 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white text-sm font-bold transition-all shadow-lg shadow-emerald-500/15 scale-100 hover:scale-103 active:scale-97"
               >
                 <User className="w-4 h-4" />
@@ -334,13 +392,40 @@ export default function Navbar() {
                   </div>
                 ) : (
                   <Link 
-                    href="/login"
+                    href={`/login?redirect=${encodeURIComponent(pathname)}`}
                     className="block w-full text-center py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold shadow-lg"
                   >
                     Get Started / Login
                   </Link>
                 )}
               </div>
+
+              {/* Install App in mobile menu */}
+              {!isInstalled && (
+                <div className="border-t border-border/10 dark:border-border pt-3">
+                  <button
+                    onClick={async () => {
+                      if (installPrompt) {
+                        try {
+                          await installPrompt.prompt();
+                          const choice = await installPrompt.userChoice;
+                          if (choice.outcome === 'accepted') {
+                            setIsInstalled(true);
+                            setInstallPrompt(null);
+                            localStorage.setItem('lv_app_installed', 'true');
+                          }
+                        } catch {}
+                      } else {
+                        alert('To install: tap your browser menu (3-dot menu or Share) then tap "Add to Home Screen"');
+                      }
+                    }}
+                    className="w-full flex items-center justify-center space-x-2 py-3 rounded-2xl border-2 border-dashed border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-bold text-sm hover:bg-emerald-500/5 transition-all"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Install LeanVerse App</span>
+                  </button>
+                </div>
+              )}
             </div>
           </motion.div>
         )}

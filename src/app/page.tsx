@@ -430,7 +430,7 @@ export default function HomePage() {
  { days: 90, title: 'Transformation', diff: 'Advanced', success: '91%', highlight: true },
  { days: 120, title: 'Evolution', diff: 'Elite', success: '85%' }
  ].map(prog => (
- <div key={prog.days} className={`glass p-6 rounded-3xl border transition-all hover:-translate-y-2 flex flex-col ${prog.highlight ? 'border-emerald-500/50 shadow-2xl shadow-emerald-500/10' : 'border-border/50 dark:border-border'}`}>
+ <div key={prog.days} className={`relative glass p-6 rounded-3xl border transition-all hover:-translate-y-2 flex flex-col ${prog.highlight ? 'border-emerald-500/50 shadow-2xl shadow-emerald-500/10' : 'border-border/50 dark:border-border'}`}>
  {prog.highlight && (
  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
  Most Popular
@@ -729,50 +729,7 @@ export default function HomePage() {
  <Link href="/calculators/maintenance" className="px-8 py-4 rounded-2xl bg-secondary hover:bg-slate-300 dark:bg-card/5 dark:backdrop-blur-md dark:hover:bg-card/10 text-foreground font-bold text-lg transition-all border border-border flex items-center justify-center shadow-lg">Calculate Calories</Link>
  </div>
  </div>
- </section> {/* Footer SEO Links */}
- <footer className="bg-background py-12 px-4 sm:px-6 lg:px-8 border-t border-border text-center md:text-left">
- <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
- <div className="space-y-4">
- <h5 className="text-foreground font-black uppercase text-sm tracking-wider">Features</h5>
- <ul className="space-y-2 text-muted text-sm font-medium">
- <li><Link href="/workout-planner" className="hover:text-emerald-500 transition-colors">AI Workout Generator</Link></li>
- <li><Link href="/diet-planner" className="hover:text-emerald-500 transition-colors">Indian Diet Planner</Link></li>
- <li><Link href="/calculators" className="hover:text-emerald-500 transition-colors">Fitness Calculators</Link></li>
- <li><Link href="/dashboard" className="hover:text-emerald-500 transition-colors">Progress Tracking</Link></li>
- </ul>
- </div>
- <div className="space-y-4">
- <h5 className="text-foreground font-black uppercase text-sm tracking-wider">Calculators</h5>
- <ul className="space-y-2 text-muted text-sm font-medium">
- <li><Link href="/calculators/bmi" className="hover:text-emerald-500 transition-colors">BMI Calculator</Link></li>
- <li><Link href="/calculators/maintenance" className="hover:text-emerald-500 transition-colors">TDEE Calculator</Link></li>
- <li><Link href="/calculators/macro" className="hover:text-emerald-500 transition-colors">Macro Calculator</Link></li>
- <li><Link href="/calculators/body-fat" className="hover:text-emerald-500 transition-colors">Body Fat Calculator</Link></li>
- </ul>
- </div>
- <div className="space-y-4">
- <h5 className="text-foreground font-black uppercase text-sm tracking-wider">Goals</h5>
- <ul className="space-y-2 text-muted text-sm font-medium">
- <li><Link href="/workout-planner" className="hover:text-emerald-500 transition-colors">Build Muscle</Link></li>
- <li><Link href="/workout-planner" className="hover:text-emerald-500 transition-colors">Lose Fat</Link></li>
- <li><Link href="/workout-planner" className="hover:text-emerald-500 transition-colors">Recomposition</Link></li>
- <li><Link href="/workout-planner" className="hover:text-emerald-500 transition-colors">General Fitness</Link></li>
- </ul>
- </div>
- <div className="space-y-4">
- <h5 className="text-foreground font-black uppercase text-sm tracking-wider">Legal</h5>
- <ul className="space-y-2 text-muted text-sm font-medium">
- <li><Link href="/terms" className="hover:text-emerald-500 transition-colors">Terms of Service</Link></li>
- <li><Link href="/privacy" className="hover:text-emerald-500 transition-colors">Privacy Policy</Link></li>
- <li><Link href="/disclaimer" className="hover:text-emerald-500 transition-colors">Disclaimer</Link></li>
- <li><Link href="/contact" className="hover:text-emerald-500 transition-colors">Contact Us</Link></li>
- </ul>
- </div>
- </div>
- <div className="max-w-7xl mx-auto text-center text-xs text-muted border-t border-white/5 pt-8">
- <p>© {new Date().getFullYear()} LeanVerse. Building dream physiques through AI-powered workout plans, macro calculators, and progressive overload tracking.</p>
- </div>
- </footer>
+ </section>
 
  </div>
  );
