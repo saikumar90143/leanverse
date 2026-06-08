@@ -99,7 +99,7 @@ export default function MaintenanceCaloriesCalculator() {
  <div className="space-y-1">
  <label className="text-xs font-bold text-muted block ml-1">Age</label>
  <input
- type="number" min="0"
+ type="text" inputMode="numeric" pattern="[0-9]*" min="0"
  value={age}
  onChange={(e) => setAge(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
  className="w-full bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
@@ -109,7 +109,7 @@ export default function MaintenanceCaloriesCalculator() {
  <div className="space-y-1">
  <label className="text-xs font-bold text-muted block ml-1">Height (cm)</label>
  <input
- type="number" min="0"
+ type="text" inputMode="numeric" pattern="[0-9]*" min="0"
  value={height}
  onChange={(e) => setHeight(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
  className="w-full bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
@@ -119,7 +119,7 @@ export default function MaintenanceCaloriesCalculator() {
  <div className="space-y-1">
  <label className="text-xs font-bold text-muted block ml-1">Weight (kg)</label>
  <input
- type="number" min="0"
+ type="text" inputMode="numeric" pattern="[0-9]*" min="0"
  value={weight}
  onChange={(e) => setWeight(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
  className="w-full bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"

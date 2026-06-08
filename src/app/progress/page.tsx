@@ -156,7 +156,7 @@ export default function ProgressTracker() {
  <div className="p-3 bg-secondary/50 dark:bg-card/5 border border-border/5 rounded-2xl">
  <span className="text-[10px] text-muted font-extrabold block">Chest</span>
  <input 
- type="number" min="0" 
+ type="text" inputMode="numeric" pattern="[0-9]*" min="0" 
  value={chest} 
  onChange={(e) => setChest(parseInt(e.target.value) || 0)}
  className="bg-transparent border-0 font-black text-lg text-foreground focus:ring-0 focus:outline-none w-full mt-1"
@@ -166,7 +166,7 @@ export default function ProgressTracker() {
  <div className="p-3 bg-secondary/50 dark:bg-card/5 border border-border/5 rounded-2xl">
  <span className="text-[10px] text-muted font-extrabold block">Waist</span>
  <input 
- type="number" min="0" 
+ type="text" inputMode="numeric" pattern="[0-9]*" min="0" 
  value={waist} 
  onChange={(e) => setWaist(parseInt(e.target.value) || 0)}
  className="bg-transparent border-0 font-black text-lg text-foreground focus:ring-0 focus:outline-none w-full mt-1"
@@ -176,7 +176,7 @@ export default function ProgressTracker() {
  <div className="p-3 bg-secondary/50 dark:bg-card/5 border border-border/5 rounded-2xl">
  <span className="text-[10px] text-muted font-extrabold block">Biceps</span>
  <input 
- type="number" min="0" 
+ type="text" inputMode="numeric" pattern="[0-9]*" min="0" 
  value={biceps} 
  onChange={(e) => setBiceps(parseInt(e.target.value) || 0)}
  className="bg-transparent border-0 font-black text-lg text-foreground focus:ring-0 focus:outline-none w-full mt-1"
@@ -186,7 +186,7 @@ export default function ProgressTracker() {
  <div className="p-3 bg-secondary/50 dark:bg-card/5 border border-border/5 rounded-2xl">
  <span className="text-[10px] text-muted font-extrabold block">Hips</span>
  <input 
- type="number" min="0" 
+ type="text" inputMode="numeric" pattern="[0-9]*" min="0" 
  value={hips} 
  onChange={(e) => setHips(parseInt(e.target.value) || 0)}
  className="bg-transparent border-0 font-black text-lg text-foreground focus:ring-0 focus:outline-none w-full mt-1"
@@ -221,6 +221,7 @@ export default function ProgressTracker() {
  <form onSubmit={handleWeightSubmit} className="flex space-x-2 pt-4 border-t border-border/10">
  <input
  type="text"
+ inputMode="numeric" pattern="[0-9]*"
  placeholder="Log Weight kg"
  value={newWeight}
  onChange={(e) => setNewWeight(e.target.value)}

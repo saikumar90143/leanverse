@@ -460,7 +460,7 @@ export default function HomePage() {
  timelineDays: prog.days, 
  goal: 'muscle', 
  experience: prog.diff === 'Beginner' ? 'beginner' : prog.diff === 'Elite' ? 'advanced' : 'intermediate' 
- })} className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${prog.highlight ? 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg' : 'bg-secondary dark:bg-card/10 hover:bg-slate-300 dark:hover:bg-card/20 text-foreground'}`}>
+ })} className={`w-full py-3 border border-border/20 dark:border-border rounded-xl font-bold text-sm transition-all ${prog.highlight ? 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg border-emerald-400/50 dark:border-emerald-500/50' : 'bg-secondary dark:bg-card/10 hover:bg-slate-300 dark:hover:bg-card/20 text-foreground'}`}>
  Start Program
  </button>
  </div>

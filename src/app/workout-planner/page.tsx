@@ -209,14 +209,24 @@ export default function AIWorkoutPlanner() {
  }, 1500);
  };
 
- const handleLogChange = (exerciseId: string, setIndex: number, field: 'weight' | 'reps', val: string) => {
- setLogs((prev) => {
- const exLogs = prev[exerciseId] ? [...prev[exerciseId]] : [];
- if (!exLogs[setIndex]) exLogs[setIndex] = { weight: '', reps: '' };
- exLogs[setIndex] = { ...exLogs[setIndex], [field]: val };
- return { ...prev, [exerciseId]: exLogs };
- });
- };
+  const handleLogChange = (exerciseId: string, setIndex: number, field: 'weight' | 'reps', val: string) => {
+    // Strip everything except digits
+    let sanitizedVal = val.replace(/\D/g, '');
+    
+    // Limit lengths: max 3 digits for weight, 2 digits for reps
+    if (field === 'weight') {
+      sanitizedVal = sanitizedVal.slice(0, 3);
+    } else if (field === 'reps') {
+      sanitizedVal = sanitizedVal.slice(0, 2);
+    }
+
+    setLogs((prev) => {
+      const exLogs = prev[exerciseId] ? [...prev[exerciseId]] : [];
+      if (!exLogs[setIndex]) exLogs[setIndex] = { weight: '', reps: '' };
+      exLogs[setIndex] = { ...exLogs[setIndex], [field]: sanitizedVal };
+      return { ...prev, [exerciseId]: exLogs };
+    });
+  };
 
  const handleCompleteWorkout = () => {
  if (!state) return;
@@ -862,6 +872,8 @@ export default function AIWorkoutPlanner() {
  </div>
  <input 
  type="text" 
+ inputMode="numeric"
+ pattern="[0-9]*"
  placeholder="Weight" 
  value={weightVal}
  readOnly={isPastDay || ex.completed}
@@ -870,7 +882,9 @@ export default function AIWorkoutPlanner() {
  />
  <span className="text-muted font-bold shrink-0">×</span>
  <input 
- type="number" 
+ type="text" 
+ inputMode="numeric"
+ pattern="[0-9]*"
  placeholder="Reps" 
  value={repsVal}
  readOnly={isPastDay || ex.completed}

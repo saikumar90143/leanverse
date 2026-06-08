@@ -144,7 +144,7 @@ export default function BodyFatCalculator() {
               <div className="space-y-1">
                 <label className="text-xs font-bold text-muted block ml-1">Height (cm)</label>
                 <input
-                  type="number" min="0"
+                  type="text" inputMode="numeric" pattern="[0-9]*" min="0"
                   value={height}
                   onChange={(e) => setHeight(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
                   className="w-full bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
@@ -154,7 +154,7 @@ export default function BodyFatCalculator() {
               <div className="space-y-1">
                 <label className="text-xs font-bold text-muted block ml-1">Neck Circumference (cm)</label>
                 <input
-                  type="number" min="0"
+                  type="text" inputMode="numeric" pattern="[0-9]*" min="0"
                   value={neck}
                   onChange={(e) => setNeck(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
                   className="w-full bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
@@ -167,7 +167,7 @@ export default function BodyFatCalculator() {
               <div className="space-y-1">
                 <label className="text-xs font-bold text-muted block ml-1">Waist Circumference (cm)</label>
                 <input
-                  type="number" min="0"
+                  type="text" inputMode="numeric" pattern="[0-9]*" min="0"
                   value={waist}
                   onChange={(e) => setWaist(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
                   className="w-full bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
@@ -178,7 +178,7 @@ export default function BodyFatCalculator() {
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-muted block ml-1">Hip Circumference (cm)</label>
                   <input
-                    type="number" min="0"
+                    type="text" inputMode="numeric" pattern="[0-9]*" min="0"
                     value={hip}
                     onChange={(e) => setHip(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
                     className="w-full bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold animate-fade-in"

@@ -48,21 +48,18 @@ export default function BlogListingPage() {
  });
  }, []);
 
- const categories = [
- { id: 'all', name: 'All Categories' },
- { id: 'Indian Diet Plans', name: 'Indian Diets' },
- { id: 'Gym Workouts', name: 'Gym Training' },
- { id: 'Home Workouts', name: 'Home Splits' },
- { id: 'Nutrition', name: 'Nutrition' },
- { id: 'Supplements', name: 'Supplements' }
- ];
+  const uniqueCategories = Array.from(new Set(blogs.map(b => b.category))).filter(Boolean);
+  const categories = [
+    { id: 'all', name: 'All Categories' },
+    ...uniqueCategories.map(cat => ({ id: cat, name: cat }))
+  ];
 
- const filteredArticles = blogs.filter((art) => {
- const matchesSearch = art.title?.toLowerCase().includes(search.toLowerCase()) || 
- art.summary?.toLowerCase().includes(search.toLowerCase());
- const matchesCategory = activeCategory === 'all' || art.category?.toLowerCase() === activeCategory.toLowerCase();
- return matchesSearch && matchesCategory;
- });
+  const filteredArticles = blogs.filter((art) => {
+    const matchesSearch = art.title?.toLowerCase().includes(search.toLowerCase()) || 
+                          art.summary?.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = activeCategory === 'all' || art.category === activeCategory;
+    return matchesSearch && matchesCategory;
+  });
 
  return (
  <div className="max-w-6xl mx-auto px-4 py-8 space-y-10">
