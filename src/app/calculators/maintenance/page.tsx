@@ -5,10 +5,10 @@ import { Calculator, Heart, Info, ArrowLeft, Zap } from 'lucide-react';
 import Link from 'next/link';
 
 export default function MaintenanceCaloriesCalculator() {
- const [age, setAge] = useState<number | ''>(25);
+ const [age, setAge] = useState<string | number>(25);
  const [gender, setGender] = useState<'male' | 'female'>('male');
- const [weight, setWeight] = useState<number | ''>(70); // kg
- const [height, setHeight] = useState<number | ''>(170); // cm
+ const [weight, setWeight] = useState<string | number>(70); // kg
+ const [height, setHeight] = useState<string | number>(170); // cm
  const [activity, setActivity] = useState<string>('1.375'); // Lightly Active default
 
  const [bmr, setBmr] = useState(1630);
@@ -99,9 +99,9 @@ export default function MaintenanceCaloriesCalculator() {
  <div className="space-y-1">
  <label className="text-xs font-bold text-muted block ml-1">Age</label>
  <input
- type="text" inputMode="numeric" pattern="[0-9]*" min="0"
+ type="text" inputMode="numeric" maxLength={3}
  value={age}
- onChange={(e) => setAge(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+ onChange={(e) => setAge(e.target.value.replace(/[^0-9]/g, ''))}
  className="w-full bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
  />
  </div>
@@ -109,9 +109,9 @@ export default function MaintenanceCaloriesCalculator() {
  <div className="space-y-1">
  <label className="text-xs font-bold text-muted block ml-1">Height (cm)</label>
  <input
- type="text" inputMode="numeric" pattern="[0-9]*" min="0"
+ type="text" inputMode="decimal" maxLength={5}
  value={height}
- onChange={(e) => setHeight(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+ onChange={(e) => setHeight(e.target.value.replace(/[^0-9.]/g, ''))}
  className="w-full bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
  />
  </div>
@@ -119,9 +119,9 @@ export default function MaintenanceCaloriesCalculator() {
  <div className="space-y-1">
  <label className="text-xs font-bold text-muted block ml-1">Weight (kg)</label>
  <input
- type="text" inputMode="numeric" pattern="[0-9]*" min="0"
+ type="text" inputMode="decimal" maxLength={5}
  value={weight}
- onChange={(e) => setWeight(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+ onChange={(e) => setWeight(e.target.value.replace(/[^0-9.]/g, ''))}
  className="w-full bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
  />
  </div>

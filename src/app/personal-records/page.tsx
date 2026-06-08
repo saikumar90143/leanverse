@@ -24,6 +24,16 @@ export default function PersonalRecordsPage() {
  const [searchQuery, setSearchQuery] = useState('');
  const [filterMuscle, setFilterMuscle] = useState('All');
  const [isMounted, setIsMounted] = useState(false);
+ const [dbExercises, setDbExercises] = useState<any[]>([]);
+
+ useEffect(() => {
+   fetch('/api/exercises')
+     .then(res => res.json())
+     .then(data => {
+       if (Array.isArray(data)) setDbExercises(data);
+     })
+     .catch(console.error);
+ }, []);
 
  useEffect(() => {
  setIsMounted(true);
@@ -61,7 +71,7 @@ export default function PersonalRecordsPage() {
  records.forEach(record => {
  record.weightUsed.forEach((weightStr: string, idx: number) => {
  const w = parseFloat(weightStr);
- const reps = record.repsAchieved[idx] || 0;
+ const reps = parseInt(record.repsAchieved[idx]) || 0;
  
  // Check for bodyweight
  if (isNaN(w) || weightStr.toLowerCase().includes('body')) {
@@ -84,8 +94,9 @@ export default function PersonalRecordsPage() {
  est1RM = maxWeight * (36 / (37 - maxRepsAtMaxWeight));
  }
 
- // Find exercise meta
- const meta = transformationExercises.find(e => e.id === exerciseId || (e as any)._id === exerciseId);
+ // Find exercise meta across both default and database exercises
+ const allExercises = [...transformationExercises, ...dbExercises];
+ const meta = allExercises.find(e => e.id === exerciseId || (e as any)._id === exerciseId);
  if (meta) {
  calculatedPRs.push({
  exerciseId,
@@ -108,7 +119,7 @@ export default function PersonalRecordsPage() {
  } catch (e) {
  console.error('Failed to load PRs', e);
  }
- }, [user]);
+ }, [user, dbExercises]);
 
  const filteredPRs = useMemo(() => {
  return prList.filter(pr => {

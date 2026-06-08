@@ -162,7 +162,7 @@ export default function HomePage() {
 
  <div className="flex bg-secondary dark:bg-card/5 p-1 rounded-xl mb-6 border border-border/50 dark:border-border">
  <button onClick={() => setQsMode('ai')} className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${qsMode === 'ai' ? 'bg-card dark:bg-secondary text-emerald-500 shadow-sm' : 'text-muted hover:text-foreground dark:hover:text-slate-300'}`}>AI Generated</button>
- <button onClick={() => setQsMode('custom')} className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${qsMode === 'custom' ? 'bg-card dark:bg-secondary text-emerald-500 shadow-sm' : 'text-muted hover:text-foreground dark:hover:text-slate-300'}`}>Custom Build</button>
+ <button onClick={() => setQsMode('custom')} className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${qsMode === 'custom' ? 'bg-card dark:bg-secondary text-emerald-500 shadow-sm' : 'text-muted hover:text-foreground dark:hover:text-slate-300'}`}>Custom Plan</button>
  </div>
 
  <div className="space-y-5">

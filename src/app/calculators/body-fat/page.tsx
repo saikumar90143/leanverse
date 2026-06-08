@@ -6,10 +6,10 @@ import Link from 'next/link';
 
 export default function BodyFatCalculator() {
   const [gender, setGender] = useState<'male' | 'female'>('male');
-  const [height, setHeight] = useState<number | ''>(170); // cm
-  const [neck, setNeck] = useState<number | ''>(38); // cm
-  const [waist, setWaist] = useState<number | ''>(82); // cm
-  const [hip, setHip] = useState<number | ''>(90); // cm (used for females)
+  const [height, setHeight] = useState<string | number>(170); // cm
+  const [neck, setNeck] = useState<string | number>(38); // cm
+  const [waist, setWaist] = useState<string | number>(82); // cm
+  const [hip, setHip] = useState<string | number>(90); // cm (used for females)
 
   const [bodyFat, setBodyFat] = useState(15.4);
   const [category, setCategory] = useState('Fit');
@@ -144,9 +144,9 @@ export default function BodyFatCalculator() {
               <div className="space-y-1">
                 <label className="text-xs font-bold text-muted block ml-1">Height (cm)</label>
                 <input
-                  type="text" inputMode="numeric" pattern="[0-9]*" min="0"
+                  type="text" inputMode="decimal" maxLength={5}
                   value={height}
-                  onChange={(e) => setHeight(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                  onChange={(e) => setHeight(e.target.value.replace(/[^0-9.]/g, ''))}
                   className="w-full bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
                 />
               </div>
@@ -154,9 +154,9 @@ export default function BodyFatCalculator() {
               <div className="space-y-1">
                 <label className="text-xs font-bold text-muted block ml-1">Neck Circumference (cm)</label>
                 <input
-                  type="text" inputMode="numeric" pattern="[0-9]*" min="0"
+                  type="text" inputMode="decimal" maxLength={5}
                   value={neck}
-                  onChange={(e) => setNeck(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                  onChange={(e) => setNeck(e.target.value.replace(/[^0-9.]/g, ''))}
                   className="w-full bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
                 />
               </div>
@@ -167,9 +167,9 @@ export default function BodyFatCalculator() {
               <div className="space-y-1">
                 <label className="text-xs font-bold text-muted block ml-1">Waist Circumference (cm)</label>
                 <input
-                  type="text" inputMode="numeric" pattern="[0-9]*" min="0"
+                  type="text" inputMode="decimal" maxLength={5}
                   value={waist}
-                  onChange={(e) => setWaist(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                  onChange={(e) => setWaist(e.target.value.replace(/[^0-9.]/g, ''))}
                   className="w-full bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold"
                 />
               </div>
@@ -178,9 +178,9 @@ export default function BodyFatCalculator() {
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-muted block ml-1">Hip Circumference (cm)</label>
                   <input
-                    type="text" inputMode="numeric" pattern="[0-9]*" min="0"
+                    type="text" inputMode="decimal" maxLength={5}
                     value={hip}
-                    onChange={(e) => setHip(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                    onChange={(e) => setHip(e.target.value.replace(/[^0-9.]/g, ''))}
                     className="w-full bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 font-bold animate-fade-in"
                   />
                 </div>

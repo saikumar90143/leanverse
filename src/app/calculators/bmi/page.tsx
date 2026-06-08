@@ -88,8 +88,9 @@ export default function BMICalculator() {
  type="range"
  min="120"
  max="220"
+ step="0.1"
  value={height}
- onChange={(e) => setHeight(parseInt(e.target.value))}
+ onChange={(e) => setHeight(parseFloat(e.target.value))}
  className="w-full h-2 bg-secondary dark:bg-card/10 rounded-lg appearance-none cursor-pointer accent-emerald-500"
  />
  </div>
@@ -104,8 +105,9 @@ export default function BMICalculator() {
  type="range"
  min="35"
  max="150"
+ step="0.1"
  value={weight}
- onChange={(e) => setWeight(parseInt(e.target.value))}
+ onChange={(e) => setWeight(parseFloat(e.target.value))}
  className="w-full h-2 bg-secondary dark:bg-card/10 rounded-lg appearance-none cursor-pointer accent-emerald-500"
  />
  </div>

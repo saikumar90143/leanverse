@@ -484,8 +484,8 @@ export default function UserDashboard() {
  <form onSubmit={handleSetTargetWeight} className="flex space-x-2">
  <input
  type="text"
- inputMode="numeric"
- pattern="[0-9]*"
+ inputMode="decimal"
+ maxLength={5}
  placeholder="Set Target kg"
  value={targetWeightInput}
  onChange={(e) => setTargetWeightInput(e.target.value)}
@@ -499,8 +499,8 @@ export default function UserDashboard() {
  <form onSubmit={handleLogWeight} className="flex space-x-2">
  <input
  type="text"
- inputMode="numeric"
- pattern="[0-9]*"
+ inputMode="decimal"
+ maxLength={5}
  placeholder="Log Weight kg"
  value={weightInput}
  onChange={(e) => setWeightInput(e.target.value)}

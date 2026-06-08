@@ -853,7 +853,7 @@ Built with LeanVerse AI`;
  <div className="grid grid-cols-2 gap-4 mb-5">
  <div className="space-y-1.5">
  <label className="text-xs font-bold text-muted uppercase tracking-wide">Age</label>
- <input type="text" inputMode="numeric" pattern="[0-9]*" min="10" value={age} onChange={e => setAge(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+ <input type="text" inputMode="numeric" maxLength={3} value={age} onChange={e => setAge(e.target.value.replace(/[^0-9]/g, ''))}
  className="w-full bg-background border border-border rounded-xl px-4 py-3 font-black text-base sm:text-sm focus:outline-none focus:border-emerald-500 transition-colors" />
  </div>
  <div className="space-y-1.5">
@@ -869,12 +869,12 @@ Built with LeanVerse AI`;
  <div className="grid grid-cols-2 gap-4 mb-6">
  <div className="space-y-1.5">
  <label className="text-xs font-bold text-muted uppercase tracking-wide">Height (cm)</label>
- <input type="text" inputMode="numeric" pattern="[0-9]*" min="50" value={height} onChange={e => setHeight(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+ <input type="text" inputMode="decimal" maxLength={5} value={height} onChange={e => setHeight(e.target.value.replace(/[^0-9.]/g, ''))}
  className="w-full bg-background border border-border rounded-xl px-4 py-3 font-black text-base sm:text-sm focus:outline-none focus:border-emerald-500 transition-colors" />
  </div>
  <div className="space-y-1.5">
  <label className="text-xs font-bold text-muted uppercase tracking-wide">Weight (kg)</label>
- <input type="text" inputMode="numeric" pattern="[0-9]*" min="30" value={weight} onChange={e => setWeight(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+ <input type="text" inputMode="decimal" maxLength={5} value={weight} onChange={e => setWeight(e.target.value.replace(/[^0-9.]/g, ''))}
  className="w-full bg-background border border-border rounded-xl px-4 py-3 font-black text-base sm:text-sm focus:outline-none focus:border-emerald-500 transition-colors" />
  </div>
  </div>

@@ -28,8 +28,25 @@ export default function AIWorkoutPlanner() {
  const [equipment, setEquipment] = useState<string[]>(['dumbbells']);
  const [loading, setLoading] = useState(false);
 
- // Active Workout State
- const [logs, setLogs] = useState<Record<string, { reps: string; weight: string }[]>>({});
+  // Active Workout State
+  const [logs, setLogs] = useState<Record<string, { reps: string; weight: string }[]>>({});
+  
+  // Load draft logs on mount
+  useEffect(() => {
+    const draft = localStorage.getItem('leanverse_workout_draft');
+    if (draft) {
+      try {
+        setLogs(JSON.parse(draft));
+      } catch (e) {}
+    }
+  }, []);
+
+  // Save draft logs on change
+  useEffect(() => {
+    if (Object.keys(logs).length > 0) {
+      localStorage.setItem('leanverse_workout_draft', JSON.stringify(logs));
+    }
+  }, [logs]);
  const [viewDayIndex, setViewDayIndex] = useState(-1);
 
  useEffect(() => {
@@ -49,15 +66,29 @@ export default function AIWorkoutPlanner() {
  
  day.mainExercises.forEach(ex => {
  if (!newLogs[ex.id]) {
- const history = state.exerciseHistory?.[ex.exerciseId];
- if (history && history.length > 0) {
- const lastSession = history[history.length - 1];
- // Pre-fill the inputs with the exact weights and reps they hit last time
- newLogs[ex.id] = Array.from({ length: ex.targetSets }).map((_, i) => ({
- reps: lastSession.repsAchieved[i] !== undefined ? lastSession.repsAchieved[i].toString() : '',
- weight: lastSession.weightUsed[i] !== undefined ? lastSession.weightUsed[i].toString() : ''
- }));
- changed = true;
+                  const history = state.exerciseHistory?.[ex.exerciseId];
+                  if (history && history.length > 0) {
+                    // Find the session with the highest weight (PR session)
+                    let bestSession = history[history.length - 1];
+                    let maxW = -1;
+                    history.forEach(session => {
+                      let sessionMax = -1;
+                      session.weightUsed.forEach(wStr => {
+                        const w = parseFloat(wStr);
+                        if (!isNaN(w) && w > sessionMax) sessionMax = w;
+                      });
+                      if (sessionMax >= maxW) { // Use >= so more recent session wins on ties
+                        maxW = sessionMax;
+                        bestSession = session;
+                      }
+                    });
+
+                    // Pre-fill the inputs with the weights and reps from their best session
+                    newLogs[ex.id] = Array.from({ length: ex.targetSets }).map((_, i) => ({
+                      reps: bestSession.repsAchieved[i] !== undefined ? bestSession.repsAchieved[i].toString() : '',
+                      weight: bestSession.weightUsed[i] !== undefined ? bestSession.weightUsed[i].toString() : ''
+                    }));
+                    changed = true;
  }
  }
  });
@@ -210,12 +241,14 @@ export default function AIWorkoutPlanner() {
  };
 
   const handleLogChange = (exerciseId: string, setIndex: number, field: 'weight' | 'reps', val: string) => {
-    // Strip everything except digits
-    let sanitizedVal = val.replace(/\D/g, '');
+    // Allow numbers and decimal point for weight, only digits for reps
+    let sanitizedVal = field === 'weight' 
+      ? val.replace(/[^0-9.]/g, '')
+      : val.replace(/\D/g, '');
     
-    // Limit lengths: max 3 digits for weight, 2 digits for reps
+    // Limit lengths: max 5 chars for weight (supports decimals), 2 digits for reps
     if (field === 'weight') {
-      sanitizedVal = sanitizedVal.slice(0, 3);
+      sanitizedVal = sanitizedVal.slice(0, 5);
     } else if (field === 'reps') {
       sanitizedVal = sanitizedVal.slice(0, 2);
     }
@@ -259,6 +292,7 @@ export default function AIWorkoutPlanner() {
  
  setState(newState);
  setLogs({}); // Clear logs for next day
+ localStorage.removeItem('leanverse_workout_draft');
  setViewDayIndex(newState.currentDay - 1);
  window.scrollTo({ top: 0, behavior: 'smooth' });
  };
@@ -872,8 +906,7 @@ export default function AIWorkoutPlanner() {
  </div>
  <input 
  type="text" 
- inputMode="numeric"
- pattern="[0-9]*"
+ inputMode="decimal"
  placeholder="Weight" 
  value={weightVal}
  readOnly={isPastDay || ex.completed}
@@ -883,8 +916,7 @@ export default function AIWorkoutPlanner() {
  <span className="text-muted font-bold shrink-0">×</span>
  <input 
  type="text" 
- inputMode="numeric"
- pattern="[0-9]*"
+ inputMode="decimal"
  placeholder="Reps" 
  value={repsVal}
  readOnly={isPastDay || ex.completed}
