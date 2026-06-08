@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
+import { v2 as cloudinary } from 'cloudinary';
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export async function POST(req: Request) {
   try {
@@ -16,7 +21,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'File size exceeds 5MB limit' }, { status: 413 });
     }
 
-    // SECURITY: Only allow specific image MIME types (blocks .svg, .exe, .php, etc.)
+    // SECURITY: Only allow specific image MIME types
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json({ success: false, error: 'Invalid file type. Only JPEG, PNG, and WebP are allowed' }, { status: 415 });
@@ -25,23 +30,24 @@ export async function POST(req: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Make filename secure against path traversal using UUID
-    const ext = file.name.substring(file.name.lastIndexOf('.'));
-    const safeExt = ['.jpg', '.jpeg', '.png', '.webp'].includes(ext.toLowerCase()) ? ext.toLowerCase() : '.jpg';
-    const filename = `${crypto.randomUUID()}${safeExt}`;
+    // Stream the buffer to Cloudinary
+    const uploadResult = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        { folder: 'leanverse_uploads' },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      uploadStream.end(buffer);
+    });
 
-    const uploadDir = join(process.cwd(), 'public', 'uploads');
-    
-    // Ensure dir exists
-    await mkdir(uploadDir, { recursive: true });
+    const url = (uploadResult as any).secure_url;
 
-    const path = join(uploadDir, filename);
-    await writeFile(path, buffer);
-
-    // Return the public URL to access the image
-    return NextResponse.json({ success: true, url: `/uploads/${filename}` });
+    return NextResponse.json({ success: true, url });
   } catch (error: any) {
-    console.error('Upload Error:', error);
+    console.error('Cloudinary Upload Error:', error);
     return NextResponse.json({ success: false, error: 'Upload failed: ' + error.message }, { status: 500 });
   }
 }
+

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { Plus, Search, Edit2, Trash2, X, Filter } from 'lucide-react';
+import ImageUploader from '@/components/ui/ImageUploader';
 
 interface Exercise {
  _id: string;
@@ -289,31 +290,15 @@ export default function ExercisesSection() {
  </div>
  )}
  <div className="flex-1">
- <input 
- type="file" 
- accept="image/*"
- onChange={async (e) => {
- const file = e.target.files?.[0];
- if (!file) return;
- 
- const formData = new FormData();
- formData.append('file', file);
- 
- try {
- const res = await fetch('/api/upload', { method: 'POST', body: formData });
- const data = await res.json();
- if (data.success) {
- setEditing((p: any) => ({ ...p, imageUrl: data.url }));
- } else {
- alert('Upload failed: ' + data.error);
- }
- } catch (err) {
- alert('Upload error');
- }
- }}
- className="w-full text-sm text-muted file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-500 file:text-white hover:file:bg-emerald-600 cursor-pointer"
- />
- <p className="text-[10px] text-muted mt-1">Recommended: .webp or transparent .webp</p>
+ <ImageUploader 
+ onUploadSuccess={(url) => setEditing((p: any) => ({ ...p, imageUrl: url }))}
+ onUploadError={(err) => alert('Upload failed: ' + err)}
+ >
+ <button type="button" className="w-full text-sm font-bold text-white bg-emerald-500 hover:bg-emerald-600 px-4 py-2 rounded-xl transition-all">
+ Select Image
+ </button>
+ </ImageUploader>
+ <p className="text-[10px] text-muted mt-2">Recommended: .webp or transparent .webp</p>
  </div>
  </div>
  </div>

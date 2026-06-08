@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { Plus, Search, Edit2, Trash2, CheckCircle, Clock, FileText, X, Calendar, Image as ImageIcon, Loader2, Sparkles } from 'lucide-react';
+import ImageUploader from '@/components/ui/ImageUploader';
 
 interface BlogPost {
  _id: string;
@@ -110,35 +111,10 @@ export default function BlogSection() {
  setShowEditor(true);
  };
 
- const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
- const file = e.target.files?.[0];
- if (!file) return;
-
- setUploadingImage(true);
- try {
- const formData = new FormData();
- formData.append('file', file);
- 
- const res = await fetch('/api/upload', {
- method: 'POST',
- body: formData,
- });
- 
- const data = await res.json();
- if (data.success && data.url) {
- // Append the markdown image tag to the content
- const imageMarkdown = `\n![Image](${data.url})\n`;
- setEditing(p => ({ ...p, content: (p.content || '') + imageMarkdown }));
- } else {
- alert(data.error || 'Failed to upload image');
- }
- } catch (err) {
- alert('Error uploading image');
- }
- setUploadingImage(false);
- // Reset the file input
- e.target.value = '';
- };
+  const handleImageUploadSuccess = (url: string) => {
+    const imageMarkdown = `\n![Image](${url})\n`;
+    setEditing(p => ({ ...p, content: (p.content || '') + imageMarkdown }));
+  };
 
  const handleGenerateAI = async () => {
  if (!aiParams.topic) return alert('Topic is required');
@@ -344,23 +320,17 @@ export default function BlogSection() {
  <div className="flex justify-between items-center mb-1">
  <label className="text-[10px] font-black text-muted uppercase">Content (Markdown)</label>
  
- <div className="relative">
- <input 
- type="file" 
- accept="image/*" 
- onChange={handleImageUpload} 
- disabled={uploadingImage}
- className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed" 
- title="Upload an image to embed in post"
- />
- <button 
- type="button" 
- className="flex items-center gap-1.5 px-2 py-1 bg-secondary dark:bg-card/5 hover:bg-secondary dark:hover:bg-card/10 rounded-lg text-xs font-bold text-muted transition-colors"
- >
- {uploadingImage ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImageIcon className="w-3.5 h-3.5" />}
- {uploadingImage ? 'Uploading...' : 'Insert Image'}
- </button>
- </div>
+                <ImageUploader 
+                  onUploadSuccess={handleImageUploadSuccess}
+                >
+                  <button 
+                    type="button" 
+                    className="flex items-center gap-1.5 px-2 py-1 bg-secondary dark:bg-card/5 hover:bg-secondary dark:hover:bg-card/10 rounded-lg text-xs font-bold text-muted transition-colors"
+                  >
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    Insert Image
+                  </button>
+                </ImageUploader>
  </div>
  <textarea
  rows={8}
