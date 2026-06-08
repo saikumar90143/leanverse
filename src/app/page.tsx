@@ -151,10 +151,10 @@ export default function HomePage() {
  <div className="relative z-10 glass bg-card/60 backdrop-blur-3xl border border-border/50 dark:border-border rounded-3xl p-6 shadow-2xl shadow-emerald-500/10">
  
  <div className="flex items-center justify-between mb-6 border-b border-border/50 dark:border-border pb-4">
- <h3 className="text-xl font-black flex items-center gap-2">
+ <h2 className="text-xl font-black flex items-center gap-2">
  <Zap className="w-5 h-5 text-emerald-500" />
  Create Your Plan
- </h3>
+ </h2>
  <span className="text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded-md">
  Takes 30s
  </span>
@@ -206,10 +206,10 @@ export default function HomePage() {
 
  {/* Timeline (Both Modes) */}
  <div className="space-y-2">
- <label className="text-xs font-bold text-muted uppercase tracking-wider">
+ <label htmlFor="qsTimelineDays" className="text-xs font-bold text-muted uppercase tracking-wider">
  {qsMode === 'ai' ? '3. Timeline' : '1. Transformation Period'}
  </label>
- <select value={qsTimelineDays} onChange={(e) => setQsTimelineDays(parseInt(e.target.value))} className="w-full bg-background dark:bg-card/5 border border-border/50 dark:border-border rounded-xl px-4 py-3 text-sm font-bold text-foreground dark:text-muted focus:outline-none focus:border-emerald-500">
+ <select id="qsTimelineDays" value={qsTimelineDays} onChange={(e) => setQsTimelineDays(parseInt(e.target.value))} className="w-full bg-background dark:bg-card/5 border border-border/50 dark:border-border rounded-xl px-4 py-3 text-sm font-bold text-foreground dark:text-muted focus:outline-none focus:border-emerald-500">
  <option value={30}>30 Days</option>
  <option value={60}>60 Days</option>
  <option value={90}>90 Days</option>
@@ -235,8 +235,8 @@ export default function HomePage() {
  <div className="grid grid-cols-2 gap-4">
  {/* Duration */}
  <div className="space-y-2">
- <label className="text-[10px] font-bold text-muted uppercase tracking-wider">5. Duration</label>
- <select value={qsDuration} onChange={(e) => setQsDuration(parseInt(e.target.value))} className="w-full bg-background dark:bg-card/5 border border-border/50 dark:border-border rounded-xl px-4 py-3 text-sm font-bold text-foreground dark:text-muted focus:outline-none focus:border-emerald-500">
+ <label htmlFor="qsDuration" className="text-[10px] font-bold text-muted uppercase tracking-wider">5. Duration</label>
+ <select id="qsDuration" value={qsDuration} onChange={(e) => setQsDuration(parseInt(e.target.value))} className="w-full bg-background dark:bg-card/5 border border-border/50 dark:border-border rounded-xl px-4 py-3 text-sm font-bold text-foreground dark:text-muted focus:outline-none focus:border-emerald-500">
  <option value={30}>30 min</option>
  <option value={45}>45 min</option>
  <option value={60}>60 min</option>
@@ -246,8 +246,8 @@ export default function HomePage() {
 
  {/* Days per week */}
  <div className="space-y-2">
- <label className="text-[10px] font-bold text-muted uppercase tracking-wider">6. Days/Week</label>
- <select value={qsDaysPerWeek} onChange={(e) => setQsDaysPerWeek(parseInt(e.target.value))} className="w-full bg-background dark:bg-card/5 border border-border/50 dark:border-border rounded-xl px-4 py-3 text-sm font-bold text-foreground dark:text-muted focus:outline-none focus:border-emerald-500">
+ <label htmlFor="qsDaysPerWeek" className="text-[10px] font-bold text-muted uppercase tracking-wider">6. Days/Week</label>
+ <select id="qsDaysPerWeek" value={qsDaysPerWeek} onChange={(e) => setQsDaysPerWeek(parseInt(e.target.value))} className="w-full bg-background dark:bg-card/5 border border-border/50 dark:border-border rounded-xl px-4 py-3 text-sm font-bold text-foreground dark:text-muted focus:outline-none focus:border-emerald-500">
  <option value={3}>3 Days</option>
  <option value={4}>4 Days</option>
  <option value={5}>5 Days</option>
@@ -258,7 +258,7 @@ export default function HomePage() {
  </>
  )}
 
- <button onClick={() => handleQuickStart()} className="w-full mt-4 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-black text-lg rounded-xl shadow-lg transition-transform active:scale-95 flex justify-center items-center gap-2">
+ <button aria-label={qsMode === 'ai' ? 'Generate AI Transformation' : 'Build Custom Plan'} onClick={() => handleQuickStart()} className="w-full mt-4 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-black text-lg rounded-xl shadow-lg transition-transform active:scale-95 flex justify-center items-center gap-2">
  {qsMode === 'ai' ? (
  <>
  <Sparkles className="w-5 h-5" />
@@ -336,7 +336,7 @@ export default function HomePage() {
  ].map((screen, i) => (
  <div key={i} className="snap-center shrink-0 w-[85vw] sm:w-[350px] md:w-[400px] flex flex-col items-center group">
  <div className="relative w-full aspect-[3/4] sm:aspect-[4/5] rounded-[2.5rem] overflow-hidden mb-6 group-hover:-translate-y-2 transition-all duration-500 shadow-2xl shadow-emerald-500/5 bg-secondary border border-border/50 dark:border-border">
- <Image src={screen.img} alt={screen.title} fill sizes="(max-width: 768px) 85vw, (max-width: 1200px) 350px, 400px" className="object-cover transition-transform duration-700 group-hover:scale-105" />
+ <Image src={screen.img} alt={screen.title} fill sizes="(max-width: 768px) 85vw, (max-width: 1200px) 350px, 400px" priority={i === 0} className="object-cover transition-transform duration-700 group-hover:scale-105" />
  </div>
  <div className="text-center px-4">
  <h3 className="text-xl font-black text-foreground mb-2">{screen.title}</h3>
@@ -456,7 +456,7 @@ export default function HomePage() {
  </div>
  </div>
 
- <button onClick={() => handleQuickStart({ 
+ <button aria-label={`Start ${prog.days} day ${prog.title} program`} onClick={() => handleQuickStart({ 
  timelineDays: prog.days, 
  goal: 'muscle', 
  experience: prog.diff === 'Beginner' ? 'beginner' : prog.diff === 'Elite' ? 'advanced' : 'intermediate' 
@@ -551,7 +551,7 @@ export default function HomePage() {
  <li className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-cyan-500" /> Warmup & Cooldown Protocols</li>
  </ul>
  <div className="pt-4">
- <button onClick={() => handleQuickStart()} className="px-8 py-4 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-white font-black text-sm transition-all shadow-lg shadow-cyan-500/20 inline-flex items-center space-x-2">
+ <button aria-label="Build workout plan" onClick={() => handleQuickStart()} className="px-8 py-4 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-white font-black text-sm transition-all shadow-lg shadow-cyan-500/20 inline-flex items-center space-x-2">
  <span>Build Workout Plan</span>
  <ArrowRight className="w-4 h-4" />
  </button>
@@ -581,7 +581,7 @@ export default function HomePage() {
  <div className="w-12 h-12 bg-cyan-500/20 text-cyan-400 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
  {calc.icon}
  </div>
- <h4 className="font-bold text-sm text-background">{calc.name}</h4>
+ <h3 className="font-bold text-sm text-background">{calc.name}</h3>
  </Link>
  ))}
  </div>
@@ -600,22 +600,22 @@ export default function HomePage() {
  <div className="grid grid-cols-2 gap-6 pt-4">
  <div className="space-y-2">
  <div className="w-10 h-10 bg-orange-500/10 text-orange-500 rounded-xl flex items-center justify-center"><Flame className="w-5 h-5" /></div>
- <h4 className="font-black text-foreground">Daily Streaks</h4>
+ <h3 className="font-black text-foreground">Daily Streaks</h3>
  <p className="text-xs text-muted font-medium">Don't break the chain. Complete workouts to keep your fire alive.</p>
  </div>
  <div className="space-y-2">
  <div className="w-10 h-10 bg-purple-500/10 text-purple-500 rounded-xl flex items-center justify-center"><Trophy className="w-5 h-5" /></div>
- <h4 className="font-black text-foreground">Earn Badges</h4>
+ <h3 className="font-black text-foreground">Earn Badges</h3>
  <p className="text-xs text-muted font-medium">Unlock exclusive achievements for hitting personal records.</p>
  </div>
  <div className="space-y-2">
  <div className="w-10 h-10 bg-emerald-500/10 text-emerald-500 rounded-xl flex items-center justify-center"><Sparkles className="w-5 h-5" /></div>
- <h4 className="font-black text-foreground">Level Up XP</h4>
+ <h3 className="font-black text-foreground">Level Up XP</h3>
  <p className="text-xs text-muted font-medium">Gain experience points and rank up from Beginner to Elite.</p>
  </div>
  <div className="space-y-2">
  <div className="w-10 h-10 bg-cyan-500/10 text-cyan-500 rounded-xl flex items-center justify-center"><Activity className="w-5 h-5" /></div>
- <h4 className="font-black text-foreground">Heatmaps</h4>
+ <h3 className="font-black text-foreground">Heatmaps</h3>
  <p className="text-xs text-muted font-medium">Visualize your effort over the last 30 days with activity charts.</p>
  </div>
  </div>

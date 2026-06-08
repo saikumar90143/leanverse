@@ -56,8 +56,9 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="LeanVerse" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icon.svg" />
-        <script
-          async
+        <Script
+          id="adsense-init"
+          strategy="lazyOnload"
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_ID || 'ca-pub-0000000000000000'}`}
           crossOrigin="anonymous"
         />
