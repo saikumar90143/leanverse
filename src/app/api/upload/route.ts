@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
+import crypto from 'crypto';
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -30,10 +31,18 @@ export async function POST(req: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
+    // Generate a predictable hash based on the file contents to prevent duplicates
+    const fileHash = crypto.createHash('sha256').update(buffer).digest('hex').substring(0, 16);
+    const publicId = `img_${fileHash}`;
+
     // Stream the buffer to Cloudinary
     const uploadResult = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
-        { folder: 'leanverse_uploads' },
+        { 
+          folder: 'leanverse_uploads',
+          public_id: publicId,
+          overwrite: true
+        },
         (error, result) => {
           if (error) reject(error);
           else resolve(result);
