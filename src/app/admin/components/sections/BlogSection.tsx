@@ -20,6 +20,7 @@ interface BlogPost {
  tags: string[];
  scheduledAt?: string;
  createdAt: string;
+ coverImage?: string;
 }
 
 const CATEGORIES = ['Indian Diet', 'Gym Workout', 'Home Workout', 'Supplements', 'Fat Loss', 'Muscle Gain', 'Yoga', 'Mental Health', 'Nutrition Science'];
@@ -33,7 +34,7 @@ const statusColors: Record<string, string> = {
 const emptyPost = (): Partial<BlogPost> => ({
  title: '', slug: '', summary: '', content: '', category: 'Indian Diet',
  status: 'draft', author: 'LeanVerse AI Team', metaTitle: '', metaDescription: '',
- keywords: [], tags: [],
+ keywords: [], tags: [], coverImage: ''
 });
 
 export default function BlogSection() {
@@ -82,8 +83,13 @@ export default function BlogSection() {
  setShowEditor(false);
  setEditing(emptyPost());
  await fetchPosts();
+ } else {
+ const data = await res.json().catch(() => ({}));
+ alert(`Failed to save post: ${data.error || 'Unknown error'}`);
  }
- } catch {}
+ } catch (err: any) {
+ alert(`Network error: ${err.message}`);
+ }
  setSaving(false);
  };
 
@@ -306,16 +312,45 @@ export default function BlogSection() {
  {CATEGORIES.map(c => <option key={c}>{c}</option>)}
  </select>
  </div>
- <div className="col-span-2">
- <label className="text-[10px] font-black text-muted uppercase block mb-1">Summary *</label>
- <textarea
- rows={2}
- value={editing.summary || ''}
- onChange={(e) => setEditing(p => ({ ...p, summary: e.target.value }))}
- placeholder="Brief description shown in blog listings..."
- className="w-full px-3 py-2.5 bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-xl text-sm focus:outline-none focus:border-emerald-500 resize-none"
- />
- </div>
+  <div className="col-span-2">
+    <label className="text-[10px] font-black text-muted uppercase block mb-1">Cover Image</label>
+    <div className="flex items-center gap-4 p-3 bg-background dark:bg-card/5 border border-border/20 dark:border-border rounded-xl">
+      {editing.coverImage ? (
+        <div className="relative group">
+          <img src={editing.coverImage} alt="Cover Preview" className="w-16 h-16 rounded-lg object-cover bg-card" />
+          <button 
+            onClick={() => setEditing((p: any) => ({ ...p, coverImage: '' }))}
+            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      ) : (
+        <div className="w-16 h-16 rounded-lg bg-secondary dark:bg-card/10 flex items-center justify-center">
+          <span className="text-[10px] text-muted">No Cover</span>
+        </div>
+      )}
+      <div className="flex-1">
+        <ImageUploader 
+          onUploadSuccess={(url) => setEditing((p: any) => ({ ...p, coverImage: url }))}
+        >
+          <button type="button" className="w-full text-sm font-bold text-white bg-emerald-500 hover:bg-emerald-600 px-4 py-2 rounded-xl transition-all">
+            Upload Cover Banner
+          </button>
+        </ImageUploader>
+      </div>
+    </div>
+  </div>
+  <div className="col-span-2">
+    <label className="text-[10px] font-black text-muted uppercase block mb-1">Summary *</label>
+    <textarea
+      rows={2}
+      value={editing.summary || ''}
+      onChange={(e) => setEditing(p => ({ ...p, summary: e.target.value }))}
+      placeholder="Brief description shown in blog listings..."
+      className="w-full px-3 py-2.5 bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-xl text-sm focus:outline-none focus:border-emerald-500 resize-none"
+    />
+  </div>
  <div className="col-span-2">
  <div className="flex justify-between items-center mb-1">
  <label className="text-[10px] font-black text-muted uppercase">Content (Markdown)</label>

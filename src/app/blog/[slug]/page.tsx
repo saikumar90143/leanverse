@@ -47,10 +47,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     coverImage: r.coverImage || 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&q=80'
   }));
 
-  // Auto-generate TOC from Markdown headers (## heading)
+  // Auto-generate TOC from Markdown headers (## or ###)
   const headings = article.content.split('\n')
-    .filter((line: string) => line.startsWith('## ') && !line.startsWith('### '))
-    .map((line: string) => line.replace('## ', '').trim());
+    .filter((line: string) => /^#{2,3}\s/.test(line.trim()))
+    .map((line: string) => line.trim().replace(/^#{2,3}\s/, '').trim());
 
   return (
     <article className="max-w-5xl mx-auto px-4 py-8 space-y-8">

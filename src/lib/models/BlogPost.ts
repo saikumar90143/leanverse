@@ -4,7 +4,7 @@ const BlogPostSchema = new Schema(
   {
     title: { type: String, required: true },
     slug: { type: String, required: true, unique: true, index: true },
-    content: { type: String, required: true, default: '' },
+    content: { type: String, default: '' },
     summary: { type: String, required: true },
     author: { type: String, default: 'LeanVerse AI Team' },
     category: { type: String, required: true, index: true },
