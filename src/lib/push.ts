@@ -5,11 +5,19 @@ const vapidKeys = {
   privateKey: process.env.VAPID_PRIVATE_KEY || '',
 };
 
-webpush.setVapidDetails(
-  process.env.VAPID_EMAIL || 'mailto:support@leanverse.in',
-  vapidKeys.publicKey,
-  vapidKeys.privateKey
-);
+if (vapidKeys.publicKey && vapidKeys.privateKey) {
+  try {
+    webpush.setVapidDetails(
+      process.env.VAPID_EMAIL || 'mailto:support@leanverse.in',
+      vapidKeys.publicKey,
+      vapidKeys.privateKey
+    );
+  } catch (e) {
+    console.warn('Failed to set VAPID details during initialization:', e);
+  }
+} else {
+  console.warn('VAPID keys missing. Push notifications may not work until configured.');
+}
 
 export async function sendPushNotification(subscription: any, payload: any) {
   try {
