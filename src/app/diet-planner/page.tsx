@@ -323,7 +323,7 @@ Built with LeanVerse AI`;
  };
 
  // Tracks custom macro foods added by the user
- const [customFoodsDatabase, setCustomFoodsDatabase] = useState<Record<string, { cals: number; protein: number; carbs: number; fat: number; alternative: string; warning?: string; icon: string; category: string; unit: string; baseQty: number; hidden?: boolean }>>(() => {
+ const [customFoodsDatabase, setCustomFoodsDatabase] = useState<Record<string, { cals: number; protein: number; carbs: number; fat: number; alternative: string; warning?: string; icon: string; category: string; unit: string; baseQty: number; servingWeight?: number; hidden?: boolean }>>(() => {
  if (typeof window !== 'undefined') {
  try {
  const saved = localStorage.getItem(getUserStorageKey('leanverse_custom_foods'));
@@ -463,8 +463,10 @@ Built with LeanVerse AI`;
 
 
  const [dbFoods, setDbFoods] = useState<Record<string, any>>({});
+ const [dbFoodsLoading, setDbFoodsLoading] = useState(true);
  
  useEffect(() => {
+ setDbFoodsLoading(true);
  fetch(`/api/admin/foods?t=${Date.now()}`)
  .then(res => res.json())
  .then(data => {
@@ -480,13 +482,15 @@ Built with LeanVerse AI`;
  category: f.mealTypes?.map((m: string) => m.toLowerCase().replace(' ', '-')) || ['lunch', 'dinner'],
  unit: f.servingUnit || '1 serving',
  baseQty: 1,
- dietStyles: f.dietStyle || []
+ dietStyles: f.dietStyle || [],
+ servingWeight: f.servingWeight || 100
  };
  return acc;
  }, {});
  setDbFoods(formatted);
  }
- }).catch(err => console.error(err));
+ }).catch(err => console.error(err))
+ .finally(() => setDbFoodsLoading(false));
 
  fetch(`/api/admin/diet-plans?t=${Date.now()}`)
  .then(res => res.json())
@@ -1180,7 +1184,12 @@ Built with LeanVerse AI`;
  </div>
 
  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 max-h-[300px] overflow-y-auto pr-1 no-scrollbar">
- {Object.keys(allFoods)
+ {dbFoodsLoading ? (
+    <div className="col-span-full py-10 flex flex-col items-center justify-center text-muted">
+      <RefreshCw className="w-6 h-6 animate-spin mb-3 text-emerald-500" />
+      <span className="font-bold text-sm">Loading food database...</span>
+    </div>
+  ) : Object.keys(allFoods)
  .filter((food) => {
  if (allFoods[food].hidden) return false;
 
@@ -1485,6 +1494,10 @@ Built with LeanVerse AI`;
  };
  });
  };
+ 
+ const sw = fData.servingWeight || 100;
+ const isLiquid = u.includes('ml') || u.includes('cup') || u.includes('glass') || baseFood.includes('milk') || baseFood.includes('juice') || baseFood.includes('water') || baseFood.includes('shake') || baseFood.includes('oil');
+ const weightStr = (sw > 0 && !isGrams) ? ` (${sw}${isLiquid ? 'ml' : 'g'})` : '';
 
  const eaten = !!eatenMeals[item];
 
@@ -1522,7 +1535,7 @@ Built with LeanVerse AI`;
  <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest min-w-[25px] text-center">{exactQty}</span>
  <button aria-label="Increase quantity" onClick={() => adjustQty(stepSize)} className="w-5 h-5 flex items-center justify-center rounded-md bg-secondary/80 dark:bg-card/10 text-muted hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors cursor-pointer leading-none font-black text-sm">+</button>
  </div>
- <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mr-1">{fData.unit}</span>
+ <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mr-1">{fData.unit}{weightStr}</span>
  <span className="font-mono text-[10px] font-bold text-muted bg-secondary/50 dark:bg-card/5 px-2 py-0.5 rounded-md truncate max-w-full">
  {finalProtein}g P • {finalCarbs}g C • {finalFat}g F
  </span>

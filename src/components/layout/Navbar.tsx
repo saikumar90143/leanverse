@@ -7,7 +7,7 @@ import { useTheme } from './ThemeProvider';
 import { useAuth } from './AuthProvider';
 import { 
   Sun, Moon, Menu, X, Flame, User, Calculator, 
-  Dumbbell, Apple, Trophy, ShoppingBag, LayoutDashboard, LogOut, Download
+  Dumbbell, Apple, Trophy, ShoppingBag, LayoutDashboard, LogOut, Download, Bell
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getUserStorageKey } from '@/lib/storage';
@@ -271,6 +271,14 @@ export default function Navbar() {
                   <LayoutDashboard className="w-4 h-4" />
                   <span className="hidden sm:inline">Dashboard</span>
                 </Link>
+                <Link 
+                  href="/settings/notifications"
+                  className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full glass text-muted hover:text-emerald-500 hover:bg-emerald-500/10 dark:text-muted dark:hover:text-emerald-400 dark:hover:bg-emerald-500/20 transition-all cursor-pointer"
+                  title="Notification Settings"
+                  aria-label="Notification Settings"
+                >
+                  <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
+                </Link>
                 {user.role === 'admin' && (
                   <Link 
                     href="/admin"
@@ -386,6 +394,12 @@ export default function Navbar() {
                       className="block w-full py-3 rounded-2xl bg-emerald-500 text-white font-bold shadow-md"
                     >
                       My Dashboard
+                    </Link>
+                    <Link 
+                      href="/settings/notifications"
+                      className="block w-full py-2.5 rounded-2xl bg-secondary dark:bg-card/20 text-foreground font-bold shadow-sm"
+                    >
+                      Notification Settings
                     </Link>
                     {user.role === 'admin' && (
                       <Link 

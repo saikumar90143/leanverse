@@ -153,7 +153,7 @@ export default function HomePage() {
  <div className="flex items-center justify-between mb-6 border-b border-border/50 dark:border-border pb-4">
  <h3 className="text-xl font-black flex items-center gap-2">
  <Zap className="w-5 h-5 text-emerald-500" />
- Quick Start Wizard
+ Create Your Plan
  </h3>
  <span className="text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded-md">
  Takes 30s

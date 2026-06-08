@@ -12,8 +12,14 @@ const UserSchema = new Schema(
     streak: { type: Number, default: 0 },
     lastActive: { type: Date, default: Date.now },
     badges: { type: [String], default: [] },
+    // Notification preferences
+    pushNotificationsEnabled: { type: Boolean, default: false },
+    emailRemindersEnabled: { type: Boolean, default: false },
+    reminderTime: { type: String, default: '08:00' }, // HH:MM format
+    streakAlertsEnabled: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
 
 export default mongoose.models.User || mongoose.model('User', UserSchema);
+

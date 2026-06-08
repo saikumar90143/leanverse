@@ -14,9 +14,11 @@ export default function UserDashboard() {
  const { user, updateUserSession } = useAuth();
  
  // Local state for dashboard logging metrics
- const [weightInput, setWeightInput] = useState('');
- const [waterCups, setWaterCups] = useState(0);
- const [loggedWeight, setLoggedWeight] = useState([74.5, 74.0, 73.6, 73.1, 72.8]);
+  const [weightInput, setWeightInput] = useState('');
+  const [loggedWeight, setLoggedWeight] = useState([74.5, 74.0, 73.6, 73.1, 72.8]);
+  const [targetWeight, setTargetWeight] = useState<number | null>(null);
+  const [targetWeightInput, setTargetWeightInput] = useState('');
+  const [waterCups, setWaterCups] = useState(0);
  const [caloriesLogged, setCaloriesLogged] = useState(0);
  const [activeCalorieGoal, setActiveCalorieGoal] = useState(2000);
  const [workoutProgress, setWorkoutProgress] = useState({ completed: 0, total: 0 });
@@ -33,61 +35,6 @@ export default function UserDashboard() {
  const [lastWorkoutDetails, setLastWorkoutDetails] = useState('Track a workout to see it here');
  const [hasDietPlan, setHasDietPlan] = useState(false);
  const [hasWorkout, setHasWorkout] = useState(false);
-
- // Macro Search State
- const [macroQuery, setMacroQuery] = useState('');
- const [macroLoading, setMacroLoading] = useState(false);
- const [macroError, setMacroError] = useState('');
- const [macroResult, setMacroResult] = useState<{ calories: number; protein: number; carbs: number; fats: number; fiber: number; ingredients: string[] } | null>(null);
-
- const [macroLogged, setMacroLogged] = useState(false);
-
- const searchMacros = async (e: React.FormEvent) => {
- e.preventDefault();
- if (!macroQuery.trim()) return;
- 
- setMacroLoading(true);
- setMacroError('');
- setMacroResult(null);
- setMacroLogged(false);
-
- try {
- const res = await fetch(`/api/food-search?q=${encodeURIComponent(macroQuery)}`);
- const data = await res.json();
- if (!res.ok) throw new Error(data.error || 'Failed to fetch macros');
- setMacroResult(data);
- } catch (err: any) {
- setMacroError(err.message);
- } finally {
- setMacroLoading(false);
- }
- };
-
- const logMacrosToTracker = () => {
- if (!macroResult) return;
- const today = formatLocalDate();
-
- // Update calories in localStorage (additive)
- const prevCalsRaw = localStorage.getItem(getUserStorageKey(`leanverse_quick_cals_${today}`));
- const prevCals = prevCalsRaw ? parseInt(prevCalsRaw, 10) : 0;
- const newCals = prevCals + macroResult.calories;
- localStorage.setItem(getUserStorageKey(`leanverse_quick_cals_${today}`), String(newCals));
-
- // Update macros in localStorage (additive)
- const prevMacrosRaw = localStorage.getItem(getUserStorageKey(`leanverse_eaten_macros_${today}`));
- const prevMacros = prevMacrosRaw ? JSON.parse(prevMacrosRaw) : { protein: 0, carbs: 0, fats: 0 };
- const newMacros = {
- protein: (prevMacros.protein || 0) + macroResult.protein,
- carbs: (prevMacros.carbs || 0) + macroResult.carbs,
- fats: (prevMacros.fats || 0) + macroResult.fats,
- };
- localStorage.setItem(getUserStorageKey(`leanverse_eaten_macros_${today}`), JSON.stringify(newMacros));
-
- // Update live UI state instantly
- setCaloriesLogged(prev => prev + macroResult.calories);
- setEatenMacros(newMacros);
- setMacroLogged(true);
- };
 
  React.useEffect(() => {
  try {
@@ -159,23 +106,42 @@ export default function UserDashboard() {
  const waterRaw = localStorage.getItem(getUserStorageKey(`leanverse_water_cups_${today}`));
  if (waterRaw) {
  setWaterCups(parseInt(waterRaw, 10));
- }
- } catch (e) {
- // ignore
- }
+      }
+      
+      // Load Target Weight
+      const targetRaw = localStorage.getItem(getUserStorageKey('leanverse_target_weight'));
+      if (targetRaw) {
+        setTargetWeight(parseFloat(targetRaw));
+      }
+    } catch (e) {
+      // ignore
+    }
  }, []);
 
- const handleLogWeight = (e: React.FormEvent) => {
- e.preventDefault();
- if (weightInput) {
- const val = parseFloat(weightInput);
- if (!isNaN(val)) {
- setLoggedWeight((prev) => [...prev.slice(1), val]);
- setWeightInput('');
- alert('Weight logged successfully!');
- }
- }
- };
+  const handleLogWeight = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (weightInput) {
+      const val = parseFloat(weightInput);
+      if (!isNaN(val)) {
+        setLoggedWeight((prev) => [...prev.slice(1), val]);
+        setWeightInput('');
+      }
+    }
+  };
+
+  const handleSetTargetWeight = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (targetWeightInput) {
+      const val = parseFloat(targetWeightInput);
+      if (!isNaN(val)) {
+        setTargetWeight(val);
+        setTargetWeightInput('');
+        try {
+          localStorage.setItem(getUserStorageKey('leanverse_target_weight'), String(val));
+        } catch(e) {}
+      }
+    }
+  };
 
  const incrementWater = () => {
  setWaterCups((prev) => {
@@ -199,21 +165,43 @@ export default function UserDashboard() {
  });
  };
 
- // SVG Chart rendering dimensions
- const chartHeight = 100;
- const chartWidth = 350;
- const padding = 15;
- const points = loggedWeight.map((w, index) => {
- const x = padding + (index * (chartWidth - padding * 2)) / (loggedWeight.length - 1);
- const maxWeight = 76;
- const minWeight = 71;
- const y = chartHeight - padding - ((w - minWeight) * (chartHeight - padding * 2)) / (maxWeight - minWeight);
- return { x, y, val: w };
- });
+  // SVG Chart rendering dimensions
+  const chartHeight = 100;
+  const chartWidth = 350;
+  const padding = 15;
+  const allChartWeights = [...loggedWeight];
+  if (targetWeight !== null) allChartWeights.push(targetWeight);
+  const maxWeight = Math.max(...allChartWeights) + 1;
+  const minWeight = Math.min(...allChartWeights) - 1;
 
- const pathD = points.reduce((acc, curr, index) => {
- return index === 0 ? `M ${curr.x} ${curr.y}` : `${acc} L ${curr.x} ${curr.y}`;
- }, '');
+  const points = loggedWeight.map((w, index) => {
+    const x = padding + (index * (chartWidth - padding * 2)) / (loggedWeight.length - 1);
+    const y = chartHeight - padding - ((w - minWeight) * (chartHeight - padding * 2)) / (maxWeight - minWeight);
+    return { x, y, val: w };
+  });
+
+  const pathD = points.reduce((acc, curr, index) => {
+    return index === 0 ? `M ${curr.x} ${curr.y}` : `${acc} L ${curr.x} ${curr.y}`;
+  }, '');
+
+  let targetY: number | null = null;
+  if (targetWeight !== null) {
+    targetY = chartHeight - padding - ((targetWeight - minWeight) * (chartHeight - padding * 2)) / (maxWeight - minWeight);
+  }
+
+  let weightProgressPct = 0;
+  if (targetWeight !== null && loggedWeight.length > 0) {
+    const startW = loggedWeight[0];
+    const currentW = loggedWeight[loggedWeight.length - 1];
+    const totalDiff = Math.abs(startW - targetWeight);
+    const currentDiff = Math.abs(startW - currentW);
+    const isCutting = targetWeight < startW;
+    const movingRightDir = isCutting ? currentW <= startW : currentW >= startW;
+    
+    if (totalDiff > 0 && movingRightDir) {
+      weightProgressPct = Math.min(100, Math.max(0, (currentDiff / totalDiff) * 100));
+    }
+  }
 
  // Static list of possible badges
  const badgeDatabase = [
@@ -441,143 +429,92 @@ export default function UserDashboard() {
  </div>
 
  {/* Weight Tracker Graph */}
- <div className="glass rounded-3xl p-6 border border-border/10 flex flex-col justify-between">
- <div className="flex justify-between items-start mb-2">
+ <div className="glass rounded-3xl p-6 border border-border/10 flex flex-col justify-between group hover:border-emerald-500/20 transition-all shadow-sm">
+ <div className="flex justify-between items-start mb-4">
  <div className="flex items-center space-x-2">
  <Scale className="w-5 h-5 text-cyan-500 animate-pulse" />
- <span className="text-xs font-black text-muted uppercase tracking-widest">Weight scale log</span>
+ <span className="text-xs font-black text-muted uppercase tracking-widest">Weight Goal</span>
  </div>
- <span className="text-xs font-bold text-muted">Current: {loggedWeight[loggedWeight.length - 1]} kg</span>
+ 
+ {targetWeight !== null && (
+ <div className="flex items-center space-x-2">
+ <div className="text-right">
+ <span className="text-xs font-bold text-muted block leading-tight">Target: {targetWeight}kg</span>
+ <span className="text-[10px] font-black text-emerald-500">{weightProgressPct.toFixed(0)}%</span>
+ </div>
+ {/* Mini Radial Ring */}
+ <div className="relative w-8 h-8 flex items-center justify-center shrink-0">
+ <svg className="w-full h-full transform -rotate-90">
+ <circle cx="16" cy="16" r="14" stroke="currentColor" strokeWidth="3" fill="transparent" className="text-slate-200 dark:text-card/40" />
+ <circle cx="16" cy="16" r="14" stroke="currentColor" strokeWidth="3" fill="transparent" 
+ strokeDasharray={2 * Math.PI * 14} 
+ strokeDashoffset={(2 * Math.PI * 14) - (weightProgressPct / 100) * (2 * Math.PI * 14)} 
+ strokeLinecap="round"
+ className="text-emerald-500 transition-all duration-1000 ease-out" 
+ />
+ </svg>
+ </div>
+ </div>
+ )}
  </div>
 
  <div className="space-y-4">
  {/* Mini SVG graph */}
- <div className="w-full h-16 flex items-end">
+ <div className="w-full h-16 flex items-end relative">
  <svg className="w-full h-full">
+ {/* Target Line */}
+ {targetY !== null && (
+ <line x1={0} y1={targetY} x2={chartWidth} y2={targetY} stroke="#10b981" strokeWidth="1" strokeDasharray="4 4" className="opacity-50" />
+ )}
  {/* Underline area gradient */}
  <path d={pathD} fill="none" stroke="#06b6d4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
  {/* Dots */}
  {points.map((p, i) => (
- <circle key={i} cx={p.x} cy={p.y} r="3" fill="#10b981" />
+ <circle key={i} cx={p.x} cy={p.y} r="3" fill={i === points.length - 1 ? "#10b981" : "#06b6d4"} />
  ))}
  </svg>
  </div>
 
- {/* Quick Weight logger */}
+ <div className="flex items-center justify-between">
+ <span className="text-xs font-bold text-muted">Current: <span className="text-foreground font-black">{loggedWeight[loggedWeight.length - 1]} kg</span></span>
+ </div>
+
+ {/* Inputs */}
+ {targetWeight === null ? (
+ <form onSubmit={handleSetTargetWeight} className="flex space-x-2">
+ <input
+ type="text"
+ inputMode="numeric"
+ pattern="[0-9]*"
+ placeholder="Set Target kg"
+ value={targetWeightInput}
+ onChange={(e) => setTargetWeightInput(e.target.value)}
+ className="flex-1 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 font-bold text-emerald-600 dark:text-emerald-400 placeholder:text-emerald-500/50"
+ />
+ <button type="submit" className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl py-2 px-3.5 cursor-pointer font-bold text-xs flex items-center">
+ Set
+ </button>
+ </form>
+ ) : (
  <form onSubmit={handleLogWeight} className="flex space-x-2">
  <input
  type="text"
+ inputMode="numeric"
+ pattern="[0-9]*"
  placeholder="Log Weight kg"
  value={weightInput}
  onChange={(e) => setWeightInput(e.target.value)}
- className="flex-1 bg-secondary/50 dark:bg-card/5 border border-slate-350/20 dark:border-border rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 font-bold text-foreground dark:text-slate-150"
+ className="flex-1 bg-secondary/50 dark:bg-card/5 border border-slate-350/20 dark:border-border rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-cyan-500 font-bold text-foreground dark:text-slate-150"
  />
- <button
- type="submit"
- className="bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl py-2 px-3.5 cursor-pointer font-bold text-xs flex items-center"
- >
+ <button type="submit" className="bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl py-2 px-3.5 cursor-pointer font-bold text-xs flex items-center">
  <Plus className="w-3.5 h-3.5" />
  </button>
  </form>
- </div>
- </div>
- </div>
-
-
- {/* Macro Search Widget */}
- <div className="glass rounded-3xl p-6 border border-border/10 mb-8 shadow-sm relative overflow-hidden">
- <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-[80px] -z-10" />
- <div className="flex items-center space-x-2 mb-4">
- <Sparkles className="w-5 h-5 text-emerald-500" />
- <h3 className="font-extrabold text-slate-850 dark:text-foreground text-base">AI Macro Search</h3>
- </div>
- <p className="text-xs text-muted mb-5 max-w-lg leading-relaxed">
- Powered by Edamam Natural Language AI. Type any food or meal (e.g., "1 large chicken shawarma and a diet coke") to instantly calculate its macronutrient profile.
- </p>
-
- <form onSubmit={searchMacros} className="flex flex-col sm:flex-row gap-3 mb-6">
- <div className="relative flex-1">
- <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
- <Search className="h-4 w-4 text-muted" />
- </div>
- <input
- type="text"
- placeholder="E.g., 2 slices pepperoni pizza"
- value={macroQuery}
- onChange={(e) => setMacroQuery(e.target.value)}
- className="w-full bg-secondary/50 dark:bg-card/5 border border-slate-350/20 dark:border-border rounded-2xl pl-10 pr-4 py-3.5 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-bold text-foreground dark:text-slate-150 transition-all"
- />
- </div>
- <button
- type="submit"
- disabled={macroLoading || !macroQuery.trim()}
- className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 disabled:opacity-50 text-white rounded-2xl py-3.5 px-6 font-black text-sm flex items-center justify-center transition-all shadow-md active:scale-95 cursor-pointer whitespace-nowrap"
- >
- {macroLoading ? (
- <span className="flex items-center space-x-2">
- <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
- <span>Searching...</span>
- </span>
- ) : (
- 'Analyze Food'
- )}
- </button>
- </form>
-
- {macroError && (
- <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-xs font-bold mb-4">
- {macroError}
- </div>
- )}
-
- {macroResult && (
- <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-4">
- <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
- <div className="bg-secondary/50 dark:bg-card/5 border border-border/50 dark:border-border rounded-2xl p-4 text-center">
- <span className="text-[10px] font-black text-muted uppercase tracking-widest block mb-1">Calories</span>
- <span className="text-2xl font-black text-emerald-500">{macroResult.calories}</span>
- </div>
- <div className="bg-secondary/50 dark:bg-card/5 border border-border/50 dark:border-border rounded-2xl p-4 text-center">
- <span className="text-[10px] font-black text-muted uppercase tracking-widest block mb-1">Protein</span>
- <span className="text-xl font-black text-foreground">{macroResult.protein}g</span>
- </div>
- <div className="bg-secondary/50 dark:bg-card/5 border border-border/50 dark:border-border rounded-2xl p-4 text-center">
- <span className="text-[10px] font-black text-muted uppercase tracking-widest block mb-1">Carbs</span>
- <span className="text-xl font-black text-foreground">{macroResult.carbs}g</span>
- </div>
- <div className="bg-secondary/50 dark:bg-card/5 border border-border/50 dark:border-border rounded-2xl p-4 text-center">
- <span className="text-[10px] font-black text-muted uppercase tracking-widest block mb-1">Fats</span>
- <span className="text-xl font-black text-foreground">{macroResult.fats}g</span>
- </div>
- </div>
- 
- {macroResult.ingredients && macroResult.ingredients.length > 0 && (
- <div className="p-3 bg-emerald-500/5 rounded-xl border border-emerald-500/10">
- <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block mb-1">Detected Items</span>
- <div className="flex flex-wrap gap-1.5">
- {macroResult.ingredients.map((ing, i) => (
- <span key={i} className="px-2 py-1 bg-card dark:bg-secondary rounded-md text-[10px] font-bold text-muted shadow-sm border border-slate-100 dark:border-slate-700">
- {ing}
- </span>
- ))}
- </div>
- </div>
- )}
- 
- <button 
- onClick={logMacrosToTracker}
- disabled={macroLogged}
- className={`w-full py-3 text-xs font-black rounded-xl transition-all mt-2 ${
- macroLogged
- ? 'bg-emerald-500 text-white cursor-default'
- : 'bg-foreground hover:bg-slate-700 dark:bg-secondary dark:hover:bg-card text-white dark:text-foreground cursor-pointer active:scale-95'
- }`}
- >
- {macroLogged ? '✅ Logged! Check Calorie Ring Above ↑' : '+ Log to Today\'s Tracker'}
- </button>
- </div>
  )}
  </div>
+ </div>
+ </div>
+
 
  {/* Saved Blueprints & Badges section */}
  <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
