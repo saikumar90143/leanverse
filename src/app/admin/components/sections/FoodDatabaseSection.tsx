@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Apple, TrendingUp, Target, BarChart3, Plus, X, Edit } from 'lucide-react';
+import { Apple, TrendingUp, Target, BarChart3, Plus, X, Edit, Search } from 'lucide-react';
 
 const DIET_STYLES_OPTIONS = ['Vegetarian', 'Non-Vegetarian', 'Eggetarian', 'Vegan', 'South Indian', 'North Indian', 'High Protein', 'Keto'];
 const MEAL_TYPES_OPTIONS = ['Breakfast', 'Lunch', 'Dinner', 'Pre-Workout', 'Post-Workout', 'Snack'];
@@ -12,6 +12,7 @@ export default function FoodDatabaseSection() {
  const [showModal, setShowModal] = useState(false);
  const [isSubmitting, setIsSubmitting] = useState(false);
  const [editingId, setEditingId] = useState<string | null>(null);
+ const [searchQuery, setSearchQuery] = useState('');
 
  // Form State
  const [formData, setFormData] = useState({
@@ -148,8 +149,12 @@ export default function FoodDatabaseSection() {
  </div>
 
  <div className="glass rounded-2xl border border-border/10 dark:border-border overflow-hidden">
- <div className="p-5 border-b border-border/10 dark:border-border">
+ <div className="p-5 border-b border-border/10 dark:border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
  <h3 className="font-black text-foreground text-sm">Food Database</h3>
+ <div className="relative">
+ <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+ <input type="text" placeholder="Search foods..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full sm:w-64 pl-9 pr-4 py-2 bg-background dark:bg-card/5 border border-border/20 dark:border-border rounded-xl text-sm focus:outline-none focus:border-emerald-500" />
+ </div>
  </div>
  <div className="overflow-x-auto">
  <table className="w-full text-xs">
@@ -161,7 +166,7 @@ export default function FoodDatabaseSection() {
  </tr>
  </thead>
  <tbody className="divide-y divide-slate-200/5 dark:divide-white/5">
- {topFoods.map((f) => (
+ {topFoods.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase())).map((f) => (
  <tr key={f._id || f.name} className="hover:bg-background/30 dark:hover:bg-card/3">
  <td className="px-4 py-3 text-lg">{f.emoji}</td>
  <td className="px-4 py-3 font-bold text-foreground ">{f.name}</td>

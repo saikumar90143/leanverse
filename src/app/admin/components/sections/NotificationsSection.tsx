@@ -6,11 +6,7 @@ import { Bell, Send, Clock, Users, CheckCircle, BarChart3 } from 'lucide-react';
 const notifTypes = ['Workout Reminder', 'Diet Reminder', 'Blog Update', 'Promotion', 'Achievement', 'Streak Alert'];
 const segments = ['All Users', 'Premium Users', 'Free Users', 'Streak > 7 Days', 'Inactive (3+ Days)', 'New Users (< 7 Days)'];
 
-const sentNotifications = [
- { title: 'Day 7 Check-in', body: 'You are on a 7-day streak! Keep it going 🔥', segment: 'Streak > 7 Days', delivered: 4821, opened: 2104, clicked: 891, time: '2 hr ago' },
- { title: 'New Blog: Fat Loss Guide', body: 'Check out our latest guide to sustainable fat loss!', segment: 'All Users', delivered: 18940, opened: 6520, clicked: 2203, time: '1 day ago' },
- { title: 'Weekend Sale - 40% Off Pro', body: 'Upgrade to Pro this weekend and save 40%!', segment: 'Free Users', delivered: 14120, opened: 4330, clicked: 1560, time: '3 days ago' },
-];
+const sentNotifications: any[] = [];
 
 export default function NotificationsSection() {
  const [title, setTitle] = useState('');
@@ -38,9 +34,9 @@ export default function NotificationsSection() {
  {/* Quick Stats */}
  <div className="grid grid-cols-3 gap-4">
  {[
- { label: 'Total Sent', value: '42.3K', icon: Send, color: 'text-emerald-500 bg-emerald-500/10' },
- { label: 'Avg Open Rate', value: '34.2%', icon: Bell, color: 'text-cyan-500 bg-cyan-500/10' },
- { label: 'Avg Click Rate', value: '11.8%', icon: BarChart3, color: 'text-violet-500 bg-violet-500/10' },
+ { label: 'Total Sent', value: sentNotifications.reduce((acc, n) => acc + n.delivered, 0).toLocaleString(), icon: Send, color: 'text-emerald-500 bg-emerald-500/10' },
+ { label: 'Avg Open Rate', value: `${sentNotifications.length ? Math.round(sentNotifications.reduce((acc, n) => acc + (n.opened / n.delivered), 0) / sentNotifications.length * 100) : 0}%`, icon: Bell, color: 'text-cyan-500 bg-cyan-500/10' },
+ { label: 'Avg Click Rate', value: `${sentNotifications.length ? Math.round(sentNotifications.reduce((acc, n) => acc + (n.clicked / n.opened), 0) / sentNotifications.length * 100) : 0}%`, icon: BarChart3, color: 'text-violet-500 bg-violet-500/10' },
  ].map(s => (
  <div key={s.label} className="glass rounded-2xl p-4 border border-border/10 dark:border-border flex items-center gap-3">
  <div className={`p-2.5 rounded-xl ${s.color}`}><s.icon className="w-4 h-4" /></div>
@@ -114,9 +110,12 @@ export default function NotificationsSection() {
  <div className="glass rounded-2xl p-6 border border-border/10 dark:border-border space-y-4">
  <h3 className="font-black text-foreground text-sm">Recent Notifications</h3>
  <div className="space-y-3">
- {sentNotifications.map((n, i) => {
- const openRate = Math.round((n.opened / n.delivered) * 100);
- const clickRate = Math.round((n.clicked / n.opened) * 100);
+ {sentNotifications.length === 0 ? (
+ <p className="text-center text-muted py-6">No recent notifications.</p>
+ ) : (
+ sentNotifications.map((n, i) => {
+ const openRate = Math.round((n.opened / n.delivered) * 100) || 0;
+ const clickRate = Math.round((n.clicked / n.opened) * 100) || 0;
  return (
  <div key={i} className="p-4 bg-secondary/30 dark:bg-card/3 rounded-2xl border border-border/10 dark:border-border">
  <div className="flex justify-between items-start mb-2">
@@ -140,7 +139,8 @@ export default function NotificationsSection() {
  </div>
  </div>
  );
- })}
+ })
+ )}
  </div>
  </div>
  </div>

@@ -18,6 +18,8 @@ interface Stats {
  };
  charts: {
  userGrowth: { date: string; count: number }[];
+ workoutGrowth: { date: string; count: number }[];
+ dietGrowth: { date: string; count: number }[];
  blogByCategory: { _id: string; count: number; views: number }[];
  };
  recentUsers: { _id: string; name: string; email: string; tier: string; streak: number; createdAt: string }[];
@@ -90,7 +92,9 @@ export default function OverviewSection() {
  .catch(() => setLoading(false));
  }, []);
 
- const growthNums = stats?.charts?.userGrowth?.map((d) => d.count) || [2, 4, 3, 7, 5, 9, 8];
+ const growthNums = stats?.charts?.userGrowth?.map((d: any) => d.count) || [];
+ const workoutGrowthNums = stats?.charts?.workoutGrowth?.map((d: any) => d.count) || [];
+ const dietGrowthNums = stats?.charts?.dietGrowth?.map((d: any) => d.count) || [];
 
  if (loading) {
  return (
@@ -107,13 +111,13 @@ export default function OverviewSection() {
  {/* KPI Grid */}
  <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-4">
  <KpiCard label="Total Users" value={kpi?.totalUsers?.toLocaleString() ?? '—'} icon={Users} color="bg-emerald-500/10 text-emerald-500" sparkData={growthNums} />
- <KpiCard label="Active Today" value={kpi?.activeToday?.toLocaleString() ?? '—'} sub="Unique sessions" icon={Activity} color="bg-cyan-500/10 text-cyan-500" sparkData={[...growthNums].reverse()} />
+ <KpiCard label="Active Today" value={kpi?.activeToday?.toLocaleString() ?? '—'} sub="Unique sessions" icon={Activity} color="bg-cyan-500/10 text-cyan-500" />
  <KpiCard label="New Today" value={kpi?.newUsersToday ?? '—'} icon={UserPlus} color="bg-violet-500/10 text-violet-500" />
  <KpiCard label="Premium Users" value={kpi?.premiumUsers?.toLocaleString() ?? '—'} icon={CreditCard} color="bg-amber-500/10 text-amber-500" />
  <KpiCard label="Blog Posts" value={kpi?.totalBlogs ?? '—'} sub={`${kpi?.publishedBlogs ?? 0} published`} icon={FileText} color="bg-blue-500/10 text-blue-500" />
- <KpiCard label="Workout Plans" value={kpi?.totalWorkoutPlans?.toLocaleString() ?? '—'} icon={Dumbbell} color="bg-rose-500/10 text-rose-500" sparkData={growthNums} />
- <KpiCard label="Diet Plans" value={kpi?.totalDietPlans?.toLocaleString() ?? '—'} icon={Apple} color="bg-green-500/10 text-green-500" />
- <KpiCard label="Monthly Revenue" value={`₹${(kpi?.monthlyRevenue ?? 0).toLocaleString()}`} icon={DollarSign} color="bg-emerald-500/10 text-emerald-500" sparkData={[300,450,600,420,750,900,kpi?.monthlyRevenue ?? 800]} />
+ <KpiCard label="Workout Plans" value={kpi?.totalWorkoutPlans?.toLocaleString() ?? '—'} icon={Dumbbell} color="bg-rose-500/10 text-rose-500" sparkData={workoutGrowthNums} />
+ <KpiCard label="Diet Plans" value={kpi?.totalDietPlans?.toLocaleString() ?? '—'} icon={Apple} color="bg-green-500/10 text-green-500" sparkData={dietGrowthNums} />
+ <KpiCard label="Monthly Revenue" value={`₹${(kpi?.monthlyRevenue ?? 0).toLocaleString()}`} icon={DollarSign} color="bg-emerald-500/10 text-emerald-500" />
  <KpiCard label="Ad Revenue" value={`₹${(kpi?.adRevenue ?? 0).toLocaleString()}`} sub="Est. monthly" icon={TrendingUp} color="bg-orange-500/10 text-orange-500" />
  <KpiCard label="Views" value={stats?.charts?.blogByCategory?.reduce((a, b) => a + b.views, 0).toLocaleString() ?? '0'} icon={Eye} color="bg-pink-500/10 text-pink-500" />
  </div>
@@ -124,7 +128,7 @@ export default function OverviewSection() {
  <div className="glass rounded-2xl p-5 border border-border/10 dark:border-border">
  <h3 className="text-xs font-black text-muted uppercase tracking-widest mb-4">User Growth (Last 7 Days)</h3>
  <div className="flex items-end gap-1.5 h-28">
- {(stats?.charts?.userGrowth ?? growthNums.map((c, i) => ({ date: `Day ${i}`, count: c }))).map((d, i) => {
+ {(stats?.charts?.userGrowth ?? []).map((d: any, i: number) => {
  const max = Math.max(...(stats?.charts?.userGrowth ?? []).map((x: any) => x.count), 1);
  const pct = Math.max(((d as any).count / max) * 100, 4);
  return (
@@ -144,16 +148,8 @@ export default function OverviewSection() {
  <div className="glass rounded-2xl p-5 border border-border/10 dark:border-border">
  <h3 className="text-xs font-black text-muted uppercase tracking-widest mb-4">Blog Views by Category</h3>
  <div className="space-y-3">
- {(stats?.charts?.blogByCategory?.length
- ? stats?.charts?.blogByCategory
- : [
- { _id: 'Indian Diet', count: 4, views: 1200 },
- { _id: 'Gym Workout', count: 6, views: 980 },
- { _id: 'Supplements', count: 2, views: 540 },
- { _id: 'Home Workout', count: 3, views: 430 },
- ]
- ).slice(0, 5).map((cat: any, i) => {
- const maxViews = Math.max(...(stats?.charts?.blogByCategory?.map(c => c.views) ?? [1200]), 1);
+ {(stats?.charts?.blogByCategory ?? []).map((cat: any, i: number) => {
+ const maxViews = Math.max(...(stats?.charts?.blogByCategory?.map((c: any) => c.views) ?? [1]), 1);
  const pct = ((cat.views || 0) / maxViews) * 100;
  const colors = ['bg-emerald-500', 'bg-cyan-500', 'bg-amber-500', 'bg-rose-500', 'bg-violet-500'];
  return (
@@ -187,14 +183,7 @@ export default function OverviewSection() {
  </tr>
  </thead>
  <tbody className="divide-y divide-slate-200/5 dark:divide-white/5">
- {(stats?.recentUsers?.length
- ? stats.recentUsers
- : [
- { _id: '1', name: 'Rohan Sharma', email: 'rohan@demo.com', tier: 'premium', streak: 12, createdAt: new Date().toISOString() },
- { _id: '2', name: 'Priya Verma', email: 'priya@demo.com', tier: 'free', streak: 3, createdAt: new Date().toISOString() },
- { _id: '3', name: 'Arjun Singh', email: 'arjun@demo.com', tier: 'pro', streak: 28, createdAt: new Date().toISOString() },
- ]
- ).map((u) => (
+ {(stats?.recentUsers ?? []).map((u) => (
  <tr key={(u as any)._id} className="hover:bg-background/30 dark:hover:bg-card/3">
  <td className="py-2.5 font-bold text-foreground ">{u.name}</td>
  <td className="py-2.5 text-muted">{u.email}</td>

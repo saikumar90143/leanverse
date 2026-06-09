@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import User from '@/lib/models/User';
 import BlogPost from '@/lib/models/BlogPost';
-import WorkoutPlan from '@/lib/models/WorkoutPlan';
-import DietPlan from '@/lib/models/DietPlan';
+import WorkoutProgram from '@/lib/models/WorkoutProgram';
+import DietPlanTemplate from '@/lib/models/DietPlanTemplate';
 import ProgressLog from '@/lib/models/ProgressLog';
 
 export async function GET() {
@@ -31,31 +31,35 @@ export async function GET() {
       User.countDocuments({ tier: { $in: ['premium', 'pro'] } }),
       BlogPost.countDocuments(),
       BlogPost.countDocuments({ status: 'published' }),
-      WorkoutPlan.countDocuments(),
-      DietPlan.countDocuments(),
+      WorkoutProgram.countDocuments(),
+      DietPlanTemplate.countDocuments(),
     ]);
 
-    // User growth last 7 days
-    const userGrowth = await User.aggregate([
-      { $match: { createdAt: { $gte: last7Days } } },
-      {
-        $group: {
-          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
-          count: { $sum: 1 },
+    // Helper function to aggregate growth
+    const getGrowthData = async (Model: any) => {
+      const growth = await Model.aggregate([
+        { $match: { createdAt: { $gte: last7Days } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+            count: { $sum: 1 },
+          },
         },
-      },
-      { $sort: { _id: 1 } },
-    ]);
+      ]);
+      const map: Record<string, number> = {};
+      growth.forEach((d: any) => { map[d._id] = d.count; });
+      const data = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+        const key = d.toISOString().split('T')[0];
+        data.push({ date: key, count: map[key] || 0 });
+      }
+      return data;
+    };
 
-    // Fill in missing days with 0
-    const growthMap: Record<string, number> = {};
-    userGrowth.forEach((d: any) => { growthMap[d._id] = d.count; });
-    const growthData = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-      const key = d.toISOString().split('T')[0];
-      growthData.push({ date: key, count: growthMap[key] || 0 });
-    }
+    const growthData = await getGrowthData(User);
+    const workoutGrowthData = await getGrowthData(WorkoutProgram);
+    const dietGrowthData = await getGrowthData(DietPlanTemplate);
 
     // Recent registrations
     const recentUsers = await User.find()
@@ -85,6 +89,8 @@ export async function GET() {
       },
       charts: {
         userGrowth: growthData,
+        workoutGrowth: workoutGrowthData,
+        dietGrowth: dietGrowthData,
         blogByCategory,
       },
       recentUsers,

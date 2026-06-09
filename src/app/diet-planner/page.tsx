@@ -170,6 +170,7 @@ export default function AIDietPlanner() {
  const [premiumPlans, setPremiumPlans] = useState<any[]>([]);
  const [planSelectionMode, setPlanSelectionMode] = useState<'ai' | 'premium' | null>(null);
  const [generating, setGenerating] = useState(false);
+ const [isPremiumPlanUsed, setIsPremiumPlanUsed] = useState(false);
 
  // ΓöÇΓöÇ Macro Search State ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
  const [macroQuery, setMacroQuery] = useState('');
@@ -429,6 +430,7 @@ Built with LeanVerse AI`;
  
  if (typeof saved.step === 'number') setStep(saved.step);
  if (saved.planGenerated === true) setPlanGenerated(true);
+ if (saved.isPremiumPlanUsed === true) setIsPremiumPlanUsed(true);
  } catch {
  // corrupted data — start fresh
  } finally {
@@ -441,14 +443,14 @@ Built with LeanVerse AI`;
 
  // Save full plan state whenever it changes
  useEffect(() => {
- if (!isStateLoaded) return;
- try {
- const toSave = { age, gender, height, weight, goal, activity, budget, foodPref, allergies, selectedFoods, customQty, mealAssignments, planGenerated, step };
- localStorage.setItem(DIET_PLAN_KEY, JSON.stringify(toSave));
- } catch {
- // quota exceeded or private mode — ignore
- }
- }, [age, gender, height, weight, goal, activity, budget, foodPref, allergies, selectedFoods, customQty, mealAssignments, planGenerated, step]);
+  if (!isStateLoaded) return;
+  try {
+  const toSave = { age, gender, height, weight, goal, activity, budget, foodPref, allergies, selectedFoods, customQty, mealAssignments, planGenerated, step, isPremiumPlanUsed };
+  localStorage.setItem(DIET_PLAN_KEY, JSON.stringify(toSave));
+  } catch {
+  // quota exceeded or private mode — ignore
+  }
+  }, [age, gender, height, weight, goal, activity, budget, foodPref, allergies, selectedFoods, customQty, mealAssignments, planGenerated, step, isPremiumPlanUsed]);
 
  const toggleEaten = (item: string) => {
  setEatenMeals(prev => {
@@ -507,41 +509,41 @@ Built with LeanVerse AI`;
  });
 
  const handleSelectPremiumPlan = (plan: any) => {
- setGenerating(true);
- const calsTarget = getDietCalorieTarget();
- const scaleFactor = plan.targetCalories > 0 ? calsTarget / plan.targetCalories : 1;
- 
- const newSelectedFoods: string[] = [];
- const newCustomQty: Record<string, number> = {};
- const newMealAssignments: Record<string, string> = {};
+  setGenerating(true);
+  
+  const newSelectedFoods: string[] = [];
+  const newCustomQty: Record<string, number> = {};
+  const newMealAssignments: Record<string, string> = {};
 
- plan.meals.forEach((meal: any) => {
- const mealName = meal.name.toLowerCase();
- meal.foods.forEach((f: any) => {
- if (!f.foodItem) return;
- const foodBaseName = f.foodItem.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
- const compositeKey = `${foodBaseName}|${mealName}`;
- 
- const baseQty = parseFloat(f.foodItem.servingUnit) || 100;
- const scaledTotalQty = Math.round((f.quantity * baseQty) * scaleFactor);
+  plan.meals.forEach((meal: any) => {
+  const mealName = meal.name.toLowerCase();
+  meal.foods.forEach((f: any) => {
+  if (!f.foodItem) return;
+  const foodBaseName = f.foodItem.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const compositeKey = `${foodBaseName}|${mealName}`;
+  
+  // f.quantity is the number of servings defined in the admin dashboard.
+  // We use it directly because dbFoods have baseQty=1.
+  const totalQty = f.quantity;
 
- if (!newSelectedFoods.includes(compositeKey)) {
- newSelectedFoods.push(compositeKey);
- }
- newCustomQty[compositeKey] = scaledTotalQty;
- newMealAssignments[compositeKey] = mealName;
- });
- });
+  if (!newSelectedFoods.includes(compositeKey)) {
+  newSelectedFoods.push(compositeKey);
+  }
+  newCustomQty[compositeKey] = totalQty;
+  newMealAssignments[compositeKey] = mealName;
+  });
+  });
 
- setSelectedFoods(newSelectedFoods);
- setCustomQty(newCustomQty);
- setEatenMeals({});
- 
- setTimeout(() => {
- setGenerating(false);
- setPlanGenerated(true);
- }, 1000);
- };
+  setSelectedFoods(newSelectedFoods);
+  setCustomQty(newCustomQty);
+  setEatenMeals({});
+  setIsPremiumPlanUsed(true);
+  
+  setTimeout(() => {
+  setGenerating(false);
+  setPlanGenerated(true);
+  }, 1000);
+  };
 
  // Monitor selected ingredients and compute macro alerts
  useEffect(() => {
@@ -663,6 +665,7 @@ Built with LeanVerse AI`;
  setGenerating(true);
  setCustomQty({}); // reset custom adjustments on new generation
  setEatenMeals({}); // reset eaten state on new generation
+ setIsPremiumPlanUsed(false);
  setTimeout(async () => {
  setGenerating(false);
  setPlanGenerated(true);
@@ -1058,13 +1061,27 @@ Built with LeanVerse AI`;
  <div className="glass rounded-3xl p-6 sm:p-8 shadow-2xl border border-border/20 dark:border-border animate-fade-in max-w-xl mx-auto text-center">
  <h2 className="text-2xl font-black mb-6 text-foreground">How would you like to build your plan?</h2>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
- <button onClick={() => setPlanSelectionMode('premium')} className="p-6 rounded-2xl border-2 border-slate-100 dark:border-border bg-background dark:bg-card/5 hover:border-emerald-500 hover:bg-emerald-500/5 transition-all text-left">
- <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mb-4">
- <Star className="w-6 h-6 text-amber-500" />
- </div>
- <h3 className="font-black text-lg mb-1 text-foreground">Premium Plans</h3>
- <p className="text-xs text-muted font-medium leading-relaxed">Choose an expertly crafted plan. It will automatically scale perfectly to your target.</p>
- </button>
+ <button 
+    onClick={() => {
+      if (user?.tier === 'free') {
+        router.push('/pricing');
+      } else {
+        setPlanSelectionMode('premium');
+      }
+    }} 
+    className={`p-6 rounded-2xl border-2 transition-all text-left relative overflow-hidden ${user?.tier === 'free' ? 'border-border/10 bg-card/5 hover:border-emerald-500/50 hover:shadow-emerald-500/10' : 'border-slate-100 dark:border-border bg-background dark:bg-card/5 hover:border-emerald-500 hover:bg-emerald-500/5'}`}
+  >
+  {user?.tier === 'free' && (
+    <div className="absolute top-4 right-4 bg-amber-500/10 text-amber-500 px-2.5 py-1 rounded-md text-[9px] font-black uppercase flex items-center">
+      <Star className="w-3 h-3 mr-1" /> Pro Feature
+    </div>
+  )}
+  <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${user?.tier === 'free' ? 'bg-muted/10' : 'bg-amber-500/10'}`}>
+  <Star className={`w-6 h-6 ${user?.tier === 'free' ? 'text-muted' : 'text-amber-500'}`} />
+  </div>
+  <h3 className="font-black text-lg mb-1 text-foreground">Premium Plans</h3>
+  <p className="text-xs text-muted font-medium leading-relaxed">Choose an expertly crafted plan. {user?.tier === 'free' ? 'Upgrade to access.' : 'It will automatically scale perfectly to your target.'}</p>
+  </button>
  
  <button onClick={() => setPlanSelectionMode('ai')} className="p-6 rounded-2xl border-2 border-slate-100 dark:border-border bg-background dark:bg-card/5 hover:border-cyan-500 hover:bg-cyan-500/5 transition-all text-left">
  <div className="w-12 h-12 rounded-full bg-cyan-500/10 flex items-center justify-center mb-4">
@@ -1084,26 +1101,33 @@ Built with LeanVerse AI`;
  <p className="text-sm text-muted font-medium mb-6">Our Auto-Scaling Engine will mathematically adjust these pre-made plans to perfectly hit your exact TDEE calories.</p>
  
  <div className="space-y-3 mb-8">
- {premiumPlans.length === 0 ? (
- <p className="text-center text-muted py-10 font-medium bg-background dark:bg-card/5 rounded-2xl">No premium plans available right now.</p>
- ) : (
- premiumPlans.map(plan => (
- <button key={plan._id} onClick={() => handleSelectPremiumPlan(plan)}
- className="w-full text-left p-4 bg-card border-2 border-slate-100 dark:border-border rounded-2xl flex justify-between items-center hover:border-emerald-500 hover:shadow-lg transition-all group">
- <div>
- <h3 className="font-black text-foreground text-lg">{plan.name}</h3>
- <div className="flex items-center gap-2 mt-1">
- <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-md">{plan.goal}</span>
- <span className="text-xs font-bold text-muted">{plan.durationDays} Days</span>
- <span className="text-xs font-bold text-amber-500">• Auto-Scales</span>
- </div>
- </div>
- <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center group-hover:bg-emerald-500 transition-colors">
- <ChevronRight className="text-muted group-hover:text-white transition-colors" />
- </div>
- </button>
- ))
- )}
+  {(() => {
+    const filteredPremiumPlans = premiumPlans.filter(plan => {
+      if (!plan.dietStyle || plan.dietStyle === 'Any') return true;
+      return dietStyles.includes(plan.dietStyle);
+    });
+
+    return filteredPremiumPlans.length === 0 ? (
+      <p className="text-center text-muted py-10 font-medium bg-background dark:bg-card/5 rounded-2xl">No premium plans available right now.</p>
+    ) : (
+      filteredPremiumPlans.map(plan => (
+        <button key={plan._id} onClick={() => handleSelectPremiumPlan(plan)}
+        className="w-full text-left p-4 bg-card border-2 border-slate-100 dark:border-border rounded-2xl flex justify-between items-center hover:border-emerald-500 hover:shadow-lg transition-all group">
+          <div>
+            <h3 className="font-black text-foreground text-lg">{plan.name}</h3>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-md">{plan.goal}</span>
+              <span className="text-xs font-bold text-muted">{plan.durationDays} Days</span>
+              <span className="text-xs font-bold text-amber-500">• Auto-Scales</span>
+            </div>
+          </div>
+          <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center group-hover:bg-emerald-500 transition-colors">
+            <ChevronRight className="text-muted group-hover:text-white transition-colors" />
+          </div>
+        </button>
+      ))
+    );
+  })()}
  </div>
  
  <button onClick={() => setPlanSelectionMode(null)} className="px-8 py-3 rounded-xl bg-secondary dark:bg-card/5 text-muted font-bold hover:bg-secondary transition-colors">Back</button>
@@ -1118,7 +1142,7 @@ Built with LeanVerse AI`;
  <div className="flex space-x-3 mb-6">
  <button
  type="button"
- onClick={() => setStep(5)}
+ onClick={() => setPlanSelectionMode(null)}
  className="flex-1 py-3 bg-secondary/50 dark:bg-card/5 text-muted dark:text-slate-350 rounded-2xl font-bold transition-all cursor-pointer"
  >
  Back
@@ -1279,7 +1303,7 @@ Built with LeanVerse AI`;
  LeanVerse Custom Meal Split
  </h1>
  <p className="text-xs text-muted mt-1 max-w-xl leading-relaxed">
- Caloric metrics generated using dynamic Mifflin formulas tailored specifically for a {age}-year old {gender} targeting **{goal === 'fatloss' ? 'Fat Loss Deficit' : goal === 'muscle' ? 'Lean Mass Growth' : 'Maintenance'}**.
+ Caloric metrics generated using dynamic Mifflin formulas tailored specifically for a {age}-year old {gender} targeting **{goal === 'fat_loss' ? 'Fat Loss Deficit' : goal === 'muscle' ? 'Lean Mass Growth' : 'Maintenance'}**.
  </p>
  </div>
 
@@ -1351,8 +1375,18 @@ Built with LeanVerse AI`;
  </div>
  </div>
 
- {/* Over Target Warning */}
- {(isOver(actualCals, calsTarget) || isOver(actualProtein, proteinTarget * 1.3) || isOver(actualCarbs, carbsTarget) || isOver(actualFats, fatsTarget)) && (
+  {/* Premium Plan Warning */}
+  {isPremiumPlanUsed && (
+  <div className="mt-4 p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-start space-x-3 text-cyan-600 dark:text-cyan-400 animate-fade-in print-hide">
+  <Info className="w-5 h-5 shrink-0 mt-0.5" />
+  <div className="text-sm font-bold leading-snug">
+  Note: You are viewing a Premium Plan with its original serving sizes. Please adjust foods according to your daily target using the <span className="font-black text-cyan-500">-</span> and <span className="font-black text-cyan-500">+</span> buttons!
+  </div>
+  </div>
+  )}
+
+  {/* Over Target Warning */}
+  {(isOver(actualCals, calsTarget) || isOver(actualProtein, proteinTarget * 1.3) || isOver(actualCarbs, carbsTarget) || isOver(actualFats, fatsTarget)) && (
  <div className="mt-4 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-start space-x-3 text-amber-600 dark:text-amber-400 animate-fade-in print-hide">
  <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
  <div className="text-sm font-bold leading-snug">

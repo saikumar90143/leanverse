@@ -37,9 +37,9 @@ export default function WorkoutsSection() {
  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
  {[
  { label: 'Total Programs', value: programs.length, icon: Dumbbell, color: 'text-emerald-500 bg-emerald-500/10' },
- { label: 'Active Users', value: '2,960', icon: Zap, color: 'text-cyan-500 bg-cyan-500/10' },
- { label: 'Avg Completion', value: '51%', icon: Target, color: 'text-violet-500 bg-violet-500/10' },
- { label: 'Avg Duration', value: '75 days', icon: Clock, color: 'text-amber-500 bg-amber-500/10' },
+ { label: 'Active Users', value: programs.reduce((acc, p) => acc + (p.activeUsers || 0), 0).toLocaleString(), icon: Zap, color: 'text-cyan-500 bg-cyan-500/10' },
+ { label: 'Avg Completion', value: `${programs.length ? Math.round(programs.reduce((acc, p) => acc + (p.completionRate || 0), 0) / programs.length) : 0}%`, icon: Target, color: 'text-violet-500 bg-violet-500/10' },
+ { label: 'Avg Duration', value: `${programs.length ? Math.round(programs.reduce((acc, p) => acc + (p.durationDays || 0), 0) / programs.length) : 0} days`, icon: Clock, color: 'text-amber-500 bg-amber-500/10' },
  ].map(s => (
  <div key={s.label} className="glass rounded-2xl p-4 border border-border/10 dark:border-border flex items-center gap-3">
  <div className={`p-2.5 rounded-xl ${s.color}`}><s.icon className="w-4 h-4" /></div>

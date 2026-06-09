@@ -17,6 +17,7 @@ const UserSchema = new Schema(
     emailRemindersEnabled: { type: Boolean, default: false },
     reminderTime: { type: String, default: '08:00' }, // HH:MM format
     streakAlertsEnabled: { type: Boolean, default: true },
+    subscriptionExpiresAt: { type: Date, required: false, default: null },
   },
   { timestamps: true }
 );

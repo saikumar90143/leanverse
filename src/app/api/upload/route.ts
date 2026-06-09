@@ -17,15 +17,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'No file provided' }, { status: 400 });
     }
 
-    // SECURITY: Limit file size to 5MB
-    if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json({ success: false, error: 'File size exceeds 5MB limit' }, { status: 413 });
+    // SECURITY: Limit file size to 15MB for mobile camera compatibility
+    if (file.size > 15 * 1024 * 1024) {
+      return NextResponse.json({ success: false, error: 'File size exceeds 15MB limit' }, { status: 413 });
     }
 
-    // SECURITY: Only allow specific image MIME types
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json({ success: false, error: 'Invalid file type. Only JPEG, PNG, and WebP are allowed' }, { status: 415 });
+    // SECURITY: Only allow image MIME types
+    if (!file.type || !file.type.startsWith('image/')) {
+      return NextResponse.json({ success: false, error: 'Invalid file type. Only images are allowed' }, { status: 415 });
     }
 
     const bytes = await file.arrayBuffer();

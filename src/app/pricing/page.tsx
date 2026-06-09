@@ -4,16 +4,53 @@ import React, { useState } from 'react';
 import { Check, ShieldCheck, Sparkles, Flame, Apple, Dumbbell } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
+import { useAuth } from '@/components/layout/AuthProvider';
+
 export default function PricingPage() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
+  const [upgrading, setUpgrading] = useState(false);
+  const { user, updateUserSession } = useAuth();
 
-  const handleSubscribe = (tier: string) => {
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-    });
-    alert(`Subscribing to LeanVerse ${tier} (${billingPeriod}) plan! Demo Sandbox checkout successful.`);
+  const handleSubscribe = async (tier: string) => {
+    if (!user) {
+      alert("Please log in first to upgrade your account!");
+      return;
+    }
+
+    if (tier === 'Free Squad') {
+      alert("You are already on the Free tier!");
+      return;
+    }
+
+    if (user.tier === 'pro' || user.tier === 'premium') {
+      alert("You already have a premium membership!");
+      return;
+    }
+
+    setUpgrading(true);
+    try {
+      const res = await fetch('/api/user/upgrade', {
+        method: 'POST',
+      });
+      const data = await res.json();
+      
+      if (res.ok && data.user) {
+        updateUserSession({ tier: 'pro', subscriptionExpiresAt: data.user.subscriptionExpiresAt });
+        confetti({
+          particleCount: 150,
+          spread: 80,
+          origin: { y: 0.6 },
+          colors: ['#10b981', '#06b6d4', '#f59e0b']
+        });
+        alert(`Congratulations! You have successfully claimed your 1-Year Free Lean Pro membership!`);
+      } else {
+        alert(data.error || "Failed to upgrade. Please try again later.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred during upgrade.");
+    }
+    setUpgrading(false);
   };
 
   const plans = [
@@ -34,9 +71,9 @@ export default function PricingPage() {
     },
     {
       name: 'Lean Pro',
-      priceMonthly: 19,
-      priceAnnual: 12, // equivalent
-      desc: 'Unlimited diet, gym splits and progressive logs.',
+      priceMonthly: 0,
+      priceAnnual: 0,
+      desc: '1-YEAR FREE PROMOTIONAL OFFER',
       features: [
         'Unlimited AI Diet Blueprints',
         'Unlimited AI Workout split maps',
@@ -45,7 +82,7 @@ export default function PricingPage() {
         'Full AI Fitness Chatbot assistant access',
         '100% Ad-Free UI Experience',
       ],
-      cta: 'Upgrade to Lean Pro',
+      cta: 'Claim 1 Year Free',
       popular: true,
     },
     {
@@ -130,7 +167,11 @@ export default function PricingPage() {
 
                 <div className="flex items-baseline space-x-1.5 py-4 border-t border-b border-border/10">
                   <span className="text-4xl sm:text-5xl font-black text-slate-850 dark:text-slate-150">${currentPrice}</span>
-                  <span className="text-xs text-muted font-bold">/ {billingPeriod === 'monthly' ? 'month' : 'month, billed annually'}</span>
+                  {p.name === 'Lean Pro' ? (
+                    <span className="text-xs text-emerald-500 font-bold uppercase ml-2 bg-emerald-500/10 px-2 py-1 rounded-md">First Year Free</span>
+                  ) : (
+                    <span className="text-xs text-muted font-bold">/ {billingPeriod === 'monthly' ? 'month' : 'month, billed annually'}</span>
+                  )}
                 </div>
 
                 {/* Features checklist */}
@@ -152,8 +193,9 @@ export default function PricingPage() {
                       ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white shadow-emerald-500/10'
                       : 'bg-secondary/50 hover:bg-secondary dark:bg-card/5 dark:hover:bg-card/10 text-foreground border border-slate-350/15'
                   }`}
+                  disabled={upgrading}
                 >
-                  <span>{p.cta}</span>
+                  <span>{upgrading && p.name === 'Lean Pro' ? 'Claiming...' : p.cta}</span>
                 </button>
               </div>
             </div>

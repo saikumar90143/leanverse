@@ -68,6 +68,7 @@ export default function DietPlansSection() {
  setEditingPlan({
  name: '',
  goal: 'Weight Loss',
+ dietStyle: 'Any',
  durationDays: 30,
  description: '',
  meals: MEALS.map(m => ({ name: m, foods: [] }))
@@ -219,6 +220,7 @@ export default function DietPlansSection() {
  <tr className="border-b border-border/10 dark:border-border bg-background/50 dark:bg-card/2">
  <th className="text-left px-4 py-3 font-black text-muted">Plan Name</th>
  <th className="text-left px-4 py-3 font-black text-muted">Goal</th>
+ <th className="text-left px-4 py-3 font-black text-muted">Diet Style</th>
  <th className="text-left px-4 py-3 font-black text-muted">Duration</th>
  <th className="text-left px-4 py-3 font-black text-muted">Target Cals</th>
  <th className="text-left px-4 py-3 font-black text-muted">Target Macros</th>
@@ -227,13 +229,14 @@ export default function DietPlansSection() {
  </thead>
  <tbody className="divide-y divide-slate-200/5 dark:divide-white/5">
  {loading ? (
- <tr><td colSpan={6} className="text-center py-10 text-muted">Loading...</td></tr>
+ <tr><td colSpan={7} className="text-center py-10 text-muted">Loading...</td></tr>
  ) : plans.length === 0 ? (
- <tr><td colSpan={6} className="text-center py-10 text-muted">No diet plans created yet.</td></tr>
+ <tr><td colSpan={7} className="text-center py-10 text-muted">No diet plans created yet.</td></tr>
  ) : plans.map((p) => (
  <tr key={p._id} className="hover:bg-background/30 dark:hover:bg-card/3">
  <td className="px-4 py-3 font-bold text-foreground ">{p.name}</td>
  <td className="px-4 py-3 text-muted">{p.goal}</td>
+ <td className="px-4 py-3 text-muted">{p.dietStyle || 'Any'}</td>
  <td className="px-4 py-3 text-muted">{p.durationDays} Days</td>
  <td className="px-4 py-3 text-emerald-500 font-bold">{p.targetCalories} kcal</td>
  <td className="px-4 py-3 text-muted">
@@ -279,6 +282,15 @@ export default function DietPlansSection() {
  <option>Muscle Gain</option>
  <option>Maintenance</option>
  <option>Recomposition</option>
+ </select>
+ </div>
+ <div>
+ <label className="text-[10px] font-black text-muted uppercase block mb-1">Diet Style</label>
+ <select value={editingPlan.dietStyle || 'Any'} onChange={(e) => setEditingPlan({ ...editingPlan, dietStyle: e.target.value })}
+ className="w-full px-3 py-2 bg-card border border-border/20 dark:border-border rounded-xl text-sm focus:outline-none focus:border-emerald-500">
+ <option>Any</option>
+ <option>Vegetarian</option>
+ <option>Non-Vegetarian</option>
  </select>
  </div>
  <div>

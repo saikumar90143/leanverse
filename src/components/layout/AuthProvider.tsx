@@ -11,6 +11,7 @@ export interface UserSession {
   streak: number;
   badges: string[];
   avatar?: string | null;
+  subscriptionExpiresAt?: string | null;
 }
 
 interface AuthContextType {

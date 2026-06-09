@@ -25,7 +25,7 @@ const insightTextColors: Record<string, string> = {
 };
 
 export default function GrowthSection() {
- const [data, setData] = useState<{ dau: number; mau: number; totalUsers: number; growth: { date: string; newUsers: number }[] } | null>(null);
+ const [data, setData] = useState<{ dau: number; mau: number; totalUsers: number; growth: { date: string; newUsers: number }[]; retention: number[]; kpiChanges: any } | null>(null);
  const [loading, setLoading] = useState(true);
 
  useEffect(() => {
@@ -41,14 +41,23 @@ export default function GrowthSection() {
  const dau = data?.dau || 0;
  const mau = data?.mau || 0;
  const growth = data?.growth || [];
+ const retentionData = data?.retention || [0, 0, 0, 0, 0, 0, 0, 0];
+ const kpis = data?.kpiChanges || {
+   dau: { value: '0%', up: true },
+   mau: { value: '0%', up: true },
+   retention: { value: '0%', up: true },
+   conversion: { value: '0%', up: true },
+   mrr: { value: '0%', up: true },
+   churn: { value: '0%', up: true },
+ };
 
  const metrics = [
- { label: 'DAU', value: dau.toLocaleString(), change: '+8.2%', up: true, icon: Users, color: 'text-emerald-500 bg-emerald-500/10' },
- { label: 'MAU', value: mau.toLocaleString(), change: '+14.5%', up: true, icon: UserCheck, color: 'text-cyan-500 bg-cyan-500/10' },
- { label: 'Retention D7', value: '42%', change: '+2.1%', up: true, icon: Repeat, color: 'text-violet-500 bg-violet-500/10' },
- { label: 'Conversion Rate', value: '3.8%', change: '-0.3%', up: false, icon: TrendingUp, color: 'text-amber-500 bg-amber-500/10' },
- { label: 'Premium MRR', value: '₹94K', change: '+21%', up: true, icon: DollarSign, color: 'text-emerald-500 bg-emerald-500/10' },
- { label: 'Churn Rate', value: '2.1%', change: '-0.5%', up: true, icon: Repeat, color: 'text-rose-500 bg-rose-500/10' },
+   { label: 'DAU', value: dau.toLocaleString(), change: kpis.dau.value, up: kpis.dau.up, icon: Users, color: 'text-emerald-500 bg-emerald-500/10' },
+   { label: 'MAU', value: mau.toLocaleString(), change: kpis.mau.value, up: kpis.mau.up, icon: UserCheck, color: 'text-cyan-500 bg-cyan-500/10' },
+   { label: 'Retention D7', value: `${retentionData[7]}%`, change: kpis.retention.value, up: kpis.retention.up, icon: Repeat, color: 'text-violet-500 bg-violet-500/10' },
+   { label: 'Conversion Rate', value: '0%', change: kpis.conversion.value, up: kpis.conversion.up, icon: TrendingUp, color: 'text-amber-500 bg-amber-500/10' },
+   { label: 'Premium MRR', value: '₹0', change: kpis.mrr.value, up: kpis.mrr.up, icon: DollarSign, color: 'text-emerald-500 bg-emerald-500/10' },
+   { label: 'Churn Rate', value: '0%', change: kpis.churn.value, up: kpis.churn.up, icon: Repeat, color: 'text-rose-500 bg-rose-500/10' },
  ];
 
  if (loading) {
@@ -116,7 +125,7 @@ export default function GrowthSection() {
  <p className="text-[9px] text-muted mb-1">{d}</p>
  </div>
  ))}
- {[100, 78, 64, 55, 48, 44, 42, 39].map((v, i) => (
+ {retentionData.map((v, i) => (
  <div key={i} className="rounded-lg p-2 text-center text-[10px] font-black"
  style={{ backgroundColor: `rgba(16, 185, 129, ${v / 120})`, color: v > 50 ? '#fff' : '#10b981' }}>
  {v}%

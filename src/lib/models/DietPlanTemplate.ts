@@ -13,6 +13,7 @@ export interface IMeal {
 export interface IDietPlanTemplate {
   name: string;
   goal: string;
+  dietStyle: string;
   durationDays: number;
   description: string;
   meals: IMeal[];
@@ -39,6 +40,7 @@ const DietPlanTemplateSchema = new mongoose.Schema<IDietPlanTemplate>(
   {
     name: { type: String, required: true },
     goal: { type: String, required: true },
+    dietStyle: { type: String, default: 'Any' },
     durationDays: { type: Number, required: true, default: 30 },
     description: { type: String, default: '' },
     meals: [MealSchema],
