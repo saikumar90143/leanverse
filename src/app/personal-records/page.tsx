@@ -30,7 +30,7 @@ export default function PersonalRecordsPage() {
    fetch('/api/exercises')
      .then(res => res.json())
      .then(data => {
-       if (Array.isArray(data)) setDbExercises(data);
+       if (data && Array.isArray(data.exercises)) setDbExercises(data.exercises);
      })
      .catch(console.error);
  }, []);

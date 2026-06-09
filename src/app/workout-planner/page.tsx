@@ -54,11 +54,12 @@ export default function AIWorkoutPlanner() {
  setViewDayIndex(state.currentDay - 1);
  }
  }, [state, viewDayIndex]);
- 
- // Auto-fill logs with history for progressive overload
- useEffect(() => {
- if (state && state.schedule && state.currentDay) {
- const day = state.schedule[state.currentDay - 1];
+  const displayDayIndex = viewDayIndex >= 0 ? viewDayIndex : (state?.currentDay ? state.currentDay - 1 : 0);
+
+  // Auto-fill logs with history for progressive overload
+  useEffect(() => {
+    if (state && state.schedule && state.currentDay) {
+      const day = state.schedule[displayDayIndex];
  if (day && day.mainExercises && !day.completed) {
  setLogs(prev => {
  const newLogs = { ...prev };
@@ -97,7 +98,7 @@ export default function AIWorkoutPlanner() {
  });
  }
  }
- }, [state?.currentDay, state?.schedule, state?.exerciseHistory]);
+  }, [state?.currentDay, state?.schedule, state?.exerciseHistory, displayDayIndex]);
  
  // Exercise Search Modal
  const [showExerciseSearch, setShowExerciseSearch] = useState(false);
@@ -192,13 +193,45 @@ export default function AIWorkoutPlanner() {
  }
  }, [state, isMounted, user]);
 
- useEffect(() => {
- if (pendingAutoGenerate && user) {
- setPendingAutoGenerate(false);
- handleGenerate();
- }
- // eslint-disable-next-line react-hooks/exhaustive-deps
- }, [pendingAutoGenerate, user]);
+  // Data migration to fix corrupted exerciseIds from previous versions
+  useEffect(() => {
+    if (state && dbExercises.length > 0) {
+      let modified = false;
+      const newState = { ...state, schedule: [...state.schedule] };
+      const allExercises = [...transformationExercises, ...dbExercises];
+
+      newState.schedule.forEach(day => {
+        day.mainExercises.forEach(ex => {
+          if (!ex.exerciseId || ex.exerciseId === 'undefined') {
+            const found = allExercises.find(e => e.name === ex.name);
+            if (found) {
+              ex.exerciseId = found.id || (found as any)._id;
+              modified = true;
+            }
+          }
+        });
+      });
+
+      // Cleanup corrupted history if it exists
+      if (newState.exerciseHistory && (newState.exerciseHistory as any)["undefined"]) {
+        delete (newState.exerciseHistory as any)["undefined"];
+        modified = true;
+      }
+
+      if (modified) {
+        setState(newState);
+        localStorage.setItem(getUserStorageKey('leanverse_transformation'), JSON.stringify(newState));
+      }
+    }
+  }, [state?.workoutsCompleted, dbExercises.length]); // Only run when state is loaded and dbExercises are available
+
+  useEffect(() => {
+    if (pendingAutoGenerate && user) {
+      setPendingAutoGenerate(false);
+      handleGenerate();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingAutoGenerate, user]);
 
 
 
@@ -303,7 +336,7 @@ export default function AIWorkoutPlanner() {
  const dbExercise = exerciseSource.find(e => e.id === dbExerciseId || e._id === dbExerciseId);
  if (!dbExercise) return;
  
- const dayIndex = state.currentDay - 1;
+ const dayIndex = displayDayIndex;
  const newState = { ...state, schedule: [...state.schedule] };
  const day = { ...newState.schedule[dayIndex] };
  
@@ -386,7 +419,7 @@ export default function AIWorkoutPlanner() {
 
  const handleRemoveExercise = (exerciseId: string) => {
  if (!state || !confirm('Remove this exercise?')) return;
- const dayIndex = state.currentDay - 1;
+ const dayIndex = displayDayIndex;
  const newState = { ...state, schedule: [...state.schedule] };
  const day = { ...newState.schedule[dayIndex] };
  
@@ -404,29 +437,134 @@ export default function AIWorkoutPlanner() {
  const targetEx = day.mainExercises.find(ex => ex.id === exerciseId);
  if (!targetEx) return;
 
- if (!targetEx.completed) {
- const exLogs = logs[exerciseId] || [];
- const isComplete = Array.from({ length: targetEx.targetSets }).every((_, i) => {
- const setLog = exLogs[i];
- return setLog && setLog.weight.trim() !== '' && String(setLog.reps).trim() !== '';
- });
+  const exLogs = logs[exerciseId] || [];
 
- if (!isComplete) {
- alert('Please log all weights and reps before marking this exercise as complete.');
- return;
- }
- }
+  if (!targetEx.completed) {
+  const isComplete = Array.from({ length: targetEx.targetSets }).every((_, i) => {
+  const setLog = exLogs[i];
+  return setLog && setLog.weight.trim() !== '' && String(setLog.reps).trim() !== '';
+  });
+
+  if (!isComplete) {
+  alert('Please log all weights and reps before marking this exercise as complete.');
+  return;
+  }
+
+  // Calculate PR and Update History Immediately
+  if (!newState.exerciseHistory) newState.exerciseHistory = {};
+  const history = newState.exerciseHistory[targetEx.exerciseId] || [];
+  
+  let oldMaxW = 0;
+  let oldMaxRepsAtMaxW = 0;
+  let absoluteOldMaxReps = 0;
+  
+  const todayStr = new Date().toDateString();
+
+  history.forEach(record => {
+    if (new Date(record.date).toDateString() === todayStr) return; // Skip today if re-logging
+    record.weightUsed.forEach((weightStr: string, idx: number) => {
+      const w = parseFloat(weightStr);
+      const reps = parseInt(record.repsAchieved[idx]?.toString()) || 0;
+      if (isNaN(w) || weightStr.toLowerCase().includes('body')) {
+        if (reps > absoluteOldMaxReps) absoluteOldMaxReps = reps;
+      } else {
+        if (w > oldMaxW) {
+          oldMaxW = w;
+          oldMaxRepsAtMaxW = reps;
+        } else if (w === oldMaxW && reps > oldMaxRepsAtMaxW) {
+          oldMaxRepsAtMaxW = reps;
+        }
+      }
+    });
+  });
+
+  let newMaxW = 0;
+  let newMaxRepsAtMaxW = 0;
+  let absoluteNewMaxReps = 0;
+
+  exLogs.forEach(l => {
+     const w = parseFloat(l.weight);
+     const reps = parseInt(l.reps) || 0;
+     if (isNaN(w) || l.weight.toLowerCase().includes('body')) {
+        if (reps > absoluteNewMaxReps) absoluteNewMaxReps = reps;
+     } else {
+        if (w > newMaxW) {
+          newMaxW = w;
+          newMaxRepsAtMaxW = reps;
+        } else if (w === newMaxW && reps > newMaxRepsAtMaxW) {
+          newMaxRepsAtMaxW = reps;
+        }
+     }
+  });
+
+  let isFirstTime = history.length === 0 || (history.length === 1 && new Date(history[0].date).toDateString() === todayStr);
+  let isNewPR = false;
+
+  if (!isFirstTime) {
+    if (newMaxW > 0 && newMaxW > oldMaxW) isNewPR = true;
+    else if (newMaxW > 0 && newMaxW === oldMaxW && newMaxRepsAtMaxW > oldMaxRepsAtMaxW) isNewPR = true;
+    else if (newMaxW === 0 && absoluteNewMaxReps > absoluteOldMaxReps) isNewPR = true;
+  }
+
+  // Save to history
+  if (!newState.exerciseHistory[targetEx.exerciseId]) {
+    newState.exerciseHistory[targetEx.exerciseId] = [];
+  }
+  
+  const newSession = {
+    date: new Date().toISOString(),
+    repsAchieved: exLogs.map(l => parseInt(l.reps) || 0),
+    weightUsed: exLogs.map(l => l.weight),
+    completionPercentage: 100
+  };
+
+  const existingIndex = newState.exerciseHistory[targetEx.exerciseId].findIndex(h => new Date(h.date).toDateString() === todayStr);
+  if (existingIndex >= 0) {
+    newState.exerciseHistory[targetEx.exerciseId][existingIndex] = newSession;
+  } else {
+    newState.exerciseHistory[targetEx.exerciseId].push(newSession);
+  }
+
+  // Trigger celebration
+  if (isFirstTime) {
+    import('canvas-confetti').then((confetti) => confetti.default({ particleCount: 50, spread: 50, origin: { y: 0.7 } }));
+  } else if (isNewPR) {
+    import('canvas-confetti').then((confetti) => confetti.default({ particleCount: 150, spread: 80, origin: { y: 0.6 } }));
+  }
+
+  } else {
+    // Unmarking: remove from history if we unmark
+    if (newState.exerciseHistory && newState.exerciseHistory[targetEx.exerciseId]) {
+      const todayStr = new Date().toDateString();
+      newState.exerciseHistory[targetEx.exerciseId] = newState.exerciseHistory[targetEx.exerciseId].filter(h => new Date(h.date).toDateString() !== todayStr);
+    }
+  }
  
- day.mainExercises = day.mainExercises.map(ex => 
- ex.id === exerciseId ? { ...ex, completed: !ex.completed } : ex
- );
- newState.schedule[dayIndex] = day;
- setState(newState);
- };
+  day.mainExercises = day.mainExercises.map(ex => {
+    if (ex.id === exerciseId) {
+      if (!ex.completed) {
+        return {
+          ...ex,
+          completed: true,
+          loggedSets: exLogs.map(l => ({ reps: parseInt(l.reps) || 0, weight: l.weight }))
+        };
+      } else {
+        return {
+          ...ex,
+          completed: false,
+          loggedSets: []
+        };
+      }
+    }
+    return ex;
+  });
+  newState.schedule[dayIndex] = day;
+  setState(newState);
+  };
 
  const handleUpdateSets = (exerciseId: string, delta: number) => {
  if (!state) return;
- const dayIndex = state.currentDay - 1;
+ const dayIndex = displayDayIndex;
  const newState = { ...state, schedule: [...state.schedule] };
  const day = { ...newState.schedule[dayIndex] };
  
@@ -696,7 +834,6 @@ export default function AIWorkoutPlanner() {
  const renderDashboard = () => {
  if (!state) return null;
  
- const displayDayIndex = viewDayIndex >= 0 ? viewDayIndex : (state.currentDay - 1);
  const activeDay = state.schedule[displayDayIndex] || state.schedule[state.totalDays - 1];
  const isPastDay = displayDayIndex < (state.currentDay - 1);
  const isFutureDay = displayDayIndex > (state.currentDay - 1);

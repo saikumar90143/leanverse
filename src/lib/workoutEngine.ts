@@ -240,8 +240,8 @@ export function populateExercisesForDay(state: TransformationState, dayIndex: nu
     if (availableForMuscle.length > 0) {
       // ROTATION ENGINE: Find the exercise least recently done
       availableForMuscle.sort((a, b) => {
-        const historyA = state.exerciseHistory[a.id];
-        const historyB = state.exerciseHistory[b.id];
+        const historyA = state.exerciseHistory[a.id || a._id];
+        const historyB = state.exerciseHistory[b.id || b._id];
         const dateA = historyA ? new Date(historyA[historyA.length - 1].date).getTime() : 0;
         const dateB = historyB ? new Date(historyB[historyB.length - 1].date).getTime() : 0;
         return dateA - dateB;
@@ -258,7 +258,7 @@ export function populateExercisesForDay(state: TransformationState, dayIndex: nu
       }
 
       // PROGRESSIVE OVERLOAD ENGINE
-      const history = state.exerciseHistory[chosen.id];
+      const history = state.exerciseHistory[chosen.id || chosen._id];
       let targetReps = '10-12';
       let targetWeight = 'Auto-regulate';
       let targetSets = 3;
@@ -320,6 +320,19 @@ export function logWorkoutCompletion(
   day.dateCompleted = new Date().toISOString();
   newState.workoutsCompleted++;
 
+  // Store logged sets on the exercises themselves for viewing past days
+  day.mainExercises = day.mainExercises.map(ex => {
+    const log = logs.find(l => l.exerciseId === ex.exerciseId);
+    if (log) {
+      return {
+        ...ex,
+        completed: true,
+        loggedSets: log.sets
+      };
+    }
+    return ex;
+  });
+
   // Date-based streak logic: only count one streak increment per calendar day,
   // and only if yesterday (or today already) was the previous completed day.
   const today = new Date().toDateString();
@@ -379,12 +392,21 @@ export function logWorkoutCompletion(
       newState.exerciseHistory[log.exerciseId] = [];
     }
     
-    newState.exerciseHistory[log.exerciseId].push({
+    const newSession = {
       date: new Date().toISOString(),
       repsAchieved: log.sets.map(s => s.reps),
       weightUsed: log.sets.map(s => s.weight),
       completionPercentage: 100 // Simplified for MVP
-    });
+    };
+
+    const todayStr = new Date().toDateString();
+    const existingIndex = newState.exerciseHistory[log.exerciseId].findIndex(h => new Date(h.date).toDateString() === todayStr);
+    
+    if (existingIndex >= 0) {
+      newState.exerciseHistory[log.exerciseId][existingIndex] = newSession;
+    } else {
+      newState.exerciseHistory[log.exerciseId].push(newSession);
+    }
   });
 
   return newState;
