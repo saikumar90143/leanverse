@@ -261,7 +261,7 @@ export default function Navbar() {
                     className="flex items-center space-x-1.5 px-3 py-2 rounded-full bg-cyan-500 hover:bg-cyan-600 dark:bg-cyan-600 dark:hover:bg-cyan-500 text-white text-sm font-bold transition-all shadow-lg hover:shadow-cyan-500/20"
                   >
                     <Dumbbell className="w-4 h-4" />
-                    <span className=" sm:inline">Active Workout</span>
+                    <span className=" sm:inline">My Workout Plan</span>
                   </Link>
                 )}
                 <Link 
@@ -386,7 +386,7 @@ export default function Navbar() {
                         href="/workout-planner"
                         className="block w-full py-3 rounded-2xl bg-cyan-500 text-white font-bold shadow-md"
                       >
-                        Active Workout
+                        My Workout Plan
                       </Link>
                     )}
                     <Link 

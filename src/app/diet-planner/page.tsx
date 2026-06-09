@@ -1239,10 +1239,20 @@ Built with LeanVerse AI`;
  ? foodCat.toLowerCase() === activeMealTab.toLowerCase()
  : false;
  
+ const isSelected = selectedFoods.includes(`${food}|${activeMealTab}`);
+ if (isSelected) return true;
+
  // If the user is actively searching, show all matches regardless of category
  if (searchFood.trim() !== '') return matchesSearch;
  // Otherwise, only show foods belonging to the active meal tab
  return matchesTab;
+ })
+ .sort((a, b) => {
+    const aSelected = selectedFoods.includes(`${a}|${activeMealTab}`);
+    const bSelected = selectedFoods.includes(`${b}|${activeMealTab}`);
+    if (aSelected && !bSelected) return -1;
+    if (!aSelected && bSelected) return 1;
+    return a.localeCompare(b);
  })
  .map((food) => {
  const compositeKey = `${food}|${activeMealTab}`;
