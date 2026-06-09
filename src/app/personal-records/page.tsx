@@ -27,13 +27,16 @@ export default function PersonalRecordsPage() {
  const [dbExercises, setDbExercises] = useState<any[]>([]);
 
  useEffect(() => {
-   fetch('/api/exercises')
+   let url = '/api/exercises';
+   if (user?.id) url += `?userId=${user.id}`;
+   
+   fetch(url)
      .then(res => res.json())
      .then(data => {
        if (data && Array.isArray(data.exercises)) setDbExercises(data.exercises);
      })
      .catch(console.error);
- }, []);
+ }, [user?.id]);
 
  useEffect(() => {
  setIsMounted(true);

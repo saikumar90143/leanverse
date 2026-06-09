@@ -22,19 +22,48 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'LeanVerse | AI Nutrition & Workout Planner',
-  description: 'AI-powered personal fitness tracking, diet planning, and gamified leveling system.',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://leanverse.vercel.app'),
+  title: {
+    default: 'LeanVerse | Best AI Nutrition & Workout Planner',
+    template: '%s | LeanVerse',
+  },
+  description: 'LeanVerse is your ultimate AI-powered personal fitness tracking, diet planning, and gamified workout leveling system. Transform your body with LeanVerse AI.',
+  applicationName: 'LeanVerse',
+  authors: [{ name: 'LeanVerse Team' }],
+  creator: 'LeanVerse',
+  publisher: 'LeanVerse',
   icons: {
     icon: '/icon.svg',
     shortcut: '/icon.svg',
     apple: '/icon.svg',
   },
-  keywords: ['AI diet planner', 'fitness tracker', 'TDEE calculator', 'macro breakdown', 'custom gym plans', 'Indian diet plans', 'Lean bulk planner'],
+  keywords: ['LeanVerse', 'LeanVerse AI', 'Leanverse fitness tracker', 'Leanverse workout planner', 'AI diet planner', 'fitness tracker', 'TDEE calculator', 'macro breakdown', 'custom gym plans', 'Indian diet plans', 'Lean bulk planner'],
   manifest: '/manifest.json',
   openGraph: {
     title: 'LeanVerse - Transform Your Body with AI',
-    description: 'Smart AI-powered diet plans, progressive overload trackers, and dynamic BMR/TDEE calculations designed for sustainable health.',
+    description: 'Smart AI-powered diet plans, progressive overload trackers, and dynamic BMR/TDEE calculations designed for sustainable health on LeanVerse.',
     type: 'website',
+    siteName: 'LeanVerse',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'LeanVerse | Best AI Nutrition & Workout Planner',
+    description: 'Transform your body with LeanVerse AI-powered workout & diet plans.',
+    creator: '@leanverse',
+  },
+  alternates: {
+    canonical: '/',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 };
 

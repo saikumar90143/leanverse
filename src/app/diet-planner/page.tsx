@@ -588,16 +588,19 @@ Built with LeanVerse AI`;
  );
  };
 
- const toggleFood = (food: string) => {
- const compositeKey = `${food}|${activeMealTab}`;
- setSelectedFoods((prev) => {
- if (prev.includes(compositeKey)) {
- return prev.filter((f) => f !== compositeKey);
- } else {
- return [...prev, compositeKey];
- }
- });
- };
+  const toggleFood = (food: string) => {
+    const compositeKey = `${food}|${activeMealTab}`;
+    if (!selectedFoods.includes(compositeKey)) {
+      setSearchFood(''); // Clear search when adding new food
+    }
+    setSelectedFoods((prev) => {
+      if (prev.includes(compositeKey)) {
+        return prev.filter((f) => f !== compositeKey);
+      } else {
+        return [...prev, compositeKey];
+      }
+    });
+  };
 
  const handleAddCustomFood = (e: React.FormEvent) => {
  e.preventDefault();
