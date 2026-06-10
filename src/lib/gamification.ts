@@ -70,6 +70,10 @@ function hasCompletedSetForDate(db: Record<string, unknown>, dateStr: string): b
   if (!entry || typeof entry !== 'object' || entry === null) return false;
   const exercises = (entry as Record<string, unknown>).exercises;
   if (!Array.isArray(exercises)) return false;
+  
+  // A logged Rest Day has an empty exercises array. This should count towards continuing the streak!
+  if (exercises.length === 0) return true;
+
   return exercises.some((ex: unknown) => {
     if (!ex || typeof ex !== 'object' || ex === null) return false;
     const sets = (ex as Record<string, unknown>).sets;

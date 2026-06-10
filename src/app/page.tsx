@@ -672,7 +672,7 @@ export default function HomePage() {
  <h3 className="text-xl font-black text-foreground mb-3 leading-snug group-hover:text-emerald-500 transition-colors">{blog.title}</h3>
  <p className="text-sm text-muted font-medium leading-relaxed mb-6 flex-1">{blog.desc}</p>
  <span className="text-sm font-bold text-foreground flex items-center gap-1 group-hover:text-emerald-500">Read Article <ArrowRight className="w-4 h-4 ml-1" /></span>
- </div>
+ </div>hhjh
  </Link>
  ))}
  </div>
