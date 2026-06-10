@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Upload, RefreshCw, X, Check, Edit2, AlertTriangle, Plus, Trash2, ArrowRight } from 'lucide-react';
 import { formatLocalDate, getUserStorageKey } from '@/lib/storage';
+import { useAuth } from '@/components/layout/AuthProvider';
+import Link from 'next/link';
 
 interface RecognizedFood {
   id: string;
@@ -24,6 +26,7 @@ interface AIFoodScannerProps {
 }
 
 export default function AIFoodScanner({ onClose, onResult }: AIFoodScannerProps = {}) {
+  const { user } = useAuth();
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<RecognizedFood[]>([]);
@@ -329,15 +332,24 @@ export default function AIFoodScanner({ onClose, onResult }: AIFoodScannerProps 
             Snap a picture of your plate or upload an image. Our AI will instantly estimate calories, macros, and weight for all items, including Indian cuisine!
           </p>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
-            <button 
-              type="button"
-              onClick={startCamera}
-              className="py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-2xl flex items-center justify-center transition-all shadow-lg"
-            >
-              <Camera className="w-5 h-5 mr-2" />
-              Open Camera
-            </button>
+          {!user ? (
+            <div className="mt-8 p-6 bg-red-500/10 border border-red-500/20 rounded-2xl">
+              <h3 className="text-red-500 font-bold mb-2">Login Required</h3>
+              <p className="text-red-400 text-sm mb-4">You must be logged in to use the AI Food Scanner.</p>
+              <Link href="/login" className="inline-block px-6 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-colors">
+                Sign In to Scan
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
+              <button 
+                type="button"
+                onClick={startCamera}
+                className="py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-2xl flex items-center justify-center transition-all shadow-lg"
+              >
+                <Camera className="w-5 h-5 mr-2" />
+                Open Camera
+              </button>
             <button 
               type="button"
               onClick={() => fileInputRef.current?.click()}
@@ -354,6 +366,7 @@ export default function AIFoodScanner({ onClose, onResult }: AIFoodScannerProps 
               onChange={handleFileUpload} 
             />
           </div>
+          )}
         </div>
       )}
 
