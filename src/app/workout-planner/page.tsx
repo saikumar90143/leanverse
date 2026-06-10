@@ -8,6 +8,7 @@ import { getUserStorageKey, formatLocalDate } from '@/lib/storage';
 import { TransformationState, UserProfile, Goal, WorkoutLocation, ExperienceLevel, WorkoutExercise } from '@/lib/types/transformation';
 import { generateTransformationJourney, populateExercisesForDay, logWorkoutCompletion, areExercisesSimilar } from '@/lib/workoutEngine';
 import { transformationExercises } from '@/lib/transformationExercises';
+import { clearWorkoutsCache } from '@/lib/gamification';
 
 export default function AIWorkoutPlanner() {
  const [isMounted, setIsMounted] = useState(false);
@@ -294,6 +295,31 @@ export default function AIWorkoutPlanner() {
     });
   };
 
+
+ /**
+  * Writes today's completed exercises to leanverse_workouts_db so that
+  * gamification streak functions (getStreak, getWeeklyGoalProgress etc.) can read them.
+  */
+ const writeWorkoutToDb = (dayName: string, exercises: { name: string; sets: { completed: boolean; weight: string; reps: number }[] }[]) => {
+  try {
+   const key = getUserStorageKey('leanverse_workouts_db');
+   const raw = localStorage.getItem(key);
+   const db: Record<string, unknown> = raw ? JSON.parse(raw) : {};
+   const dateStr = formatLocalDate();
+   db[dateStr] = {
+    name: dayName,
+    exercises: exercises.map(ex => ({
+     name: ex.name,
+     sets: ex.sets
+    }))
+   };
+   localStorage.setItem(key, JSON.stringify(db));
+   clearWorkoutsCache(); // Clear stale in-memory cache
+   // Notify streak components on the same page
+   window.dispatchEvent(new CustomEvent('leanverse-workout-logged'));
+  } catch {}
+ };
+
  const handleCompleteWorkout = () => {
  if (!state) return;
  
@@ -328,6 +354,17 @@ export default function AIWorkoutPlanner() {
  localStorage.removeItem('leanverse_workout_draft');
  setViewDayIndex(newState.currentDay - 1);
  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+ // Write to workouts DB so streak system picks it up
+ const completedDay = state.schedule[dayIndex];
+ writeWorkoutToDb(completedDay.workoutName, completedDay.mainExercises.map(ex => ({
+  name: ex.name,
+  sets: Array.from({ length: ex.targetSets }).map((_, i) => ({
+   completed: true,
+   weight: logs[ex.id]?.[i]?.weight || 'Bodyweight',
+   reps: parseInt(logs[ex.id]?.[i]?.reps || '10')
+  }))
+ })));
  };
 
  const handleAddExtraExercise = (dbExerciseId: string) => {
@@ -560,6 +597,16 @@ export default function AIWorkoutPlanner() {
   });
   newState.schedule[dayIndex] = day;
   setState(newState);
+
+  // Sync to workouts DB for the streak system
+  writeWorkoutToDb(day.workoutName, day.mainExercises.map((e: any) => ({
+    name: e.name,
+    sets: e.loggedSets.map((s: any) => ({
+      completed: true,
+      weight: s.weight,
+      reps: s.reps
+    }))
+  })));
   };
 
  const handleUpdateSets = (exerciseId: string, delta: number) => {

@@ -21,7 +21,6 @@ export default function Footer() {
     features: [
       { name: 'Diet Planner', path: '/diet-planner', icon: Apple },
       { name: 'Workout Planner', path: '/workout-planner', icon: Dumbbell },
-      { name: 'Healthy Recipes', path: '/recipes', icon: Heart },
       { name: 'Supplements', path: '/store', icon: Shield },
     ],
     calculators: [

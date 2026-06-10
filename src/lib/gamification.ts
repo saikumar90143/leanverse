@@ -26,6 +26,15 @@ export const LEVELS: Level[] = [
 
 let memoryCache: Record<string, unknown> | null = null;
 let cacheTime = 0;
+/**
+ * Force-clears the in-memory workouts cache so next read hits localStorage.
+ * Call this whenever a workout is logged/updated.
+ */
+export function clearWorkoutsCache(): void {
+  memoryCache = null;
+  cacheTime = 0;
+}
+
 
 /**
  * Safely parse the workouts DB from localStorage with a 2-second in-memory cache.
@@ -370,4 +379,242 @@ export function getDailyChallenge(): { title: string; desc: string; icon: string
     icon: challenge.icon,
     completed
   };
+}
+/**
+ * Returns the best (longest) consecutive workout streak ever.
+ */
+export function getBestStreak(): number {
+  const db = getWorkoutsDb();
+  const dates = Object.keys(db).filter(d => hasCompletedSetForDate(db, d)).sort();
+  if (dates.length === 0) return 0;
+
+  let best = 1;
+  let current = 1;
+
+  for (let i = 1; i < dates.length; i++) {
+    const prev = new Date(dates[i - 1]);
+    const curr = new Date(dates[i]);
+    const diff = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
+    if (diff === 1) {
+      current++;
+      if (current > best) best = current;
+    } else {
+      current = 1;
+    }
+  }
+  return best;
+}
+
+/**
+ * Returns the total number of days where at least one workout set was completed.
+ */
+export function getTotalWorkoutsCompleted(): number {
+  const db = getWorkoutsDb();
+  return Object.keys(db).filter(d => hasCompletedSetForDate(db, d)).length;
+}
+
+/**
+ * Returns weekly goal progress for the current Mon–Sun week.
+ */
+export function getWeeklyGoalProgress(weeklyGoalTarget: number = 4): {
+  completed: number;
+  goal: number;
+  percentage: number;
+  days: { date: string; dayName: string; hasWorkout: boolean; isToday: boolean; isFuture: boolean }[];
+} {
+  const db = getWorkoutsDb();
+  const today = new Date();
+  const todayStr = formatLocalDate(today);
+
+  // Find Monday of current week
+  const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon...
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
+
+  const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const days = [];
+  let completed = 0;
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const dateStr = formatLocalDate(d);
+    const hasWorkout = hasCompletedSetForDate(db, dateStr);
+    const isToday = dateStr === todayStr;
+    const isFuture = d > today && !isToday;
+
+    if (hasWorkout) completed++;
+    days.push({ date: dateStr, dayName: dayNames[i], hasWorkout, isToday, isFuture });
+  }
+
+  return {
+    completed,
+    goal: weeklyGoalTarget,
+    percentage: Math.round((completed / weeklyGoalTarget) * 100),
+    days,
+  };
+}
+
+/**
+ * Returns consistency score (%) over the past 30 days — ratio of workout days to total days.
+ */
+export function getConsistencyScore(days: number = 30): number {
+  const db = getWorkoutsDb();
+  const today = new Date();
+  let workoutDays = 0;
+
+  for (let i = 0; i < days; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    if (hasCompletedSetForDate(db, formatLocalDate(d))) workoutDays++;
+  }
+  return Math.round((workoutDays / days) * 100);
+}
+
+/**
+ * Returns average workouts per week over the past 4 weeks.
+ */
+export function getAvgWorkoutsPerWeek(): number {
+  const db = getWorkoutsDb();
+  const today = new Date();
+  let total = 0;
+  for (let i = 0; i < 28; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    if (hasCompletedSetForDate(db, formatLocalDate(d))) total++;
+  }
+  return Math.round((total / 4) * 10) / 10;
+}
+
+// ─── Streak Freeze ───────────────────────────────────────────────────────────
+
+export interface StreakFreezeState {
+  available: number;
+  usedDates: string[];
+  lastResetMonth: string; // "YYYY-MM"
+}
+
+export function getStreakFreeze(): StreakFreezeState {
+  if (typeof window === 'undefined') return { available: 1, usedDates: [], lastResetMonth: '' };
+  try {
+    const raw = localStorage.getItem(getUserStorageKey('leanverse_streak_freeze'));
+    const today = new Date();
+    const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+
+    if (!raw) return { available: 1, usedDates: [], lastResetMonth: currentMonth };
+
+    const state: StreakFreezeState = JSON.parse(raw);
+    // Reset monthly
+    if (state.lastResetMonth !== currentMonth) {
+      const reset = { available: 1, usedDates: state.usedDates, lastResetMonth: currentMonth };
+      localStorage.setItem(getUserStorageKey('leanverse_streak_freeze'), JSON.stringify(reset));
+      return reset;
+    }
+    return state;
+  } catch {
+    return { available: 1, usedDates: [], lastResetMonth: '' };
+  }
+}
+
+export function useStreakFreeze(dateStr: string): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const state = getStreakFreeze();
+    if (state.available <= 0) return false;
+    const updated: StreakFreezeState = {
+      ...state,
+      available: state.available - 1,
+      usedDates: [...state.usedDates, dateStr],
+    };
+    localStorage.setItem(getUserStorageKey('leanverse_streak_freeze'), JSON.stringify(updated));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// ─── Achievements / Badges ────────────────────────────────────────────────────
+
+export interface Achievement {
+  id: string;
+  name: string;
+  desc: string;
+  emoji: string;
+  tier: 'bronze' | 'silver' | 'gold' | 'platinum' | 'legendary';
+  unlocked: boolean;
+  unlockedDate?: string;
+}
+
+const ACHIEVEMENT_DEFINITIONS = [
+  { id: 'first_workout',    name: 'First Step',        desc: 'Complete your very first workout.',          emoji: '🏁', tier: 'bronze' as const,   threshold: (s: number, t: number) => t >= 1 },
+  { id: 'streak_3',         name: '3-Day Streak',       desc: 'Work out 3 days in a row.',                 emoji: '🥉', tier: 'bronze' as const,   threshold: (s: number) => s >= 3 },
+  { id: 'streak_7',         name: 'Week Warrior',       desc: 'Maintain a 7-day workout streak.',          emoji: '🥈', tier: 'silver' as const,   threshold: (s: number) => s >= 7 },
+  { id: 'streak_14',        name: 'Fortnight Fighter',  desc: '14 consecutive days of training.',          emoji: '💪', tier: 'silver' as const,   threshold: (s: number) => s >= 14 },
+  { id: 'streak_30',        name: 'Iron Discipline',    desc: '30-day unbroken streak — incredible!',      emoji: '🥇', tier: 'gold' as const,     threshold: (s: number) => s >= 30 },
+  { id: 'streak_60',        name: 'Two Month Titan',    desc: '60 straight days of consistency.',          emoji: '🔥', tier: 'gold' as const,     threshold: (s: number) => s >= 60 },
+  { id: 'streak_90',        name: 'Habit Locked',       desc: '90 days — you\'ve built a real habit.',     emoji: '⚡', tier: 'platinum' as const, threshold: (s: number) => s >= 90 },
+  { id: 'streak_365',       name: 'Year of the Beast',  desc: '365-day streak — legendary status!',        emoji: '🏆', tier: 'legendary' as const, threshold: (s: number) => s >= 365 },
+  { id: 'workouts_10',      name: 'Getting Started',    desc: 'Complete 10 total workouts.',               emoji: '🌱', tier: 'bronze' as const,   threshold: (_: number, t: number) => t >= 10 },
+  { id: 'workouts_25',      name: 'Quarter Century',    desc: 'Complete 25 total workouts.',               emoji: '💯', tier: 'silver' as const,   threshold: (_: number, t: number) => t >= 25 },
+  { id: 'workouts_50',      name: 'Halfway to Hundred', desc: 'Complete 50 total workouts.',               emoji: '🔥', tier: 'gold' as const,     threshold: (_: number, t: number) => t >= 50 },
+  { id: 'workouts_100',     name: 'Centurion',          desc: '100 workouts completed. Elite level.',      emoji: '💎', tier: 'platinum' as const, threshold: (_: number, t: number) => t >= 100 },
+  { id: 'consistency_80',   name: 'Consistent Athlete', desc: '80%+ monthly consistency score.',           emoji: '📈', tier: 'gold' as const,     threshold: (_s: number, _t: number, c: number) => c >= 80 },
+];
+
+export function getAchievements(): Achievement[] {
+  if (typeof window === 'undefined') return ACHIEVEMENT_DEFINITIONS.map(a => ({ ...a, unlocked: false }));
+
+  const streak = getStreak();
+  const total = getTotalWorkoutsCompleted();
+  const consistency = getConsistencyScore();
+
+  let saved: Record<string, string> = {};
+  try {
+    const raw = localStorage.getItem(getUserStorageKey('leanverse_achievements'));
+    if (raw) saved = JSON.parse(raw);
+  } catch {}
+
+  const achievements: Achievement[] = ACHIEVEMENT_DEFINITIONS.map(def => {
+    const unlocked = def.threshold(streak, total, consistency);
+    const unlockedDate = saved[def.id] || (unlocked ? formatLocalDate() : undefined);
+    if (unlocked && !saved[def.id]) {
+      saved[def.id] = formatLocalDate();
+    }
+    return { id: def.id, name: def.name, desc: def.desc, emoji: def.emoji, tier: def.tier, unlocked, unlockedDate };
+  });
+
+  try {
+    localStorage.setItem(getUserStorageKey('leanverse_achievements'), JSON.stringify(saved));
+  } catch {}
+
+  return achievements;
+}
+
+// ─── Milestone celebration tracker ───────────────────────────────────────────
+
+export const STREAK_MILESTONES = [3, 7, 14, 30, 60, 90, 180, 365];
+
+export function getUnseenMilestone(): number | null {
+  if (typeof window === 'undefined') return null;
+  const streak = getStreak();
+  try {
+    const raw = localStorage.getItem(getUserStorageKey('leanverse_seen_milestones'));
+    const seen: number[] = raw ? JSON.parse(raw) : [];
+    const milestone = STREAK_MILESTONES.find(m => streak >= m && !seen.includes(m));
+    return milestone ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function markMilestoneSeen(milestone: number): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const raw = localStorage.getItem(getUserStorageKey('leanverse_seen_milestones'));
+    const seen: number[] = raw ? JSON.parse(raw) : [];
+    if (!seen.includes(milestone)) {
+      seen.push(milestone);
+      localStorage.setItem(getUserStorageKey('leanverse_seen_milestones'), JSON.stringify(seen));
+    }
+  } catch {}
 }

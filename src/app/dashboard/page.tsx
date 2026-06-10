@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useAuth } from '@/components/layout/AuthProvider';
 import { 
  Flame, Trophy, Apple, Dumbbell, Droplet, Scale, Sparkles, 
@@ -10,6 +11,10 @@ import Link from 'next/link';
 import { getTodayWorkoutSummary } from '@/lib/gamification';
 import { getUserStorageKey, getUserId, formatLocalDate } from '@/lib/storage';
 import MacroRings from '@/components/shared/MacroRings';
+
+const WorkoutStreakCard = dynamic(() => import('@/components/shared/WorkoutStreakCard'), { ssr: false });
+const WeeklyWorkoutTracker = dynamic(() => import('@/components/shared/WeeklyWorkoutTracker'), { ssr: false });
+const StreakMilestonePopup = dynamic(() => import('@/components/shared/StreakMilestonePopup'), { ssr: false });
 export default function UserDashboard() {
  const { user, updateUserSession } = useAuth();
  
@@ -288,6 +293,8 @@ export default function UserDashboard() {
 
  return (
  <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
+  {/* Milestone Popup */}
+  <StreakMilestonePopup />
  {/* Welcome banner */}
  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass rounded-3xl p-6 sm:p-8 border border-emerald-500/20 shadow-xl relative overflow-hidden">
  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-2xl -z-10" />
@@ -320,8 +327,14 @@ export default function UserDashboard() {
  </div>
  </div>
  </div>
+  {/* Streak Card - compact */}
+  <WorkoutStreakCard compact weeklyGoal={4} />
 
- {/* Grid trackers */}
+  {/* Weekly Workout Tracker */}
+  <WeeklyWorkoutTracker weeklyGoal={4} />
+
+
+  {/* Grid trackers */}
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
  {/* Diet Completion Chart */}
@@ -342,38 +355,6 @@ export default function UserDashboard() {
  fatsTarget={targetMacros.fats}
  calsTarget={activeCalorieGoal}
  />
- </div>
- </div>
-
- {/* Journey Completion Chart */}
- <div className="glass rounded-3xl p-6 border border-border/10 flex flex-col justify-between items-center text-center group hover:border-cyan-500/20 transition-all shadow-sm">
- <div className="flex items-center space-x-1.5 mb-4 w-full justify-center">
- <Dumbbell className="w-4 h-4 text-cyan-500" />
- <span className="text-xs font-black text-muted uppercase tracking-widest">Journey Progress</span>
- </div>
- 
- <div className="relative flex items-center justify-center mb-4">
- <svg className="w-28 h-28 transform -rotate-90">
- <circle cx="56" cy="56" r="48" stroke="currentColor" strokeWidth="10" fill="transparent" className="text-slate-100 dark:text-foreground/5" />
- <circle cx="56" cy="56" r="48" stroke="currentColor" strokeWidth="10" fill="transparent" 
- strokeDasharray={2 * Math.PI * 48} 
- strokeDashoffset={(2 * Math.PI * 48) - (workoutProgress.total > 0 ? (workoutProgress.completed / workoutProgress.total) : 0) * (2 * Math.PI * 48)} 
- strokeLinecap="round"
- className="text-cyan-500 transition-all duration-1000 ease-out" 
- />
- </svg>
- <div className="absolute inset-0 flex flex-col items-center justify-center">
- <span className="text-xl font-black text-foreground">
- {workoutProgress.total > 0 ? Math.round((workoutProgress.completed / workoutProgress.total) * 100) : 0}%
- </span>
- </div>
- </div>
- 
- <div className="w-full">
- <span className="text-xs font-bold text-muted mb-2 block">{workoutProgress.completed} / {workoutProgress.total || 0} Days Done</span>
- <Link href="/workout-planner" className="block w-full bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl py-2 font-bold text-xs transition-colors cursor-pointer">
- Open Journey
- </Link>
  </div>
  </div>
 
@@ -516,7 +497,7 @@ export default function UserDashboard() {
  </div>
 
 
- {/* Saved Blueprints & Badges section */}
+  {/* Saved Blueprints & Badges section */}
  <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
  {/* Saved blueprints list */}
  <div className="md:col-span-7 glass rounded-3xl p-6 border border-border/10 space-y-6">

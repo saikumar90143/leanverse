@@ -13,7 +13,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/calculators/body-fat',
     '/calculators/water',
     '/progress',
-    '/recipes',
     '/blog',
     '/blog/ultimate-indian-diet-plan-fat-loss',
     '/blog/gym-workouts-perfect-push-pull-legs-split',

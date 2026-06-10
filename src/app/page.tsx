@@ -135,7 +135,7 @@ export default function HomePage() {
  </Link>
  <Link 
  href="/calculators/maintenance"
- className="px-8 py-4 rounded-2xl glass hover:bg-foreground/10 dark:hover:bg-card/10 text-foreground font-bold text-lg transition-all border border-border text-center flex items-center justify-center"
+ className="px-8 py-4 rounded-2xl bg-transparent text-foreground font-bold text-lg transition-all border-2 border-foreground/30 hover:border-emerald-500 hover:text-emerald-500 text-center flex items-center justify-center"
  >
  Calculate Calories
  </Link>
@@ -151,9 +151,9 @@ export default function HomePage() {
  <div className="relative z-10 glass bg-card/60 backdrop-blur-3xl border border-border/50 dark:border-border rounded-3xl p-6 shadow-2xl shadow-emerald-500/10">
  
  <div className="flex items-center justify-between mb-6 border-b border-border/50 dark:border-border pb-4">
- <h2 className="text-xl font-black flex items-center gap-2">
+ <h2 className="text-xl font-black flex items-center md:text-lg text-xs gap-2">
  <Zap className="w-5 h-5 text-emerald-500" />
- Create Your Plan
+ Create Your Workout Plan
  </h2>
  <span className="text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded-md">
  Takes 30s
@@ -171,8 +171,8 @@ export default function HomePage() {
  <div className="space-y-2">
  <label className="text-xs font-bold text-muted uppercase tracking-wider">1. Primary Goal</label>
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
- <button onClick={() => setQsGoal('fatloss')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsGoal === 'fatloss' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'bg-background dark:bg-card/5 border-transparent text-muted hover:bg-secondary dark:hover:bg-card/10'}`}>Lose Fat</button>
- <button onClick={() => setQsGoal('muscle')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsGoal === 'muscle' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'bg-background dark:bg-card/5 border-transparent text-muted hover:bg-secondary dark:hover:bg-card/10'}`}>Build Muscle</button>
+ <button onClick={() => setQsGoal('fatloss')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsGoal === 'fatloss' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'bg-background dark:bg-card/5 border-border/30 dark:border-border text-muted hover:bg-secondary dark:hover:bg-card/10'}`}>Fat Loss</button>
+ <button onClick={() => setQsGoal('muscle')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsGoal === 'muscle' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'bg-background dark:bg-card/5 border-border/30 dark:border-border text-muted hover:bg-secondary dark:hover:bg-card/10'}`}>Build Muscle</button>
  </div>
  </div>
  )}
@@ -182,8 +182,8 @@ export default function HomePage() {
  <div className="space-y-2">
  <label className="text-xs font-bold text-muted uppercase tracking-wider">2. Workout Location</label>
  <div className="grid grid-cols-2 gap-2">
- <button onClick={() => setQsLocation('gym')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsLocation === 'gym' ? 'bg-cyan-500/10 border-cyan-500 text-cyan-600 dark:text-cyan-400' : 'bg-background dark:bg-card/5 border-transparent text-muted hover:bg-secondary dark:hover:bg-card/10'}`}>Commercial Gym</button>
- <button onClick={() => setQsLocation('home')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsLocation === 'home' ? 'bg-cyan-500/10 border-cyan-500 text-cyan-600 dark:text-cyan-400' : 'bg-background dark:bg-card/5 border-transparent text-muted hover:bg-secondary dark:hover:bg-card/10'}`}>Home Workout</button>
+ <button onClick={() => setQsLocation('gym')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsLocation === 'gym' ? 'bg-cyan-500/10 border-cyan-500 text-cyan-600 dark:text-cyan-400' : 'bg-background dark:bg-card/5 border-border/30 dark:border-border text-muted hover:bg-secondary dark:hover:bg-card/10'}`}>Commercial Gym</button>
+ <button onClick={() => setQsLocation('home')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsLocation === 'home' ? 'bg-cyan-500/10 border-cyan-500 text-cyan-600 dark:text-cyan-400' : 'bg-background dark:bg-card/5 border-border/30 dark:border-border text-muted hover:bg-secondary dark:hover:bg-card/10'}`}>Home Workout</button>
  </div>
  {qsLocation === 'home' && (
    <div className="pt-2">
@@ -209,7 +209,7 @@ export default function HomePage() {
  <label htmlFor="qsTimelineDays" className="text-xs font-bold text-muted uppercase tracking-wider">
  {qsMode === 'ai' ? '3. Timeline' : '1. Transformation Period'}
  </label>
- <select id="qsTimelineDays" value={qsTimelineDays} onChange={(e) => setQsTimelineDays(parseInt(e.target.value))} className="w-full bg-background dark:bg-card/5 border border-border/50 dark:border-border rounded-xl px-4 py-3 text-sm font-bold text-foreground dark:text-muted focus:outline-none focus:border-emerald-500">
+ <select id="qsTimelineDays" value={qsTimelineDays} onChange={(e) => setQsTimelineDays(parseInt(e.target.value))} className="w-full bg-background dark:bg-card/5 border border-border/50 dark:border-border rounded-xl px-4 py-3 text-sm font-bold text-black dark:text-muted focus:outline-none focus:border-emerald-500">
  <option value={30}>30 Days</option>
  <option value={60}>60 Days</option>
  <option value={90}>90 Days</option>
@@ -726,7 +726,7 @@ export default function HomePage() {
  <p className="text-lg text-muted font-medium">Join thousands of users following personalized fitness plans built specifically for their unique goals, diets, and environments.</p>
  <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
  <Link href="/diet-planner" className="px-8 py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-black text-lg transition-all shadow-xl shadow-emerald-500/25 flex items-center justify-center space-x-2"><span>Generate Diet Plan</span> <ArrowRight className="w-5 h-5" /></Link>
- <Link href="/calculators/maintenance" className="px-8 py-4 rounded-2xl bg-secondary hover:bg-slate-300 dark:bg-card/5 dark:backdrop-blur-md dark:hover:bg-card/10 text-foreground font-bold text-lg transition-all border border-border flex items-center justify-center shadow-lg">Calculate Calories</Link>
+ <Link href="/calculators/maintenance" className="px-8 py-4 rounded-2xl bg-secondary hover:bg-slate-300 dark:bg-card/5 dark:backdrop-blur-md dark:hover:bg-card/10 text-foreground font-bold text-lg transition-all border border-border border-gray-300 dark:border-border flex items-center justify-center shadow-lg  ">Calculate Calories</Link>
  </div>
  </div>
  </section>

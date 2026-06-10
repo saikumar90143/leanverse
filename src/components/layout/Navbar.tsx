@@ -7,7 +7,7 @@ import { useTheme } from './ThemeProvider';
 import { useAuth } from './AuthProvider';
 import { 
   Sun, Moon, Menu, X, Flame, User, Calculator, 
-  Dumbbell, Apple, Trophy, ShoppingBag, LayoutDashboard, LogOut, Download, Bell
+  Dumbbell, Apple, Trophy, ShoppingBag, LayoutDashboard, LogOut, Download, Bell, Camera
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getUserStorageKey } from '@/lib/storage';
@@ -110,8 +110,9 @@ export default function Navbar() {
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Diet Planner', path: '/diet-planner', icon: Apple },
+    { name: 'Food Scanner', path: '/food-scanner', icon: Camera },
+    { name: 'Streak', path: '/streak', icon: Flame },
     { name: 'Personal Records', path: '/personal-records', icon: Trophy },
-    { name: 'Recipes', path: '/recipes', icon: Flame },
     { name: 'Store', path: '/store', icon: ShoppingBag },
     { name: 'Blog', path: '/blog' },
     { name: 'Pricing', path: '/pricing' },
