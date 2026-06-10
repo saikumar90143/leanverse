@@ -63,6 +63,37 @@ export default function AIFoodScanner({ onClose, onResult }: AIFoodScannerProps 
     }
   };
 
+  const optimizeImage = (dataUrl: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_DIM = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height && width > MAX_DIM) {
+          height *= MAX_DIM / width;
+          width = MAX_DIM;
+        } else if (height > MAX_DIM) {
+          width *= MAX_DIM / height;
+          height = MAX_DIM;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.7));
+        } else {
+          resolve(dataUrl); // fallback
+        }
+      };
+      img.src = dataUrl;
+    });
+  };
+
   const capturePhoto = () => {
     if (videoRef.current && canvasRef.current) {
       const context = canvasRef.current.getContext('2d');
@@ -71,9 +102,12 @@ export default function AIFoodScanner({ onClose, onResult }: AIFoodScannerProps 
         canvasRef.current.height = videoRef.current.videoHeight;
         context.drawImage(videoRef.current, 0, 0);
         const dataUrl = canvasRef.current.toDataURL('image/jpeg', 0.8);
-        setImage(dataUrl);
         stopCamera();
-        analyzeImage(dataUrl);
+        
+        optimizeImage(dataUrl).then(optimized => {
+          setImage(optimized);
+          analyzeImage(optimized);
+        });
       }
     }
   };
@@ -84,8 +118,10 @@ export default function AIFoodScanner({ onClose, onResult }: AIFoodScannerProps 
       const reader = new FileReader();
       reader.onload = (event) => {
         const result = event.target?.result as string;
-        setImage(result);
-        analyzeImage(result);
+        optimizeImage(result).then(optimized => {
+          setImage(optimized);
+          analyzeImage(optimized);
+        });
       };
       reader.readAsDataURL(file);
     }
@@ -295,6 +331,7 @@ export default function AIFoodScanner({ onClose, onResult }: AIFoodScannerProps 
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
             <button 
+              type="button"
               onClick={startCamera}
               className="py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-2xl flex items-center justify-center transition-all shadow-lg"
             >
@@ -302,6 +339,7 @@ export default function AIFoodScanner({ onClose, onResult }: AIFoodScannerProps 
               Open Camera
             </button>
             <button 
+              type="button"
               onClick={() => fileInputRef.current?.click()}
               className="py-4 bg-secondary dark:bg-card/5 border border-border/10 hover:border-emerald-500 text-foreground font-black rounded-2xl flex items-center justify-center transition-all"
             >
@@ -319,26 +357,24 @@ export default function AIFoodScanner({ onClose, onResult }: AIFoodScannerProps 
         </div>
       )}
 
-      {cameraActive && (
-        <div className="relative rounded-3xl overflow-hidden bg-black aspect-[3/4] sm:aspect-video flex items-center justify-center">
-          <video 
-            ref={videoRef} 
-            autoPlay 
-            playsInline 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 border-4 border-emerald-500/30 m-4 rounded-2xl pointer-events-none"></div>
-          
-          <div className="absolute bottom-6 left-0 right-0 flex justify-center space-x-6">
-            <button onClick={stopCamera} className="w-14 h-14 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg">
-              <X className="w-6 h-6" />
-            </button>
-            <button onClick={capturePhoto} className="w-16 h-16 bg-white border-4 border-emerald-500 rounded-full shadow-xl flex items-center justify-center">
-              <div className="w-12 h-12 bg-emerald-500 rounded-full" />
-            </button>
-          </div>
+      <div className={`relative rounded-3xl overflow-hidden bg-black aspect-[3/4] sm:aspect-video items-center justify-center ${cameraActive ? 'flex' : 'hidden'}`}>
+        <video 
+          ref={videoRef} 
+          autoPlay 
+          playsInline 
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 border-4 border-emerald-500/30 m-4 rounded-2xl pointer-events-none"></div>
+        
+        <div className="absolute bottom-6 left-0 right-0 flex justify-center space-x-6">
+          <button type="button" onClick={stopCamera} className="w-14 h-14 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg">
+            <X className="w-6 h-6" />
+          </button>
+          <button type="button" onClick={capturePhoto} className="w-16 h-16 bg-white border-4 border-emerald-500 rounded-full shadow-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-emerald-500 rounded-full" />
+          </button>
         </div>
-      )}
+      </div>
 
       <canvas ref={canvasRef} className="hidden" />
 
@@ -351,7 +387,7 @@ export default function AIFoodScanner({ onClose, onResult }: AIFoodScannerProps 
             </div>
           )}
           <div className="flex gap-4">
-            <button onClick={resetScanner} className="flex-1 py-3 bg-secondary rounded-xl font-bold">Try Again</button>
+            <button type="button" onClick={resetScanner} className="flex-1 py-3 bg-secondary rounded-xl font-bold">Try Again</button>
           </div>
         </div>
       )}
@@ -376,7 +412,7 @@ export default function AIFoodScanner({ onClose, onResult }: AIFoodScannerProps 
                <span className="block text-xs font-bold text-muted uppercase tracking-widest">Total Identified</span>
                <span className="text-xl font-black text-emerald-500">{results.length} Items</span>
              </div>
-             <button onClick={resetScanner} className="w-10 h-10 bg-secondary rounded-full flex items-center justify-center hover:bg-red-500/10 hover:text-red-500 transition-colors">
+             <button type="button" onClick={resetScanner} className="w-10 h-10 bg-secondary rounded-full flex items-center justify-center hover:bg-red-500/10 hover:text-red-500 transition-colors">
                <X className="w-5 h-5" />
              </button>
           </div>
