@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import User from '@/lib/models/User';
+import { verifyAdmin } from '@/lib/auth';
 
 export async function GET(req: Request) {
   try {
+    if (!(await verifyAdmin())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     await dbConnect();
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search') || '';
@@ -39,6 +41,7 @@ export async function GET(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
+    if (!(await verifyAdmin())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     await dbConnect();
     const { userId, action, value } = await req.json();
     if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 });
@@ -59,6 +62,7 @@ export async function PATCH(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
+    if (!(await verifyAdmin())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     await dbConnect();
     const { userId } = await req.json();
     if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 });

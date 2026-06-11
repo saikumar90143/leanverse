@@ -5,6 +5,46 @@ import { ACTIVITY_LEVELS, GOALS, TIMELINES, DIET_STYLES, FOOD_PREFS, BUDGETS, ME
 export default function DietWizard({ p }: { p: any }) {
   const { step, setStep, age, setAge, gender, setGender, height, setHeight, weight, setWeight, goal, setGoal, activity, setActivity, budget, setBudget, timeline, setTimeline, dietStyles, setDietStyles, foodPref, setFoodPref, allergies, setAllergies, selectedFoods, setSelectedFoods, searchFood, setSearchFood, homeFoodCals, setHomeFoodCals, homeFoodProtein, setHomeFoodProtein, warningMessage, setWarningMessage, proteinTip, setProteinTip, planGenerated, setPlanGenerated, premiumPlans, setPremiumPlans, planSelectionMode, setPlanSelectionMode, generating, setGenerating, isPremiumPlanUsed, setIsPremiumPlanUsed, macroQuery, setMacroQuery, macroLoading, setMacroLoading, macroError, setMacroError, macroResult, setMacroResult, macroAddedKey, setMacroAddedKey, searchMacros, addMacroResultToPlan, customQty, setCustomQty, mealAssignments, setMealAssignments, activeMealTab, setActiveMealTab, viewDateOffset, setViewDateOffset, getDisplayDate, copiedGrocery, setCopiedGrocery, handleCopyGrocery, shareText, shareWhatsapp, shareX, getActiveDateStr, activeDateStr, toggleEaten, safeWeight, safeHeight, safeAge, bmr, actMult, tdee, bmi, bmiCategory, getTargetCalories, eatenMeals, setEatenMeals, dbFoods, setDbFoods, dbFoodsLoading, setDbFoodsLoading, allFoods, handleSelectPremiumPlan, toggleDietStyle, toggleFood, handleAddCustomFood, handleGenerate, getDietCalorieTarget, calsTarget, proteinTarget, currentBmi, maxProteinCals, fatsTarget, carbsTarget, rawQtys, getSmartDefaultQty, actualCals, actualProtein, actualCarbs, actualFats, eatenCals, eatenProtein, eatenCarbs, eatenFats, isOver, isUnder, showCustomForm, setShowCustomForm, cfName, setCfName, cfCals, setCfCals, cfProtein, setCfProtein, cfCarbs, setCfCarbs, cfFats, setCfFats, cfMeal, setCfMeal, customFoodsDatabase, setCustomFoodsDatabase, handleAIFoodScan, user, router, isMounted, setIsMounted, showScanner, setShowScanner, AIFoodScanner, DIET_PLAN_KEY } = p;
   
+  const filteredSortedFoods = React.useMemo(() => {
+    if (!allFoods) return [];
+    return Object.keys(allFoods)
+      .filter((food) => {
+        if (allFoods[food].hidden) return false;
+        
+        let matchesDiet = true;
+        if (dietStyles.includes('Vegetarian') && !dietStyles.includes('Non-Vegetarian')) {
+          const fStyles = allFoods[food].dietStyles;
+          if (fStyles && fStyles.length > 0) {
+            matchesDiet = fStyles.includes('Vegetarian');
+          } else {
+            matchesDiet = !['chicken', 'fish', 'egg', 'beef', 'mutton', 'pork'].some(meat => food.toLowerCase().includes(meat));
+          }
+        }
+        if (!matchesDiet) return false;
+
+        const matchesSearch = food.toLowerCase().includes(searchFood.toLowerCase().trim());
+        const foodCat = allFoods[food].category;
+        const matchesTab = Array.isArray(foodCat) 
+          ? foodCat.some(c => c?.toLowerCase() === activeMealTab.toLowerCase())
+          : typeof foodCat === 'string'
+          ? foodCat.toLowerCase() === activeMealTab.toLowerCase()
+          : false;
+          
+        const isSelected = selectedFoods.includes(`${food}|${activeMealTab}`);
+        if (isSelected) return true;
+
+        if (searchFood.trim() !== '') return matchesSearch;
+        return matchesTab;
+      })
+      .sort((a, b) => {
+        const aSelected = selectedFoods.includes(`${a}|${activeMealTab}`);
+        const bSelected = selectedFoods.includes(`${b}|${activeMealTab}`);
+        if (aSelected && !bSelected) return -1;
+        if (!aSelected && bSelected) return 1;
+        return a.localeCompare(b);
+      });
+  }, [allFoods, dietStyles, searchFood, activeMealTab, selectedFoods]);
+
   return (
     <div id="blueprint-card" className="glass rounded-3xl p-6 sm:p-8 shadow-2xl border border-border/20 dark:border-border max-w-2xl mx-auto scroll-mt-24">
  <div className="flex items-center space-x-3 mb-6">
@@ -393,45 +433,7 @@ export default function DietWizard({ p }: { p: any }) {
       <RefreshCw className="w-6 h-6 animate-spin mb-3 text-emerald-500" />
       <span className="font-bold text-sm">Loading food database...</span>
     </div>
-  ) : Object.keys(allFoods)
- .filter((food) => {
- if (allFoods[food].hidden) return false;
-
- let matchesDiet = true;
- if (dietStyles.includes('Vegetarian') && !dietStyles.includes('Non-Vegetarian')) {
- const fStyles = allFoods[food].dietStyles;
- if (fStyles && fStyles.length > 0) {
- matchesDiet = fStyles.includes('Vegetarian');
- } else {
- matchesDiet = !['chicken', 'fish', 'egg', 'beef', 'mutton', 'pork'].some(meat => food.toLowerCase().includes(meat));
- }
- }
- if (!matchesDiet) return false;
-
- const matchesSearch = food.toLowerCase().includes(searchFood.toLowerCase().trim());
- const foodCat = allFoods[food].category;
- const matchesTab = Array.isArray(foodCat) 
- ? foodCat.some(c => c?.toLowerCase() === activeMealTab.toLowerCase())
- : typeof foodCat === 'string'
- ? foodCat.toLowerCase() === activeMealTab.toLowerCase()
- : false;
- 
- const isSelected = selectedFoods.includes(`${food}|${activeMealTab}`);
- if (isSelected) return true;
-
- // If the user is actively searching, show all matches regardless of category
- if (searchFood.trim() !== '') return matchesSearch;
- // Otherwise, only show foods belonging to the active meal tab
- return matchesTab;
- })
- .sort((a, b) => {
-    const aSelected = selectedFoods.includes(`${a}|${activeMealTab}`);
-    const bSelected = selectedFoods.includes(`${b}|${activeMealTab}`);
-    if (aSelected && !bSelected) return -1;
-    if (!aSelected && bSelected) return 1;
-    return a.localeCompare(b);
- })
- .map((food) => {
+  ) : filteredSortedFoods.map((food) => {
  const compositeKey = `${food}|${activeMealTab}`;
  return (
  <button

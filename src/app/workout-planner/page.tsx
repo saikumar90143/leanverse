@@ -9,6 +9,7 @@ import { TransformationState, UserProfile, Goal, WorkoutLocation, ExperienceLeve
 import { generateTransformationJourney, populateExercisesForDay, logWorkoutCompletion, areExercisesSimilar } from '@/lib/workoutEngine';
 import { transformationExercises } from '@/lib/transformationExercises';
 import { clearWorkoutsCache } from '@/lib/gamification';
+import { recalculateAllStats } from '@/lib/userStats';
 
 export default function AIWorkoutPlanner() {
  const [isMounted, setIsMounted] = useState(false);
@@ -191,6 +192,7 @@ export default function AIWorkoutPlanner() {
  useEffect(() => {
  if (state && isMounted) {
  localStorage.setItem(getUserStorageKey('leanverse_transformation'), JSON.stringify(state));
+ recalculateAllStats();
  window.dispatchEvent(new Event('leanverse_state_changed'));
  }
  }, [state, isMounted, user]);
@@ -316,6 +318,7 @@ export default function AIWorkoutPlanner() {
    };
    localStorage.setItem(key, JSON.stringify(db));
    clearWorkoutsCache(); // Clear stale in-memory cache
+   recalculateAllStats(); // Update O(1) user stats cache
    // Notify streak components on the same page
    window.dispatchEvent(new CustomEvent('leanverse-workout-logged'));
   } catch {}

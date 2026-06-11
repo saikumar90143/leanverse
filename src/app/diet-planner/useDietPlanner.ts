@@ -848,6 +848,7 @@ Built with LeanVerse AI`;
     getActiveDateStr,
     activeDateStr,
     toggleEaten,
+    changeDate,
     safeWeight,
     safeHeight,
     safeAge,

@@ -6,6 +6,9 @@
  */
 import { getUserStorageKey, formatLocalDate } from './storage';
 import { exerciseDatabase } from './exerciseDatabase';
+import { getUserStats } from './userStats';
+
+const exerciseDict = new Map(exerciseDatabase.map(e => [e.name.toLowerCase().trim(), e]));
 
 export interface Level {
   name: string;
@@ -86,72 +89,17 @@ function hasCompletedSetForDate(db: Record<string, unknown>, dateStr: string): b
 }
 
 /**
- * Returns the current consecutive workout streak (days).
- * A day counts if there is at least 1 completed set.
- * Streak continues if today or yesterday has a workout; otherwise resets.
+ * Returns the current consecutive workout streak (days) in O(1) time.
  */
 export function getStreak(): number {
-  const db = getWorkoutsDb();
-  if (Object.keys(db).length === 0) return 0;
-
-  let streak = 0;
-  const today = new Date();
-  // Check today first; if no workout today, still check yesterday to preserve streak
-  // that hasn't been broken yet today.
-  let checkDate = new Date(today);
-
-  // Normalize to local date string YYYY-MM-DD
-  const toDateStr = (d: Date) => formatLocalDate(d);
-
-  // Start from today; if today has no workout, start from yesterday (grace period)
-  const todayStr = toDateStr(today);
-  if (!hasCompletedSetForDate(db, todayStr)) {
-    checkDate.setDate(checkDate.getDate() - 1);
-  }
-
-  // Count consecutive days backwards
-  for (let i = 0; i < 365; i++) {
-    const dateStr = toDateStr(checkDate);
-    if (hasCompletedSetForDate(db, dateStr)) {
-      streak++;
-      checkDate.setDate(checkDate.getDate() - 1);
-    } else {
-      break;
-    }
-  }
-
-  return streak;
+  return getUserStats().streak;
 }
 
 /**
- * Calculates the total lifetime volume (kg) from all completed sets in the DB.
+ * Calculates the total lifetime volume (kg) in O(1) time.
  */
 export function getLifetimeVolume(): number {
-  const db = getWorkoutsDb();
-  let total = 0;
-
-  for (const entry of Object.values(db)) {
-    if (!entry || typeof entry !== 'object' || entry === null) continue;
-    const exercises = (entry as Record<string, unknown>).exercises;
-    if (!Array.isArray(exercises)) continue;
-
-    for (const ex of exercises) {
-      if (!ex || typeof ex !== 'object' || ex === null) continue;
-      const sets = (ex as Record<string, unknown>).sets;
-      if (!Array.isArray(sets)) continue;
-
-      for (const s of sets) {
-        if (!s || typeof s !== 'object' || s === null) continue;
-        const set = s as Record<string, unknown>;
-        if (set.completed !== true) continue;
-        const weight = typeof set.weight === 'number' ? set.weight : 0;
-        const reps = typeof set.reps === 'number' ? set.reps : 0;
-        total += weight * reps;
-      }
-    }
-  }
-
-  return Math.round(total);
+  return getUserStats().lifetimeVolume;
 }
 
 /**
@@ -230,7 +178,7 @@ export function getTodayWorkoutSummary(): { name: string; completedSets: number;
     if (!ex || typeof ex !== 'object' || ex === null) continue;
     
     const exName = typeof (ex as Record<string, unknown>).name === 'string' ? (ex as Record<string, unknown>).name as string : '';
-    const dbMatch = exerciseDatabase.find(e => e.name.toLowerCase() === exName.toLowerCase().trim());
+    const dbMatch = exerciseDict.get(exName.toLowerCase().trim());
     const calsPerMin = dbMatch ? dbMatch.caloriesPerMinute : 6;
 
     const sets = (ex as Record<string, unknown>).sets;
@@ -275,7 +223,7 @@ export function getHeatmapData(days: number = 30): { date: string; hasWorkout: b
           if (!ex || typeof ex !== 'object' || ex === null) continue;
 
           const exName = typeof (ex as Record<string, unknown>).name === 'string' ? (ex as Record<string, unknown>).name as string : '';
-          const dbMatch = exerciseDatabase.find(e => e.name.toLowerCase() === exName.toLowerCase().trim());
+          const dbMatch = exerciseDict.get(exName.toLowerCase().trim());
           const calsPerMin = dbMatch ? dbMatch.caloriesPerMinute : 6;
 
           const sets = (ex as Record<string, unknown>).sets;
@@ -385,36 +333,17 @@ export function getDailyChallenge(): { title: string; desc: string; icon: string
   };
 }
 /**
- * Returns the best (longest) consecutive workout streak ever.
+ * Returns the best (longest) consecutive workout streak ever in O(1) time.
  */
 export function getBestStreak(): number {
-  const db = getWorkoutsDb();
-  const dates = Object.keys(db).filter(d => hasCompletedSetForDate(db, d)).sort();
-  if (dates.length === 0) return 0;
-
-  let best = 1;
-  let current = 1;
-
-  for (let i = 1; i < dates.length; i++) {
-    const prev = new Date(dates[i - 1]);
-    const curr = new Date(dates[i]);
-    const diff = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
-    if (diff === 1) {
-      current++;
-      if (current > best) best = current;
-    } else {
-      current = 1;
-    }
-  }
-  return best;
+  return getUserStats().bestStreak;
 }
 
 /**
- * Returns the total number of days where at least one workout set was completed.
+ * Returns the total number of days where at least one workout set was completed in O(1) time.
  */
 export function getTotalWorkoutsCompleted(): number {
-  const db = getWorkoutsDb();
-  return Object.keys(db).filter(d => hasCompletedSetForDate(db, d)).length;
+  return getUserStats().totalWorkouts;
 }
 
 /**

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Trophy, TrendingUp, Calendar, ArrowUpRight, Search, Activity, Dumbbell } from 'lucide-react';
 import { getUserStorageKey } from '@/lib/storage';
 import { transformationExercises } from '@/lib/transformationExercises';
+import { getUserStats } from '@/lib/userStats';
 import { useAuth } from '@/components/layout/AuthProvider';
 import Link from 'next/link';
 
@@ -50,80 +51,31 @@ export default function PersonalRecordsPage() {
  }
 
  try {
- // Get the latest history (either active transformation or preserved stats)
- let history: Record<string, any[]> = {};
- 
- const activeStateStr = localStorage.getItem(getUserStorageKey('leanverse_transformation'));
- if (activeStateStr) {
- const activeState = JSON.parse(activeStateStr);
- if (activeState.exerciseHistory) history = activeState.exerciseHistory;
- } else {
- const preservedStr = localStorage.getItem(getUserStorageKey('leanverse_preserved_stats'));
- if (preservedStr) {
- const preservedState = JSON.parse(preservedStr);
- if (preservedState.exerciseHistory) history = preservedState.exerciseHistory;
- }
- }
+  const stats = getUserStats();
+  const calculatedPRs: PRData[] = [];
+  const allExercises = [...transformationExercises, ...dbExercises];
 
- // Process history into PRs
- const calculatedPRs: PRData[] = [];
+  Object.entries(stats.prs).forEach(([exerciseId, prStats]: [string, any]) => {
+  const meta = allExercises.find(e => e.id === exerciseId || (e as any)._id === exerciseId);
+  if (meta) {
+  calculatedPRs.push({
+  exerciseId,
+  name: meta.name,
+  muscleGroup: meta.muscleGroup,
+  imageUrl: (meta as any).imageUrl,
+  maxWeight: prStats.maxWeight,
+  maxReps: prStats.maxReps,
+  maxRepsAtMaxWeight: prStats.maxRepsAtMaxWeight,
+  estimated1RM: prStats.estimated1RM,
+  lastPerformed: prStats.lastPerformed
+  });
+  }
+  });
 
- Object.entries(history).forEach(([exerciseId, records]) => {
- if (!records || records.length === 0) return;
-
- let maxWeight = 0;
- let maxRepsAtMaxWeight = 0;
- let absoluteMaxReps = 0;
- let lastPerformed = records[records.length - 1].date;
-
- records.forEach(record => {
- record.weightUsed.forEach((weightStr: string, idx: number) => {
- const w = parseFloat(weightStr);
- const reps = parseInt(record.repsAchieved[idx]) || 0;
- 
- // Check for bodyweight
- if (isNaN(w) || weightStr.toLowerCase().includes('body')) {
- if (reps > absoluteMaxReps) absoluteMaxReps = reps;
- } else {
- if (w > maxWeight) {
- maxWeight = w;
- maxRepsAtMaxWeight = reps;
- } else if (w === maxWeight && reps > maxRepsAtMaxWeight) {
- maxRepsAtMaxWeight = reps;
- }
- if (reps > absoluteMaxReps) absoluteMaxReps = reps;
- }
- });
- });
-
- // Epley / Brzycki 1RM Formula: Weight × (36 / (37 - Reps))
- let est1RM = 0;
- if (maxWeight > 0 && maxRepsAtMaxWeight > 0) {
- est1RM = maxWeight * (36 / (37 - maxRepsAtMaxWeight));
- }
-
- // Find exercise meta across both default and database exercises
- const allExercises = [...transformationExercises, ...dbExercises];
- const meta = allExercises.find(e => e.id === exerciseId || (e as any)._id === exerciseId);
- if (meta) {
- calculatedPRs.push({
- exerciseId,
- name: meta.name,
- muscleGroup: meta.muscleGroup,
- imageUrl: (meta as any).imageUrl,
- maxWeight,
- maxReps: absoluteMaxReps,
- maxRepsAtMaxWeight,
- estimated1RM: Math.round(est1RM),
- lastPerformed
- });
- }
- });
-
- // Sort by recently performed or heaviest weight
- calculatedPRs.sort((a, b) => new Date(b.lastPerformed).getTime() - new Date(a.lastPerformed).getTime());
- 
- setPrList(calculatedPRs);
+  // Sort by recently performed
+  calculatedPRs.sort((a, b) => new Date(b.lastPerformed).getTime() - new Date(a.lastPerformed).getTime());
+  
+  setPrList(calculatedPRs);
  } catch (e) {
  console.error('Failed to load PRs', e);
  } finally {

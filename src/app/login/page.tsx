@@ -48,10 +48,17 @@ function LoginForm() {
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  // Forgot Password state
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotMessage, setForgotMessage] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   // Where to send user after login (defaults to /dashboard)
   const redirectTo = searchParams.get('redirect') || '/dashboard';
@@ -99,6 +106,11 @@ function LoginForm() {
         setLoading(false);
         return;
       }
+      if (password !== confirmPassword) {
+        setError('Passwords do not match.');
+        setLoading(false);
+        return;
+      }
       const success = await register(name, email, password);
       if (success) {
         triggerConfetti();
@@ -115,6 +127,31 @@ function LoginForm() {
     // Pass redirect param through to Google OAuth callback
     const callbackRedirect = encodeURIComponent(redirectTo);
     window.location.href = `/api/auth/google?redirect=${callbackRedirect}`;
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotMessage('');
+    setForgotLoading(true);
+    
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail })
+      });
+      const data = await res.json();
+      
+      if (!res.ok) {
+        setForgotMessage(data.error || 'Failed to send reset link.');
+      } else {
+        // Option A simulation
+        setForgotMessage(`Reset Link Generated! For this sandbox demo, go to: ${data.resetUrl}`);
+      }
+    } catch (err) {
+      setForgotMessage('An unexpected error occurred.');
+    }
+    setForgotLoading(false);
   };
 
   return (
@@ -225,7 +262,14 @@ function LoginForm() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted block ml-1">Password</label>
+            <div className="flex items-center justify-between ml-1">
+              <label className="text-xs font-bold text-muted block">Password</label>
+              {activeTab === 'signin' && (
+                <button type="button" onClick={() => setShowForgotModal(true)} className="text-xs font-bold text-emerald-500 hover:text-emerald-400 transition-colors">
+                  Forgot Password?
+                </button>
+              )}
+            </div>
             <div className="relative">
               <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
               <input
@@ -238,6 +282,23 @@ function LoginForm() {
               />
             </div>
           </div>
+
+          {activeTab === 'signup' && (
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted block ml-1">Confirm Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  className="w-full bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-2xl pl-10 pr-4 py-3 text-base sm:text-sm text-foreground focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
+            </div>
+          )}
 
           <button
             type="submit"
@@ -257,6 +318,51 @@ function LoginForm() {
 
        
       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm glass rounded-3xl p-6 sm:p-8 shadow-2xl border border-border/20 dark:border-border animate-fade-in relative">
+            <button onClick={() => setShowForgotModal(false)} className="absolute top-4 right-4 text-muted hover:text-foreground transition-colors">
+              <User className="w-5 h-5 hidden" /> {/* Placeholder icon to match import, using text 'X' below to avoid importing X icon if not present */}
+              <span className="font-bold text-xl leading-none">&times;</span>
+            </button>
+            <h3 className="text-xl font-black text-foreground mb-2">Reset Password</h3>
+            <p className="text-xs text-muted mb-6">Enter your email and we will generate a secure reset link.</p>
+            
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted block ml-1">Email Address</label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                  <input
+                    type="email"
+                    placeholder="you@example.com"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    required
+                    className="w-full bg-secondary/50 dark:bg-card/5 border border-border/20 dark:border-border rounded-2xl pl-10 pr-4 py-3 text-base sm:text-sm text-foreground focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+
+              {forgotMessage && (
+                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-semibold break-all">
+                  {forgotMessage}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={forgotLoading}
+                className="w-full py-3 rounded-2xl bg-foreground text-background font-bold transition-transform active:scale-[0.98] disabled:opacity-60 flex items-center justify-center cursor-pointer hover:bg-muted"
+              >
+                {forgotLoading ? 'Generating...' : 'Generate Reset Link'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

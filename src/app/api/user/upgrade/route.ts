@@ -15,7 +15,10 @@ export async function POST(req: Request) {
 
     let decoded: any;
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_please_change_in_production');
+      if (!process.env.JWT_SECRET) {
+        throw new Error('FATAL: JWT_SECRET environment variable is missing.');
+      }
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (err) {
       return NextResponse.json({ error: 'Invalid or expired token.' }, { status: 401 });
     }
@@ -40,9 +43,13 @@ export async function POST(req: Request) {
     }
 
     // Create a new token with the updated tier (if we stored tier in JWT, we don't, but let's refresh it anyway)
+    if (!process.env.JWT_SECRET) {
+      throw new Error('FATAL: JWT_SECRET environment variable is missing.');
+    }
+
     const newToken = jwt.sign(
       { id: user._id.toString(), role: user.role },
-      process.env.JWT_SECRET || 'fallback_secret_please_change_in_production',
+      process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 

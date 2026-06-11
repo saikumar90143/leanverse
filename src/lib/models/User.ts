@@ -18,6 +18,8 @@ const UserSchema = new Schema(
     reminderTime: { type: String, default: '08:00' }, // HH:MM format
     streakAlertsEnabled: { type: Boolean, default: true },
     subscriptionExpiresAt: { type: Date, required: false, default: null },
+    resetPasswordToken: { type: String, required: false, default: null },
+    resetPasswordExpires: { type: Date, required: false, default: null },
   },
   { timestamps: true }
 );

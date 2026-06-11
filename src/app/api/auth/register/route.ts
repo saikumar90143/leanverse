@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import User from '@/lib/models/User';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 
 export async function POST(req: Request) {
   try {
@@ -17,11 +18,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'User with this email already exists' }, { status: 400 });
     }
 
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     // Save user profile
     const newUser = await User.create({
       name,
       email: email.toLowerCase(),
-      passwordHash: password, // For simplicity in our demo sandbox
+      passwordHash: hashedPassword,
       role: 'user',
       tier: 'free',
       streak: 1,
@@ -40,9 +44,13 @@ export async function POST(req: Request) {
       avatar: newUser.avatar
     };
 
+    if (!process.env.JWT_SECRET) {
+      throw new Error('FATAL: JWT_SECRET environment variable is missing.');
+    }
+
     const token = jwt.sign(
       { id: newUser._id.toString(), role: newUser.role },
-      process.env.JWT_SECRET || 'fallback_secret_please_change_in_production',
+      process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 

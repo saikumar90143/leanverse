@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import User from '@/lib/models/User';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 
 export async function POST(req: Request) {
   try {
@@ -27,9 +28,13 @@ export async function POST(req: Request) {
         avatar: undefined
       };
 
+      if (!process.env.JWT_SECRET) {
+        throw new Error('FATAL: JWT_SECRET environment variable is missing.');
+      }
+
       const token = jwt.sign(
         { id: 'admin_mock', role: 'admin' },
-        process.env.JWT_SECRET || 'fallback_secret_please_change_in_production',
+        process.env.JWT_SECRET,
         { expiresIn: '7d' }
       );
 
@@ -48,7 +53,15 @@ export async function POST(req: Request) {
       return response;
     }
 
-    if (!user || user.passwordHash !== password) {
+    // Artificial delay to mitigate brute-force attacks
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    if (!user) {
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    if (!isMatch) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
@@ -99,9 +112,13 @@ export async function POST(req: Request) {
       avatar: user.avatar
     };
 
+    if (!process.env.JWT_SECRET) {
+      throw new Error('FATAL: JWT_SECRET environment variable is missing.');
+    }
+
     const token = jwt.sign(
       { id: user._id.toString(), role: user.role },
-      process.env.JWT_SECRET || 'fallback_secret_please_change_in_production',
+      process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
