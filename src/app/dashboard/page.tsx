@@ -40,8 +40,25 @@ export default function UserDashboard() {
  const [lastWorkoutDetails, setLastWorkoutDetails] = useState('Track a workout to see it here');
  const [hasDietPlan, setHasDietPlan] = useState(false);
  const [hasWorkout, setHasWorkout] = useState(false);
+ const [greeting, setGreeting] = useState('');
+ const [bgClass, setBgClass] = useState('');
 
  React.useEffect(() => {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) {
+    setGreeting('Good Morning');
+    setBgClass('from-orange-500/10 to-amber-500/5 dark:from-orange-500/20 dark:to-amber-500/10 border-orange-500/20');
+  } else if (hour >= 12 && hour < 17) {
+    setGreeting('Good Afternoon');
+    setBgClass('from-emerald-500/10 to-cyan-500/5 dark:from-emerald-500/20 dark:to-cyan-500/10 border-emerald-500/20');
+  } else if (hour >= 17 && hour < 21) {
+    setGreeting('Good Evening');
+    setBgClass('from-purple-500/10 to-pink-500/5 dark:from-purple-500/20 dark:to-pink-500/10 border-purple-500/20');
+  } else {
+    setGreeting('Late Night Grind');
+    setBgClass('from-blue-600/10 to-indigo-600/5 dark:from-blue-600/20 dark:to-indigo-600/10 border-blue-500/20');
+  }
+
  try {
  // Load Diet Plan
  const dietRaw = localStorage.getItem(getUserStorageKey('leanverse_diet_plan'));
@@ -296,8 +313,8 @@ export default function UserDashboard() {
   {/* Milestone Popup */}
   <StreakMilestonePopup />
  {/* Welcome banner */}
- <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass rounded-3xl p-6 sm:p-8 border border-emerald-500/20 shadow-xl relative overflow-hidden">
- <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-2xl -z-10" />
+ <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass rounded-3xl p-6 sm:p-8 border shadow-xl relative overflow-hidden transition-colors duration-1000 bg-gradient-to-br ${bgClass || 'from-emerald-500/5 to-cyan-500/5 border-emerald-500/20'}`}>
+ <div className="absolute top-0 right-0 w-32 h-32 bg-foreground/5 rounded-full blur-2xl -z-10" />
 
  <div className="flex items-center space-x-4">
  <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white flex items-center justify-center shadow-lg font-black text-xl">
@@ -305,7 +322,7 @@ export default function UserDashboard() {
  </div>
  <div>
  <h1 className="text-xl sm:text-2xl font-black text-foreground flex items-center">
- Welcome back, {user.name}!
+ {greeting ? `${greeting}, ${user.name}!` : `Welcome back, ${user.name}!`}
  <Sparkles className="w-5 h-5 ml-1.5 text-amber-400 animate-bounce" />
  </h1>
  <p className="text-xs text-muted mt-0.5">

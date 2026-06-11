@@ -15,6 +15,7 @@ import {
 import { getDailyMotivation } from '@/lib/motivationEngine';
 import { getTodayWorkoutSummary } from '@/lib/gamification';
 import { formatLocalDate as fld } from '@/lib/storage';
+import { useAuth } from '@/components/layout/AuthProvider';
 
 // Lazy load heavy components
 const WorkoutStreakCard = dynamic(() => import('@/components/shared/WorkoutStreakCard'), { ssr: false });
@@ -24,6 +25,7 @@ const AchievementsBadges = dynamic(() => import('@/components/shared/Achievement
 const StreakMilestonePopup = dynamic(() => import('@/components/shared/StreakMilestonePopup'), { ssr: false });
 
 export default function StreakPage() {
+  const { user } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
@@ -84,6 +86,21 @@ export default function StreakPage() {
     { label: 'Avg / Week', value: `${avgPerWeek}`, icon: BarChart2, color: 'text-blue-500', bg: 'bg-blue-500/10' },
     { label: 'Freeze Left', value: `${freeze.available}`, icon: Snowflake, color: 'text-sky-500', bg: 'bg-sky-500/10' },
   ];
+
+  if (mounted && !user) {
+    return (
+      <div className="min-h-screen pt-32 pb-20 flex flex-col items-center justify-center text-center px-4 bg-background">
+        <div className="glass rounded-3xl p-12 border border-border/20 shadow-xl max-w-md w-full">
+          <Flame className="w-16 h-16 text-amber-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-black text-foreground mb-2">Please login first</h2>
+          <p className="text-muted mb-6">You need to be logged in to view your streak and consistency stats.</p>
+          <Link href="/login?redirect=/streak" className="inline-flex bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white px-8 py-3 rounded-full font-bold shadow-lg transition-all scale-100 hover:scale-105 active:scale-95">
+            Go to Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8 pt-24">

@@ -5,6 +5,7 @@ import { Trophy, TrendingUp, Calendar, ArrowUpRight, Search, Activity, Dumbbell 
 import { getUserStorageKey } from '@/lib/storage';
 import { transformationExercises } from '@/lib/transformationExercises';
 import { useAuth } from '@/components/layout/AuthProvider';
+import Link from 'next/link';
 
 interface PRData {
  exerciseId: string;
@@ -43,7 +44,10 @@ export default function PersonalRecordsPage() {
  setIsMounted(true);
  
  // We only load data once mounted to avoid hydration mismatch
- if (!user) return;
+ if (!user) {
+   setLoading(false);
+   return;
+ }
 
  try {
  // Get the latest history (either active transformation or preserved stats)
@@ -138,6 +142,21 @@ export default function PersonalRecordsPage() {
  const allMuscles = ['All', ...Array.from(new Set(prList.map(p => p.muscleGroup))).sort()];
 
  if (!isMounted) return null;
+
+ if (!user) {
+   return (
+     <div className="min-h-screen pt-32 pb-20 flex flex-col items-center justify-center text-center px-4 bg-background">
+       <div className="glass rounded-3xl p-12 border border-border/20 shadow-xl max-w-md w-full">
+         <Trophy className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
+         <h2 className="text-2xl font-black text-foreground mb-2">Please login first</h2>
+         <p className="text-muted mb-6">You need to be logged in to view your personal records and strength progression.</p>
+         <Link href="/login?redirect=/personal-records" className="inline-flex bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white px-8 py-3 rounded-full font-bold shadow-lg transition-all scale-100 hover:scale-105 active:scale-95">
+           Go to Login
+         </Link>
+       </div>
+     </div>
+   );
+ }
 
  return (
  <div className="min-h-screen pt-24 pb-20 bg-background transition-colors">

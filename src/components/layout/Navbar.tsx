@@ -141,7 +141,16 @@ export default function Navbar() {
         <div className="flex items-center justify-between w-full gap-4 lg:gap-8">
           {/* Left Area: Logo */}
           <div className="flex items-center shrink-0">
-            <Link href="/" className="flex items-center space-x-2 shrink-0">
+            <Link 
+              href="/" 
+              onClick={(e) => {
+                if (pathname === '/') {
+                  e.preventDefault();
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+              }}
+              className="flex items-center space-x-2 shrink-0"
+            >
               <img src="/icon.svg" alt="LeanVerse Logo" width="36" height="36" className="w-8 h-8 sm:w-9 sm:h-9 shrink-0" />
               <span className="text-xl sm:text-2xl font-black tracking-wider bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent leading-none pb-1">
                 LEAN<span className="font-light text-foreground">VERSE</span>

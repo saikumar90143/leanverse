@@ -103,6 +103,7 @@ export default function AIWorkoutPlanner() {
  
  // Exercise Search Modal
  const [showExerciseSearch, setShowExerciseSearch] = useState(false);
+ const [prCelebrationActive, setPrCelebrationActive] = useState(false);
  const [exerciseSearch, setExerciseSearch] = useState('');
  const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -566,7 +567,13 @@ export default function AIWorkoutPlanner() {
   if (isFirstTime) {
     import('canvas-confetti').then((confetti) => confetti.default({ particleCount: 50, spread: 50, origin: { y: 0.7 } }));
   } else if (isNewPR) {
+    setPrCelebrationActive(true);
+    setTimeout(() => setPrCelebrationActive(false), 2500);
     import('canvas-confetti').then((confetti) => confetti.default({ particleCount: 150, spread: 80, origin: { y: 0.6 } }));
+  }
+  
+  if (typeof navigator !== 'undefined' && navigator.vibrate) {
+    navigator.vibrate([30, 50, 30]);
   }
 
   } else {
@@ -1057,7 +1064,7 @@ export default function AIWorkoutPlanner() {
  <div className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold px-3 py-1.5 rounded-lg border border-emerald-500/20 shrink-0 text-center hidden sm:block">
  {ex.targetWeight}
  </div>
- <button onClick={() => handleToggleExerciseComplete(ex.id)} className={`p-2 rounded-lg transition-colors hidden sm:block ${ex.completed ? 'text-emerald-500 bg-emerald-500/10 opacity-100' : 'text-muted hover:text-emerald-500 hover:bg-emerald-500/10 opacity-0 group-hover:opacity-100'}`}>
+ <button onClick={() => handleToggleExerciseComplete(ex.id)} className={`p-2 rounded-lg transition-all scale-100 active:scale-95 hidden sm:block ${ex.completed ? 'text-emerald-500 bg-emerald-500/10 opacity-100' : 'text-muted hover:text-emerald-500 hover:bg-emerald-500/10 opacity-0 group-hover:opacity-100'}`}>
  <CheckCircle2 className="w-4 h-4" />
  </button>
  <button onClick={() => handleRemoveExercise(ex.id)} className="p-2 text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors hidden sm:block opacity-0 group-hover:opacity-100">
@@ -1126,7 +1133,7 @@ export default function AIWorkoutPlanner() {
  </div>
  {!isPastDay && (
  <div className="flex gap-2 mt-2 sm:hidden">
- <button onClick={() => handleToggleExerciseComplete(ex.id)} className={`flex-1 py-2 text-xs font-bold rounded-xl transition-colors ${ex.completed ? 'text-emerald-500 bg-emerald-500/10' : 'text-muted bg-secondary/50 dark:bg-card/5'}`}>
+ <button onClick={() => handleToggleExerciseComplete(ex.id)} className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all scale-100 active:scale-95 ${ex.completed ? 'text-emerald-500 bg-emerald-500/10' : 'text-muted bg-secondary/50 dark:bg-card/5'}`}>
  {ex.completed ? 'Completed' : 'Mark Complete'}
  </button>
  <button onClick={() => handleRemoveExercise(ex.id)} className="flex-1 py-2 text-xs font-bold text-red-500 bg-red-500/5 rounded-xl">
@@ -1419,6 +1426,13 @@ export default function AIWorkoutPlanner() {
  return (
  <div className="max-w-6xl mx-auto px-4 py-8">
  {state ? renderDashboard() : renderWizard()}
+ {prCelebrationActive && (
+   <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm transition-all duration-500 pointer-events-none flex items-center justify-center">
+     <div className="text-center animate-pulse scale-110">
+       <h2 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500 drop-shadow-2xl">NEW PR!</h2>
+     </div>
+   </div>
+ )}
  </div>
  );
 }
