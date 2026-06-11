@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import User from '@/lib/models/User';
+import jwt from 'jsonwebtoken';
 
 interface GoogleTokenResponse {
   access_token: string;
@@ -132,9 +133,27 @@ export async function GET(req: NextRequest) {
       avatar: user.avatar || null,
     };
 
+    const token = jwt.sign(
+      { id: user._id.toString(), role: user.role },
+      process.env.JWT_SECRET || 'fallback_secret_please_change_in_production',
+      { expiresIn: '7d' }
+    );
+
     // Encode session and redirect to client-side success handler
     const encoded = Buffer.from(JSON.stringify(sessionPayload)).toString('base64');
-    return NextResponse.redirect(`${siteUrl}/auth/google/success?session=${encoded}`);
+    const response = NextResponse.redirect(`${siteUrl}/auth/google/success?session=${encoded}`);
+    
+    response.cookies.set({
+      name: 'leanverse_token',
+      value: token,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production' && process.env.VERCEL === '1',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7 // 7 days
+    });
+
+    return response;
   } catch (err: unknown) {
     console.error('Google OAuth callback error:', err);
     return NextResponse.redirect(`${siteUrl}/login?error=server_error`);

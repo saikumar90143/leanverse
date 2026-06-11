@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Upload, RefreshCw, X, Check, Edit2, AlertTriangle, Plus, Trash2, ArrowRight } from 'lucide-react';
+import { Camera, Upload, RefreshCw, X, Check, Edit2, AlertTriangle, Plus, Trash2, ArrowRight, Star } from 'lucide-react';
 import { formatLocalDate, getUserStorageKey } from '@/lib/storage';
 import { useAuth } from '@/components/layout/AuthProvider';
 import Link from 'next/link';
@@ -338,6 +338,15 @@ export default function AIFoodScanner({ onClose, onResult }: AIFoodScannerProps 
               <p className="text-red-400 text-sm mb-4">You must be logged in to use the AI Food Scanner.</p>
               <Link href="/login" className="inline-block px-6 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-colors">
                 Sign In to Scan
+              </Link>
+            </div>
+          ) : user.tier === 'free' ? (
+            <div className="mt-8 p-6 bg-amber-500/10 border border-amber-500/20 rounded-2xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-xl -z-10" />
+              <h3 className="text-amber-500 font-black mb-2 flex items-center justify-center"><Star className="w-5 h-5 mr-2" /> Pro Feature</h3>
+              <p className="text-amber-500/80 text-sm mb-4">The AI Macro Lens is exclusive to LeanVerse Pro members. Good news: You are currently eligible to claim 1 Year of LeanVerse Pro for FREE!</p>
+              <Link href="/pricing" className="inline-block px-6 py-3 bg-amber-500 text-white font-black rounded-xl hover:bg-amber-600 transition-all shadow-lg hover:shadow-amber-500/20 hover:-translate-y-0.5">
+                Claim 1 Year Free Pro
               </Link>
             </div>
           ) : (

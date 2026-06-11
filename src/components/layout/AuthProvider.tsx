@@ -61,46 +61,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         saveUser(data.user);
         return true;
       }
-      // Sandbox demo fallback
-      if (email === 'admin@leanverse.com' && password === 'admin123') {
-        saveUser({
-          id: 'admin_mock',
-          name: 'LeanVerse Administrator',
-          email: 'admin@leanverse.com',
-          role: 'admin',
-          tier: 'pro',
-          streak: 15,
-          badges: ['Elite Creator', 'AdSense Guru', 'Streak Champion'],
-        });
-        return true;
-      }
-      if (email && password.length >= 6) {
-        saveUser({
-          id: 'user_mock',
-          name: email.split('@')[0],
-          email,
-          role: 'user',
-          tier: 'free',
-          streak: 3,
-          badges: ['Quick Starter'],
-        });
-        return true;
-      }
       return false;
     } catch (err) {
-      console.error('Login error, falling back to demo mode:', err);
-      if (email && password.length >= 6) {
-        saveUser({
-          id: 'user_mock',
-          name: email.split('@')[0],
-          email,
-          role: email.includes('admin') ? 'admin' : 'user',
-          tier: email.includes('admin') ? 'pro' : 'free',
-          streak: 3,
-          badges: ['Demo Explorer'],
-        });
-        return true;
-      }
+      console.error('Login error:', err);
       return false;
     }
   };
@@ -117,29 +80,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         saveUser(data.user);
         return true;
       }
-      // Demo fallback
-      saveUser({
-        id: 'user_mock_' + Math.random().toString(36).slice(2, 9),
-        name,
-        email,
-        role: 'user',
-        tier: 'free',
-        streak: 1,
-        badges: ['New Joiner'],
-      });
-      return true;
+      return false;
     } catch (err) {
-      console.error('Register error, falling back to demo mode:', err);
-      saveUser({
-        id: 'user_mock_' + Math.random().toString(36).slice(2, 9),
-        name,
-        email,
-        role: 'user',
-        tier: 'free',
-        streak: 1,
-        badges: ['New Joiner'],
-      });
-      return true;
+      console.error('Register error:', err);
+      return false;
     }
   };
 

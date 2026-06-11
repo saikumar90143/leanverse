@@ -24,6 +24,7 @@ export default function PersonalRecordsPage() {
  const [searchQuery, setSearchQuery] = useState('');
  const [filterMuscle, setFilterMuscle] = useState('All');
  const [isMounted, setIsMounted] = useState(false);
+ const [loading, setLoading] = useState(true);
  const [dbExercises, setDbExercises] = useState<any[]>([]);
 
  useEffect(() => {
@@ -121,6 +122,8 @@ export default function PersonalRecordsPage() {
  setPrList(calculatedPRs);
  } catch (e) {
  console.error('Failed to load PRs', e);
+ } finally {
+ setLoading(false);
  }
  }, [user, dbExercises]);
 
@@ -160,6 +163,27 @@ export default function PersonalRecordsPage() {
  </div>
  </div>
 
+ {/* Loading State */}
+ {loading ? (
+ <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+ {[1, 2, 3, 4, 5, 6].map(i => (
+ <div key={i} className="glass rounded-3xl p-5 border border-border/20 dark:border-border shadow-xl h-48 animate-pulse flex flex-col justify-between">
+ <div className="flex items-start gap-3">
+ <div className="w-12 h-12 bg-secondary/50 dark:bg-card rounded-xl"></div>
+ <div className="space-y-2 flex-1 pt-1">
+ <div className="h-4 bg-secondary/50 dark:bg-card rounded w-3/4"></div>
+ <div className="h-3 bg-secondary/50 dark:bg-card rounded w-1/4"></div>
+ </div>
+ </div>
+ <div className="grid grid-cols-2 gap-3 mt-4">
+ <div className="h-16 bg-secondary/50 dark:bg-card rounded-2xl"></div>
+ <div className="h-16 bg-secondary/50 dark:bg-card rounded-2xl"></div>
+ </div>
+ </div>
+ ))}
+ </div>
+ ) : (
+ <>
  {/* Filters */}
  <div className="glass rounded-3xl p-4 sm:p-5 mb-8 border border-border/20 dark:border-border shadow-lg flex flex-col sm:flex-row gap-4">
  <div className="relative flex-1">
@@ -262,6 +286,8 @@ export default function PersonalRecordsPage() {
  Complete workouts in the AI Workout Planner to automatically track your strength milestones and personal records here!
  </p>
  </div>
+ )}
+ </>
  )}
 
  </div>

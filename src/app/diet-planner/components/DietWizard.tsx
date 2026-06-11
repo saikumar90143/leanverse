@@ -238,7 +238,10 @@ export default function DietWizard({ p }: { p: any }) {
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
  <button 
     onClick={() => {
-      if (user?.tier === 'free') {
+      if (!user) {
+        alert('Unauthorized. Please log in first.');
+        router.push('/login?redirect=%2Fdiet-planner');
+      } else if (user.tier === 'free') {
         router.push('/pricing');
       } else {
         setPlanSelectionMode('premium');
@@ -255,7 +258,7 @@ export default function DietWizard({ p }: { p: any }) {
   <Star className={`w-6 h-6 ${user?.tier === 'free' ? 'text-muted' : 'text-amber-500'}`} />
   </div>
   <h3 className="font-black text-lg mb-1 text-foreground">Premium Plans</h3>
-  <p className="text-xs text-muted font-medium leading-relaxed">Choose an expertly crafted plan. {user?.tier === 'free' ? 'Upgrade to access.' : 'It will automatically scale perfectly to your target.'}</p>
+  <p className="text-xs text-muted font-medium leading-relaxed">Choose an expertly crafted plan. {user?.tier === 'free' ? 'Claim your 1-Year Free Pro tier to access!' : 'It will automatically scale perfectly to your target.'}</p>
   </button>
  
  <button onClick={() => setPlanSelectionMode('ai')} className="p-6 rounded-2xl border-2 border-slate-100 dark:border-border bg-background dark:bg-card/5 hover:border-cyan-500 hover:bg-cyan-500/5 transition-all text-left">

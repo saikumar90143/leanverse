@@ -597,16 +597,6 @@ export default function AIWorkoutPlanner() {
   });
   newState.schedule[dayIndex] = day;
   setState(newState);
-
-  // Sync to workouts DB for the streak system
-  writeWorkoutToDb(day.workoutName, day.mainExercises.map((e: any) => ({
-    name: e.name,
-    sets: e.loggedSets.map((s: any) => ({
-      completed: true,
-      weight: s.weight,
-      reps: s.reps
-    }))
-  })));
   };
 
  const handleUpdateSets = (exerciseId: string, delta: number) => {

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Check, ShieldCheck, Sparkles, Flame, Apple, Dumbbell } from 'lucide-react';
+import { Check, ShieldCheck, Sparkles, Flame, Apple, Dumbbell, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 import { useAuth } from '@/components/layout/AuthProvider';
@@ -9,7 +9,7 @@ import { useAuth } from '@/components/layout/AuthProvider';
 export default function PricingPage() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
   const [upgrading, setUpgrading] = useState(false);
-  const { user, updateUserSession } = useAuth();
+  const { user, updateUserSession,logout } = useAuth();
 
   const handleSubscribe = async (tier: string) => {
     if (!user) {
@@ -44,7 +44,13 @@ export default function PricingPage() {
         });
         alert(`Congratulations! You have successfully claimed your 1-Year Free Lean Pro membership!`);
       } else {
-        alert(data.error || "Failed to upgrade. Please try again later.");
+        if (res.status === 401) {
+          alert('Your session has expired. Please log in again.');
+          logout();
+          window.location.href = '/login?redirect=%2Fpricing';
+        } else {
+          alert(data.error || "Failed to upgrade. Please try again later.");
+        }
       }
     } catch (err) {
       console.error(err);
@@ -66,13 +72,18 @@ export default function PricingPage() {
         'Standard Blog & CMS catalog access',
         'Supported by Sponsored Ads',
       ],
+      missingFeatures: [
+        'Unlimited AI Diet Blueprints',
+        'Unlimited AI Workout maps',
+        '100% Ad-Free UI Experience',
+      ],
       cta: 'Start Free Training',
       popular: false,
     },
     {
       name: 'Lean Pro',
-      priceMonthly: 0,
-      priceAnnual: 0,
+      priceMonthly: 199,
+      priceAnnual: 149,
       desc: '1-YEAR FREE PROMOTIONAL OFFER',
       features: [
         'Unlimited AI Diet Blueprints',
@@ -81,14 +92,15 @@ export default function PricingPage() {
         'Unlimited print-to-PDF downloads',
         'Full AI Fitness Chatbot assistant access',
         '100% Ad-Free UI Experience',
+        'unlimited Food scan with AI nutrition breakdowns',
       ],
       cta: 'Claim 1 Year Free',
       popular: true,
     },
     {
       name: 'Elite Coach',
-      priceMonthly: 39,
-      priceAnnual: 27,
+      priceMonthly: 499,
+      priceAnnual: 399,
       desc: 'Premium biometric monitoring and analytics.',
       features: [
         'Everything in Lean Pro',
@@ -166,7 +178,7 @@ export default function PricingPage() {
                 </div>
 
                 <div className="flex items-baseline space-x-1.5 py-4 border-t border-b border-border/10">
-                  <span className="text-4xl sm:text-5xl font-black text-slate-850 dark:text-slate-150">${currentPrice}</span>
+                  <span className="text-4xl sm:text-5xl font-black text-slate-850 dark:text-slate-150">₹{currentPrice}</span>
                   {p.name === 'Lean Pro' ? (
                     <span className="text-xs text-emerald-500 font-bold uppercase ml-2 bg-emerald-500/10 px-2 py-1 rounded-md">First Year Free</span>
                   ) : (
@@ -182,20 +194,34 @@ export default function PricingPage() {
                       <span className="font-semibold">{feat}</span>
                     </li>
                   ))}
+                  {p.missingFeatures && p.missingFeatures.map((feat) => (
+                    <li key={feat} className="flex items-start space-x-2 opacity-50">
+                      <X className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                      <span className="font-semibold line-through text-slate-500">{feat}</span>
+                    </li>
+                  ))}
                 </ul>
               </div>
 
               <div className="pt-8 no-print">
                 <button
                   onClick={() => handleSubscribe(p.name)}
-                  className={`w-full py-3.5 rounded-2xl font-black text-xs shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5 active:scale-97 ${
-                    p.popular
-                      ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white shadow-emerald-500/10'
-                      : 'bg-secondary/50 hover:bg-secondary dark:bg-card/5 dark:hover:bg-card/10 text-foreground border border-slate-350/15'
+                  className={`w-full py-3.5 rounded-2xl font-black text-xs shadow-md transition-all flex items-center justify-center space-x-1.5 active:scale-97 ${
+                    p.name === 'Elite Coach' || ((user?.tier === 'pro' || user?.tier === 'premium') && (p.name === 'Lean Pro' || p.name === 'Free Squad'))
+                      ? 'bg-emerald-500/10 text-emerald-500/60 border border-emerald-500/20 cursor-not-allowed opacity-80'
+                      : p.popular
+                      ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white shadow-emerald-500/10 cursor-pointer'
+                      : 'bg-secondary/50 hover:bg-secondary dark:bg-card/5 dark:hover:bg-card/10 text-foreground border border-slate-350/15 cursor-pointer'
                   }`}
-                  disabled={upgrading}
+                  disabled={upgrading || p.name === 'Elite Coach' || ((user?.tier === 'pro' || user?.tier === 'premium') && (p.name === 'Lean Pro' || p.name === 'Free Squad'))}
                 >
-                  <span>{upgrading && p.name === 'Lean Pro' ? 'Claiming...' : p.cta}</span>
+                  <span>{
+                    p.name === 'Elite Coach' ? 'Coming Soon'
+                    : upgrading && p.name === 'Lean Pro' ? 'Claiming...' 
+                    : (user?.tier === 'pro' || user?.tier === 'premium') && p.name === 'Lean Pro' ? 'Active Plan'
+                    : (user?.tier === 'pro' || user?.tier === 'premium') && p.name === 'Free Squad' ? 'Included in Pro'
+                    : p.cta
+                  }</span>
                 </button>
               </div>
             </div>
