@@ -9,6 +9,7 @@ import BlogPost from '@/lib/models/BlogPost';
 import { notFound } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -114,7 +115,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 [&_li]:text-base sm:[&_li]:text-[1.125rem] [&_li]:text-slate-700 dark:[&_li]:text-slate-300 [&_li]:leading-loose
                 [&_img]:rounded-3xl [&_img]:shadow-2xl [&_img]:my-10 [&_img]:border [&_img]:border-border/10 [&_img]:mx-auto
                 [&_code]:text-emerald-600 dark:[&_code]:text-emerald-400 [&_code]:bg-emerald-500/10 [&_code]:px-2 [&_code]:py-1 [&_code]:rounded-lg [&_code]:font-bold">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
                 {article.content}
               </ReactMarkdown>
             </div>
