@@ -62,9 +62,6 @@ export const metadata: Metadata = {
     creator: '@leanverse',
     images: ['https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1200&h=630&fit=crop'],
   },
-  alternates: {
-    canonical: '/',
-  },
   robots: {
     index: true,
     follow: true,
