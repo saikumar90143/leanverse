@@ -22,6 +22,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     notFound();
   }
 
+  let cleanContent = rawPost.content || '';
+  if (rawPost.coverImage) {
+    const escapedUrl = rawPost.coverImage.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    cleanContent = cleanContent.replace(new RegExp(`!\\[.*?\\]\\(${escapedUrl}\\)\\s*`, 'g'), '');
+    cleanContent = cleanContent.replace(new RegExp(`<img[^>]*src=["']${escapedUrl}["'][^>]*>\\s*`, 'g'), '');
+  }
+
   // Format data
   const article = {
     title: rawPost.title,
@@ -31,7 +38,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     author: rawPost.author || 'LeanVerse Team',
     date: rawPost.publishedAt ? new Date(rawPost.publishedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '',
     coverImage: rawPost.coverImage || 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1200&q=80',
-    content: rawPost.content || ''
+    content: cleanContent
   };
 
   // Get related articles (fetch 2 random published)
@@ -51,6 +58,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const headings = article.content.split('\n')
     .filter((line: string) => /^#{2,3}\s/.test(line.trim()))
     .map((line: string) => line.trim().replace(/^#{2,3}\s/, '').trim());
+
+  // Check if there are any images inserted into the content
+  const hasInsertedImages = /!\[.*?\]\(.*?\)|<img[^>]+>/i.test(article.content);
 
   return (
     <article className="max-w-5xl mx-auto px-4 py-8 space-y-8">
@@ -73,32 +83,37 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         </div>
       </div>
 
-      {/* Hero Banner Cover */}
-      <div className="relative w-full h-[300px] sm:h-[400px] rounded-3xl overflow-hidden shadow-2xl no-print">
-        <Image 
-          src={article.coverImage} 
-          alt={article.title}
-          fill
-          priority={true}
-          sizes="(max-width: 768px) 100vw, 1024px"
-          className="object-cover hover:scale-105 transition-transform duration-700"
-        />
-      </div>
+      {/* Hero Banner Cover (Hidden if images are present in content) */}
+      {!hasInsertedImages && (
+        <div className="relative w-full h-[300px] sm:h-[400px] rounded-3xl overflow-hidden shadow-2xl no-print">
+          <Image 
+            src={article.coverImage} 
+            alt={article.title}
+            fill
+            priority={true}
+            sizes="(max-width: 768px) 100vw, 1024px"
+            className="object-cover hover:scale-105 transition-transform duration-700"
+          />
+        </div>
+      )}
 
       {/* Main Core Body splits */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Blog Body text */}
         <div className="lg:col-span-8 space-y-6">
           <div className="w-full overflow-x-auto pb-4">
-            <div className="prose dark:prose-invert max-w-none text-sm leading-relaxed text-muted dark:text-slate-350 space-y-5
-                prose-h2:text-lg prose-h2:font-black prose-h2:text-foreground dark:prose-h2:text-slate-100 prose-h2:mt-6 prose-h2:mb-3
-                prose-h3:text-sm prose-h3:font-black prose-h3:text-foreground dark:prose-h3:text-slate-150 prose-h3:mt-4 prose-h3:mb-2
-                prose-p:mb-4
-                prose-ol:list-decimal prose-ol:pl-5 prose-ol:space-y-1.5
-                prose-ul:list-disc prose-ul:pl-5 prose-ul:space-y-1.5
-                prose-li:pl-1
-                prose-img:rounded-2xl prose-img:border prose-img:border-border/10 prose-img:shadow-md
-                prose-strong:font-extrabold prose-strong:text-slate-850 dark:prose-strong:text-slate-200">
+            <div className="max-w-none 
+                [&_p]:text-base sm:[&_p]:text-[1.125rem] [&_p]:leading-loose [&_p]:text-slate-700 dark:[&_p]:text-slate-300 [&_p]:mb-6
+                [&_h2]:font-black [&_h2]:tracking-tight [&_h2]:text-foreground [&_h2]:text-2xl sm:[&_h2]:text-3xl [&_h2]:mt-12 [&_h2]:mb-6
+                [&_h3]:font-black [&_h3]:tracking-tight [&_h3]:text-foreground [&_h3]:text-xl sm:[&_h3]:text-2xl [&_h3]:mt-8 [&_h3]:mb-4
+                [&_a]:text-emerald-500 [&_a]:no-underline hover:[&_a]:text-emerald-600 hover:[&_a]:underline
+                [&_blockquote]:border-l-4 [&_blockquote]:border-emerald-500 [&_blockquote]:pl-6 [&_blockquote]:italic [&_blockquote]:text-lg [&_blockquote]:text-slate-600 dark:[&_blockquote]:text-slate-400 [&_blockquote]:bg-emerald-500/5 [&_blockquote]:py-3 [&_blockquote]:rounded-r-2xl [&_blockquote]:my-8
+                [&_strong]:font-black [&_strong]:text-foreground
+                [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:space-y-3 [&_ul]:mb-6
+                [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:space-y-3 [&_ol]:mb-6
+                [&_li]:text-base sm:[&_li]:text-[1.125rem] [&_li]:text-slate-700 dark:[&_li]:text-slate-300 [&_li]:leading-loose
+                [&_img]:rounded-3xl [&_img]:shadow-2xl [&_img]:my-10 [&_img]:border [&_img]:border-border/10 [&_img]:mx-auto
+                [&_code]:text-emerald-600 dark:[&_code]:text-emerald-400 [&_code]:bg-emerald-500/10 [&_code]:px-2 [&_code]:py-1 [&_code]:rounded-lg [&_code]:font-bold">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {article.content}
               </ReactMarkdown>
