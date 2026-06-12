@@ -232,10 +232,8 @@ const ExerciseSchema = new Schema(
 );
 
 // Helpful indexes
-ExerciseSchema.index({ muscleGroup: 1 });
 ExerciseSchema.index({ difficulty: 1 });
 ExerciseSchema.index({ locationType: 1 });
 ExerciseSchema.index({ category: 1 });
-ExerciseSchema.index({ slug: 1 });
 
 export default mongoose.models.Exercise || mongoose.model('Exercise', ExerciseSchema);
