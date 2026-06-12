@@ -105,6 +105,8 @@ export default function AIWorkoutPlanner() {
  // Exercise Search Modal
  const [showExerciseSearch, setShowExerciseSearch] = useState(false);
  const [prCelebrationActive, setPrCelebrationActive] = useState(false);
+ const [prMotivationActive, setPrMotivationActive] = useState(false);
+ const [motivationMessage, setMotivationMessage] = useState('');
  const [exerciseSearch, setExerciseSearch] = useState('');
  const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -540,11 +542,13 @@ export default function AIWorkoutPlanner() {
 
   let isFirstTime = history.length === 0 || (history.length === 1 && new Date(history[0].date).toDateString() === todayStr);
   let isNewPR = false;
+  let isLessWeight = false;
 
   if (!isFirstTime) {
     if (newMaxW > 0 && newMaxW > oldMaxW) isNewPR = true;
     else if (newMaxW > 0 && newMaxW === oldMaxW && newMaxRepsAtMaxW > oldMaxRepsAtMaxW) isNewPR = true;
     else if (newMaxW === 0 && absoluteNewMaxReps > absoluteOldMaxReps) isNewPR = true;
+    else if (newMaxW > 0 && newMaxW < oldMaxW) isLessWeight = true;
   }
 
   // Save to history
@@ -573,6 +577,17 @@ export default function AIWorkoutPlanner() {
     setPrCelebrationActive(true);
     setTimeout(() => setPrCelebrationActive(false), 2500);
     import('canvas-confetti').then((confetti) => confetti.default({ particleCount: 150, spread: 80, origin: { y: 0.6 } }));
+  } else if (isLessWeight) {
+    const messages = [
+      "STRENGTH IS FORGED IN THE STRUGGLE. KEEP PUSHING.",
+      "YOUR BODY IS ADAPTING. TOMORROW YOU LIFT HEAVIER.",
+      "THE ONLY BAD WORKOUT IS THE ONE THAT DIDN'T HAPPEN.",
+      "PROGRESS ISN'T ALWAYS LINEAR. STAY THE COURSE.",
+      "NOT EVERY DAY IS A PR, BUT EVERY REP IS PROGRESS."
+    ];
+    setMotivationMessage(messages[Math.floor(Math.random() * messages.length)]);
+    setPrMotivationActive(true);
+    setTimeout(() => setPrMotivationActive(false), 3000);
   }
   
   if (typeof navigator !== 'undefined' && navigator.vibrate) {
@@ -1436,6 +1451,25 @@ export default function AIWorkoutPlanner() {
      </div>
    </div>
  )}
+ {prMotivationActive && (
+    <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md transition-all duration-500 pointer-events-none flex items-center justify-center">
+      <div className="text-center animate-fade-in scale-110 p-8 bg-zinc-950/90 border-2 border-violet-500/50 rounded-3xl shadow-[0_0_80px_rgba(139,92,246,0.3)] max-w-lg relative overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-violet-500/20 blur-[60px]" />
+        
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center shadow-lg mb-5 animate-pulse">
+            <Flame className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400 mb-3 tracking-wide">
+            RESILIENCE
+          </h2>
+          <p className="text-zinc-300 font-extrabold text-lg leading-snug max-w-sm mx-auto uppercase tracking-wide">
+            {motivationMessage}
+          </p>
+        </div>
+      </div>
+    </div>
+  )}
  </div>
  );
 }

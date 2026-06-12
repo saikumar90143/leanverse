@@ -91,14 +91,14 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="LeanVerse" />
+        <meta name="google-adsense-account" content="ca-pub-3227570109528503" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icon.svg" />
-        <Script
-          id="adsense-init"
-          strategy="lazyOnload"
+        <script
+          async
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_ID || 'ca-pub-0000000000000000'}`}
           crossOrigin="anonymous"
-        />
+        ></script>
       </head>
       <body suppressHydrationWarning className="min-h-full flex flex-col bg-background text-foreground">
         <Script
