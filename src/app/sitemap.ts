@@ -1,9 +1,11 @@
 import { MetadataRoute } from 'next';
+import dbConnect from '@/lib/db';
+import BlogPost from '@/lib/models/BlogPost';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://leanverse.vercel.app';
   
-  const routes = [
+  const staticRoutes = [
     '',
     '/diet-planner',
     '/workout-planner',
@@ -18,16 +20,35 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/calculators/water',
     '/progress',
     '/blog',
+    '/recipes',
     '/store',
     '/pricing',
     '/about',
     '/privacy',
   ];
 
-  return routes.map((route) => ({
+  const sitemapEntries: MetadataRoute.Sitemap = staticRoutes.map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
     changeFrequency: 'weekly',
     priority: route === '' || route.includes('-tracker') || route.includes('-planner') ? 1.0 : 0.8,
   }));
+
+  try {
+    await dbConnect();
+    const posts = await BlogPost.find({ status: 'published' }).select('slug updatedAt').lean();
+    
+    posts.forEach((post: any) => {
+      sitemapEntries.push({
+        url: `${baseUrl}/blog/${post.slug}`,
+        lastModified: post.updatedAt || new Date(),
+        changeFrequency: 'monthly',
+        priority: 0.7,
+      });
+    });
+  } catch (error) {
+    console.error('Failed to generate dynamic sitemap routes:', error);
+  }
+
+  return sitemapEntries;
 }
