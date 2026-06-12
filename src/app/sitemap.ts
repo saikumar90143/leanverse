@@ -7,6 +7,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '',
     '/diet-planner',
     '/workout-planner',
+    '/workout-tracker',
+    '/food-tracker',
+    '/ai-diet-planner',
+    '/progressive-overload-tracker',
     '/calculators/bmi',
     '/calculators/maintenance',
     '/calculators/macro',
@@ -14,9 +18,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/calculators/water',
     '/progress',
     '/blog',
-    '/blog/ultimate-indian-diet-plan-fat-loss',
-    '/blog/gym-workouts-perfect-push-pull-legs-split',
-    '/blog/home-workouts-fat-loss-minimal-equipment',
     '/store',
     '/pricing',
     '/about',
@@ -27,6 +28,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
     changeFrequency: 'weekly',
-    priority: route === '' ? 1.0 : 0.8,
+    priority: route === '' || route.includes('-tracker') || route.includes('-planner') ? 1.0 : 0.8,
   }));
 }

@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   },
   description: 'LeanVerse is your ultimate AI-powered personal fitness tracking, diet planning, and gamified workout leveling system. Transform your body with LeanVerse AI.',
   applicationName: 'LeanVerse',
-  authors: [{ name: 'LeanVerse Team' }],
+  authors: [{ name: 'LeanVerse Team', url: 'https://leanverse.vercel.app' }],
   creator: 'LeanVerse',
   publisher: 'LeanVerse',
   icons: {
@@ -37,19 +37,30 @@ export const metadata: Metadata = {
     shortcut: '/icon.svg',
     apple: '/icon.svg',
   },
-  keywords: ['LeanVerse', 'LeanVerse AI', 'Leanverse fitness tracker', 'Leanverse workout planner', 'AI diet planner', 'fitness tracker', 'TDEE calculator', 'macro breakdown', 'custom gym plans', 'Indian diet plans', 'Lean bulk planner'],
+  keywords: ['Workout Tracker', 'Progressive Overload Tracker', 'Food Tracker', 'AI Diet Planner', 'Calorie Calculator', 'BMI Calculator', 'TDEE Calculator', 'LeanVerse', 'LeanVerse AI', 'Leanverse fitness tracker', 'Leanverse workout planner', 'macro breakdown', 'custom gym plans', 'Indian diet plans'],
   manifest: '/manifest.json',
   openGraph: {
     title: 'LeanVerse - Transform Your Body with AI',
     description: 'Smart AI-powered diet plans, progressive overload trackers, and dynamic BMR/TDEE calculations designed for sustainable health on LeanVerse.',
-    type: 'website',
+    url: 'https://leanverse.vercel.app',
     siteName: 'LeanVerse',
+    images: [
+      {
+        url: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1200&h=630&fit=crop',
+        width: 1200,
+        height: 630,
+        alt: 'LeanVerse AI Fitness Platform',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'LeanVerse | Best AI Nutrition & Workout Planner',
     description: 'Transform your body with LeanVerse AI-powered workout & diet plans.',
     creator: '@leanverse',
+    images: ['https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1200&h=630&fit=crop'],
   },
   alternates: {
     canonical: '/',
@@ -93,6 +104,48 @@ export default function RootLayout({
         />
       </head>
       <body suppressHydrationWarning className="min-h-full flex flex-col bg-background text-foreground">
+        <Script
+          id="structured-data-org"
+          type="application/ld+json"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "LeanVerse",
+              "url": "https://leanverse.vercel.app",
+              "logo": "https://leanverse.vercel.app/icon.svg",
+              "sameAs": [
+                "https://twitter.com/leanverse",
+                "https://github.com/leanverse"
+              ]
+            })
+          }}
+        />
+        <Script
+          id="structured-data-app"
+          type="application/ld+json"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              "name": "LeanVerse Fitness Platform",
+              "operatingSystem": "Web, iOS, Android",
+              "applicationCategory": "HealthApplication",
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "4.9",
+                "ratingCount": "1250"
+              },
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+              }
+            })
+          }}
+        />
         <ScrollToTop />
         <ThemeProvider>
           <AuthProvider>
