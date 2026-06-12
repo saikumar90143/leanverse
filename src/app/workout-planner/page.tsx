@@ -1209,7 +1209,7 @@ export default function AIWorkoutPlanner() {
  {/* Options */}
  <div className="glass p-3 lg:p-6 rounded-3xl border border-border/10 text-center">
  <button onClick={resetJourney} className="w-full py-3 rounded-xl border border-red-500/20 text-red-500 font-bold hover:bg-red-500/10 transition-all cursor-pointer text-sm">
- Abandon Journey & Reset
+ Create New Workout Plan
  </button>
  </div>
  </div>

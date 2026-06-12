@@ -39,39 +39,55 @@ export default function ImageUploader({ onUploadSuccess, onUploadError, classNam
     try {
       let fileToUpload = file;
 
-      // If rotated, use canvas to rotate the image client-side before uploading
-      if (rotation !== 0) {
-        fileToUpload = await new Promise<File>((resolve) => {
-          const img = new Image();
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            if (!ctx) return resolve(file);
+      // Always use canvas to standardize format, resize (max 1920px), and rotate
+      // This solves Cloudinary's 10MB limit and mobile HEIC/large-file upload errors
+      fileToUpload = await new Promise<File>((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return resolve(file);
 
-            if (rotation === 90 || rotation === 270) {
-              canvas.width = img.height;
-              canvas.height = img.width;
-            } else {
-              canvas.width = img.width;
-              canvas.height = img.height;
+          const MAX_SIZE = 1920;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
             }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
 
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            ctx.rotate((rotation * Math.PI) / 180);
-            ctx.drawImage(img, -img.width / 2, -img.height / 2);
+          if (rotation === 90 || rotation === 270) {
+            canvas.width = height;
+            canvas.height = width;
+          } else {
+            canvas.width = width;
+            canvas.height = height;
+          }
 
-            canvas.toBlob((blob) => {
-              if (blob) {
-                resolve(new File([blob], file.name, { type: file.type }));
-              } else {
-                resolve(file);
-              }
-            }, file.type);
-          };
-          img.onerror = () => resolve(file);
-          img.src = preview;
-        });
-      }
+          ctx.translate(canvas.width / 2, canvas.height / 2);
+          ctx.rotate((rotation * Math.PI) / 180);
+          ctx.drawImage(img, -width / 2, -height / 2, width, height);
+
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const newFileName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+              resolve(new File([blob], newFileName, { type: 'image/jpeg' }));
+            } else {
+              resolve(file);
+            }
+          }, 'image/jpeg', 0.8);
+        };
+        img.onerror = () => resolve(file);
+        img.src = preview;
+      });
 
       const formData = new FormData();
       formData.append('file', fileToUpload);
