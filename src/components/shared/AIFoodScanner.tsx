@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Upload, RefreshCw, X, Check, Edit2, AlertTriangle, Plus, Trash2, ArrowRight, Star } from 'lucide-react';
+import { Camera, Upload, RefreshCw, X, Check, Edit2, AlertTriangle, Plus, Trash2, ArrowRight, Star, Zap } from 'lucide-react';
 import { formatLocalDate, getUserStorageKey } from '@/lib/storage';
 import { useAuth } from '@/components/layout/AuthProvider';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 interface RecognizedFood {
   id: string;
@@ -27,6 +28,7 @@ interface AIFoodScannerProps {
 
 export default function AIFoodScanner({ onClose, onResult }: AIFoodScannerProps = {}) {
   const { user } = useAuth();
+  const pathname = usePathname();
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<RecognizedFood[]>([]);
@@ -36,6 +38,8 @@ export default function AIFoodScanner({ onClose, onResult }: AIFoodScannerProps 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [cameraActive, setCameraActive] = useState(false);
+  const [torchSupported, setTorchSupported] = useState(false);
+  const [torchActive, setTorchActive] = useState(false);
 
   // Stop camera when unmounting
   useEffect(() => {
@@ -52,9 +56,38 @@ export default function AIFoodScanner({ onClose, onResult }: AIFoodScannerProps 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         setCameraActive(true);
+        
+        const track = stream.getVideoTracks()[0];
+        if (track) {
+          const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+          if ((capabilities as any).torch) {
+            setTorchSupported(true);
+          } else {
+            setTorchSupported(false);
+          }
+          setTorchActive(false);
+        }
       }
     } catch (err) {
       setError('Could not access camera. Please upload an image instead.');
+    }
+  };
+
+  const toggleTorch = async () => {
+    if (!videoRef.current || !videoRef.current.srcObject) return;
+    const stream = videoRef.current.srcObject as MediaStream;
+    const track = stream.getVideoTracks()[0];
+    
+    if (track && torchSupported) {
+      try {
+        const newTorchState = !torchActive;
+        await track.applyConstraints({
+          advanced: [{ torch: newTorchState } as any]
+        });
+        setTorchActive(newTorchState);
+      } catch (err) {
+        console.error("Error toggling torch:", err);
+      }
     }
   };
 
@@ -336,7 +369,7 @@ export default function AIFoodScanner({ onClose, onResult }: AIFoodScannerProps 
             <div className="mt-8 p-6 bg-red-500/10 border border-red-500/20 rounded-2xl">
               <h3 className="text-red-500 font-bold mb-2">Login Required</h3>
               <p className="text-red-400 text-sm mb-4">You must be logged in to use the AI Food Scanner.</p>
-              <Link href="/login" className="inline-block px-6 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-colors">
+              <Link href={`/login?redirect=${encodeURIComponent(pathname || '/')}`} className="inline-block px-6 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-colors">
                 Sign In to Scan
               </Link>
             </div>
@@ -388,6 +421,16 @@ export default function AIFoodScanner({ onClose, onResult }: AIFoodScannerProps 
         />
         <div className="absolute inset-0 border-4 border-emerald-500/30 m-4 rounded-2xl pointer-events-none"></div>
         
+        {torchSupported && (
+          <button 
+            type="button" 
+            onClick={toggleTorch} 
+            className={`absolute top-8 right-8 z-50 w-12 h-12 rounded-full flex items-center justify-center shadow-xl transition-colors ${torchActive ? 'bg-amber-400 text-black' : 'bg-black/50 text-white border border-white/20 hover:bg-black/70'}`}
+          >
+            <Zap className={`w-5 h-5 ${torchActive ? 'fill-current' : ''}`} />
+          </button>
+        )}
+
         <div className="absolute bottom-6 left-0 right-0 flex justify-center space-x-6">
           <button type="button" onClick={stopCamera} className="w-14 h-14 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg">
             <X className="w-6 h-6" />

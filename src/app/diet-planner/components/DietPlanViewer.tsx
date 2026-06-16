@@ -44,56 +44,57 @@ export default function DietPlanViewer({ p }: { p: any }) {
  </button>
 
  </div>
-
- {/* Macro Rings — Eaten Progress at the top */}
- <div className="glass  rounded-3xl border border-border/10 flex flex-col items-center justify-center shadow-sm">
- <span className="text-[10px] font-black text-muted uppercase tracking-widest block mb-2">Today's Eaten</span>
- <div className="scale-75 origin-top -mb-12">
- <MacroRings
- protein={eatenProtein}
- carbs={eatenCarbs}
- fats={eatenFats}
- calories={eatenCals}
- proteinTarget={actualProtein}
- carbsTarget={actualCarbs}
- fatsTarget={actualFats}
- calsTarget={actualCals}
- />
- </div>
- </div>
  </div>
  </div>
 
- {/* Macro Breakdown cards */}
- <div className="grid grid-cols-2 md:grid-cols-4 gap-4 print-card">
- <div className={`glass p-5 rounded-2xl border transition-colors duration-300 ${isOver(actualCals, calsTarget) ? 'border-red-500/50 bg-red-500/5' : 'border-border/10'}`}>
- <span className="text-[10px] text-muted font-extrabold uppercase tracking-widest block mb-1">Calories</span>
- <span className={`text-xl sm:text-2xl md:text-3xl font-black block ${isOver(actualCals, calsTarget) ? 'text-red-500' : 'text-foreground'}`}>
- {actualCals} <span className="text-sm sm:text-base md:text-xl text-muted font-bold">/ {calsTarget}</span> <span className="text-[10px] sm:text-xs text-muted font-bold ml-1">kcal</span>
- </span>
- </div>
- 
- <div className={`glass p-5 rounded-2xl border transition-colors duration-300 ${isUnder(actualProtein, proteinTarget) ? 'border-amber-500/50 bg-amber-500/5' : isOver(actualProtein, proteinTarget * 1.3) ? 'border-red-500/50 bg-red-500/5' : 'border-border/10'}`}>
- <span className="text-[10px] text-emerald-500 font-extrabold uppercase tracking-widest block mb-1">Protein</span>
- <span className={`text-xl sm:text-2xl md:text-3xl font-black block ${isUnder(actualProtein, proteinTarget) ? 'text-amber-500' : isOver(actualProtein, proteinTarget * 1.3) ? 'text-red-500' : 'text-emerald-500'}`}>
- {actualProtein} <span className="text-sm sm:text-base md:text-xl text-muted font-bold">/ {proteinTarget}g</span>
- </span>
- </div>
- 
- <div className={`glass p-5 rounded-2xl border transition-colors duration-300 ${isOver(actualCarbs, carbsTarget) ? 'border-red-500/50 bg-red-500/5' : 'border-border/10'}`}>
- <span className="text-[10px] text-cyan-500 font-extrabold uppercase tracking-widest block mb-1">Carbs</span>
- <span className={`text-xl sm:text-2xl md:text-3xl font-black block ${isOver(actualCarbs, carbsTarget) ? 'text-red-500' : 'text-cyan-500'}`}>
- {actualCarbs} <span className="text-sm sm:text-base md:text-xl text-muted font-bold">/ {carbsTarget}g</span>
- </span>
- </div>
- 
- <div className={`glass p-5 rounded-2xl border transition-colors duration-300 ${isOver(actualFats, fatsTarget) ? 'border-red-500/50 bg-red-500/5' : 'border-border/10'}`}>
- <span className="text-[10px] text-amber-500 font-extrabold uppercase tracking-widest block mb-1">Fats</span>
- <span className={`text-xl sm:text-2xl md:text-3xl font-black block ${isOver(actualFats, fatsTarget) ? 'text-red-500' : 'text-amber-500'}`}>
- {actualFats} <span className="text-sm sm:text-base md:text-xl text-muted font-bold">/ {fatsTarget}g</span>
- </span>
- </div>
- </div>
+  {/* Macro Rings + Macro Breakdown cards Side by Side */}
+  <div className="flex flex-row gap-2 sm:gap-4 print-card mt-4">
+  <div className="w-[38%] sm:w-1/3 md:w-1/4 glass rounded-2xl sm:rounded-3xl border border-border/10 flex flex-col items-center justify-center py-4 px-1 shadow-sm shrink-0">
+  <span className="text-[10px] font-black text-muted uppercase tracking-widest block mb-2 text-center">Today's Eaten</span>
+  <div className="scale-[0.55] sm:scale-75 md:scale-90 origin-top -mb-16 sm:-mb-10 md:-mb-4">
+  <MacroRings
+  protein={eatenProtein}
+  carbs={eatenCarbs}
+  fats={eatenFats}
+  calories={eatenCals}
+  proteinTarget={actualProtein}
+  carbsTarget={actualCarbs}
+  fatsTarget={actualFats}
+  calsTarget={actualCals}
+  />
+  </div>
+  </div>
+
+  <div className="flex-1 grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-4">
+  <div className={`glass p-3 sm:p-5 rounded-2xl border transition-colors duration-300 flex flex-col justify-center ${isOver(actualCals, calsTarget) ? 'border-red-500/50 bg-red-500/5' : 'border-border/10'}`}>
+  <span className="text-[9px] sm:text-[10px] text-muted font-extrabold uppercase tracking-widest block mb-0.5 sm:mb-1 truncate">Calories</span>
+  <span className={`text-lg sm:text-2xl md:text-3xl font-black block leading-none ${isOver(actualCals, calsTarget) ? 'text-red-500' : 'text-foreground'}`}>
+  {actualCals} <span className="text-[10px] sm:text-base md:text-xl text-muted font-bold block sm:inline">/ {calsTarget}</span> <span className="hidden sm:inline text-[10px] sm:text-xs text-muted font-bold ml-1">kcal</span>
+  </span>
+  </div>
+  
+  <div className={`glass p-3 sm:p-5 rounded-2xl border transition-colors duration-300 flex flex-col justify-center ${isUnder(actualProtein, proteinTarget) ? 'border-amber-500/50 bg-amber-500/5' : isOver(actualProtein, proteinTarget * 1.3) ? 'border-red-500/50 bg-red-500/5' : 'border-border/10'}`}>
+  <span className="text-[9px] sm:text-[10px] text-emerald-500 font-extrabold uppercase tracking-widest block mb-0.5 sm:mb-1 truncate">Protein</span>
+  <span className={`text-lg sm:text-2xl md:text-3xl font-black block leading-none ${isUnder(actualProtein, proteinTarget) ? 'text-amber-500' : isOver(actualProtein, proteinTarget * 1.3) ? 'text-red-500' : 'text-emerald-500'}`}>
+  {actualProtein} <span className="text-[10px] sm:text-base md:text-xl text-muted font-bold block sm:inline">/ {proteinTarget}g</span>
+  </span>
+  </div>
+  
+  <div className={`glass p-3 sm:p-5 rounded-2xl border transition-colors duration-300 flex flex-col justify-center ${isOver(actualCarbs, carbsTarget) ? 'border-red-500/50 bg-red-500/5' : 'border-border/10'}`}>
+  <span className="text-[9px] sm:text-[10px] text-cyan-500 font-extrabold uppercase tracking-widest block mb-0.5 sm:mb-1 truncate">Carbs</span>
+  <span className={`text-lg sm:text-2xl md:text-3xl font-black block leading-none ${isOver(actualCarbs, carbsTarget) ? 'text-red-500' : 'text-cyan-500'}`}>
+  {actualCarbs} <span className="text-[10px] sm:text-base md:text-xl text-muted font-bold block sm:inline">/ {carbsTarget}g</span>
+  </span>
+  </div>
+  
+  <div className={`glass p-3 sm:p-5 rounded-2xl border transition-colors duration-300 flex flex-col justify-center ${isOver(actualFats, fatsTarget) ? 'border-red-500/50 bg-red-500/5' : 'border-border/10'}`}>
+  <span className="text-[9px] sm:text-[10px] text-amber-500 font-extrabold uppercase tracking-widest block mb-0.5 sm:mb-1 truncate">Fats</span>
+  <span className={`text-lg sm:text-2xl md:text-3xl font-black block leading-none ${isOver(actualFats, fatsTarget) ? 'text-red-500' : 'text-amber-500'}`}>
+  {actualFats} <span className="text-[10px] sm:text-base md:text-xl text-muted font-bold block sm:inline">/ {fatsTarget}g</span>
+  </span>
+  </div>
+  </div>
+  </div>
 
   {/* Premium Plan Warning */}
   {isPremiumPlanUsed && (

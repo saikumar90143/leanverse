@@ -5,8 +5,10 @@ import { Check, ShieldCheck, Sparkles, Flame, Apple, Dumbbell, X } from 'lucide-
 import confetti from 'canvas-confetti';
 
 import { useAuth } from '@/components/layout/AuthProvider';
+import { useRouter } from 'next/navigation';
 
 export default function PricingPage() {
+  const router = useRouter();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
   const [upgrading, setUpgrading] = useState(false);
   const { user, updateUserSession,logout } = useAuth();
@@ -43,6 +45,7 @@ export default function PricingPage() {
           colors: ['#10b981', '#06b6d4', '#f59e0b']
         });
         alert(`Congratulations! You have successfully claimed your 1-Year Free Lean Pro membership!`);
+        router.back();
       } else {
         if (res.status === 401) {
           alert('Your session has expired. Please log in again.');
