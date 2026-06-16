@@ -11,6 +11,31 @@ import { transformationExercises } from '@/lib/transformationExercises';
 import { clearWorkoutsCache } from '@/lib/gamification';
 import { recalculateAllStats } from '@/lib/userStats';
 
+function checkAlreadyWorkedOutToday(state: TransformationState | null): boolean {
+  if (!state || state.currentDay <= 1) return false;
+  const prev = state.schedule[state.currentDay - 2];
+  if (!prev || !prev.completed || !prev.dateCompleted) return false;
+  
+  const today = new Date().toDateString();
+  if (new Date(prev.dateCompleted).toDateString() !== today) return false;
+
+  if (prev.mainExercises && prev.mainExercises.length > 0) {
+    let didExercisesToday = false;
+    prev.mainExercises.forEach(ex => {
+      if (state.exerciseHistory && state.exerciseHistory[ex.exerciseId]) {
+        const history = state.exerciseHistory[ex.exerciseId];
+        const lastSession = history[history.length - 1];
+        if (lastSession && new Date(lastSession.date).toDateString() === today) {
+          didExercisesToday = true;
+        }
+      }
+    });
+    return didExercisesToday;
+  }
+  
+  return false;
+}
+
 export default function AIWorkoutPlanner() {
  const [isMounted, setIsMounted] = useState(false);
  const router = useRouter();
@@ -332,7 +357,7 @@ export default function AIWorkoutPlanner() {
  const dayIndex = state.currentDay - 1;
  const prevDay = dayIndex > 0 ? state.schedule[dayIndex - 1] : null;
  
- if (prevDay && prevDay.dateCompleted && new Date(prevDay.dateCompleted).toDateString() === new Date().toDateString()) {
+ if (checkAlreadyWorkedOutToday(state)) {
  alert("You've already conquered today's mission! Rest up and come back tomorrow.");
  return;
  }
@@ -904,7 +929,7 @@ export default function AIWorkoutPlanner() {
  const allCompleted = activeDay.isRestDay || (activeDay.mainExercises.length > 0 && activeDay.mainExercises.every(ex => ex.completed));
  
  const prevDay = state.currentDay > 1 ? state.schedule[state.currentDay - 2] : null;
- const isAlreadyWorkedOutToday = prevDay?.dateCompleted ? new Date(prevDay.dateCompleted).toDateString() === new Date().toDateString() : false;
+ const isAlreadyWorkedOutToday = checkAlreadyWorkedOutToday(state);
  
  const canComplete = allCompleted && !isAlreadyWorkedOutToday && !isPastDay && !isFutureDay;
 
