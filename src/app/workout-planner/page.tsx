@@ -1041,13 +1041,21 @@ export default function AIWorkoutPlanner() {
  <p className="text-muted max-w-md mx-auto mb-8">
  Your muscles grow outside the gym. Focus on hydration, light mobility, and sleep today.
  </p>
+
+ {!isPastDay ? (
  <button 
  onClick={handleCompleteWorkout} 
- disabled={isAlreadyWorkedOutToday}
- className={`px-8 py-4 font-bold rounded-2xl shadow-lg transition-all cursor-pointer text-lg mb-4 block mx-auto ${isAlreadyWorkedOutToday ? 'bg-secondary text-muted cursor-not-allowed' : 'bg-emerald-500 hover:bg-emerald-600 text-white'}`}
+ disabled={!canComplete}
+ className={`px-8 py-4 font-bold rounded-2xl shadow-lg transition-all text-lg mb-4 block mx-auto ${canComplete ? 'bg-emerald-500 hover:bg-emerald-600 text-white cursor-pointer' : 'bg-secondary text-muted cursor-not-allowed'}`}
  >
- {isAlreadyWorkedOutToday ? 'Come Back Tomorrow!' : 'Mark Rest Day Complete (+50 XP)'}
+ {isAlreadyWorkedOutToday ? 'Come Back Tomorrow!' : isFutureDay ? 'Complete previous days first' : 'Mark Rest Day Complete (+50 XP)'}
  </button>
+ ) : (
+ <div className="w-full max-w-xs mx-auto mb-4 py-4 font-black text-lg rounded-2xl bg-secondary dark:bg-card/5 text-emerald-500 flex items-center justify-center space-x-2 border border-border/50 dark:border-border">
+ <CheckCircle2 className="w-5 h-5" />
+ <span>Rest Day Completed</span>
+ </div>
+ )}
  
  {!isPastDay && (
  <button 
