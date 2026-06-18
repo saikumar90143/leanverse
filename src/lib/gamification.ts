@@ -353,7 +353,7 @@ export function getWeeklyGoalProgress(weeklyGoalTarget: number = 4): {
   completed: number;
   goal: number;
   percentage: number;
-  days: { date: string; dayName: string; hasWorkout: boolean; isToday: boolean; isFuture: boolean }[];
+  days: { date: string; dayName: string; hasWorkout: boolean; isLoggedRestDay: boolean; isToday: boolean; isFuture: boolean }[];
 } {
   const db = getWorkoutsDb();
   const today = new Date();
@@ -372,12 +372,36 @@ export function getWeeklyGoalProgress(weeklyGoalTarget: number = 4): {
     const d = new Date(monday);
     d.setDate(monday.getDate() + i);
     const dateStr = formatLocalDate(d);
-    const hasWorkout = hasCompletedSetForDate(db, dateStr);
+    
+    // Check workout vs rest day
+    let hasWorkout = false;
+    let isLoggedRestDay = false;
+    const entry = db[dateStr];
+    
+    if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
+      const exercises = (entry as Record<string, unknown>).exercises;
+      if (Array.isArray(exercises)) {
+        if (exercises.length === 0) {
+          isLoggedRestDay = true;
+        } else {
+          hasWorkout = exercises.some((ex: unknown) => {
+            if (!ex || typeof ex !== 'object' || ex === null) return false;
+            const sets = (ex as Record<string, unknown>).sets;
+            if (!Array.isArray(sets)) return false;
+            return sets.some((s: unknown) => {
+              if (!s || typeof s !== 'object' || s === null) return false;
+              return (s as Record<string, unknown>).completed === true;
+            });
+          });
+        }
+      }
+    }
+
     const isToday = dateStr === todayStr;
     const isFuture = d > today && !isToday;
 
-    if (hasWorkout) completed++;
-    days.push({ date: dateStr, dayName: dayNames[i], hasWorkout, isToday, isFuture });
+    if (hasWorkout || isLoggedRestDay) completed++;
+    days.push({ date: dateStr, dayName: dayNames[i], hasWorkout, isLoggedRestDay, isToday, isFuture });
   }
 
   return {

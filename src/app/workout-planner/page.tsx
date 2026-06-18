@@ -19,6 +19,10 @@ function checkAlreadyWorkedOutToday(state: TransformationState | null): boolean 
   const today = new Date().toDateString();
   if (new Date(prev.dateCompleted).toDateString() !== today) return false;
 
+  // If we reach here, it was completed today.
+  // If it's a rest day, it counts as today's activity completed.
+  if (prev.isRestDay) return true;
+
   if (prev.mainExercises && prev.mainExercises.length > 0) {
     let didExercisesToday = false;
     prev.mainExercises.forEach(ex => {
@@ -33,7 +37,7 @@ function checkAlreadyWorkedOutToday(state: TransformationState | null): boolean 
     return didExercisesToday;
   }
   
-  return false;
+  return true; // Fallback to true if it was marked complete today but had no exercises
 }
 
 export default function AIWorkoutPlanner() {

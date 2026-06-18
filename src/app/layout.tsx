@@ -87,6 +87,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased scroll-smooth scroll-pt-24`}
       suppressHydrationWarning
+      data-scroll-behavior="smooth"
     >
       <head>
         <meta name="theme-color" content="#10b981" />

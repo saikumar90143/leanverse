@@ -28,6 +28,7 @@ export default function WeeklyWorkoutTracker({ weeklyGoal = 4, restDays = [] }: 
 
   const getDayStatus = (day: typeof data.days[0], index: number) => {
     if (day.hasWorkout) return 'completed';
+    if (day.isLoggedRestDay) return 'rest';
     if (restDays.includes(index)) return 'rest';
     if (day.isFuture) return 'upcoming';
     return 'missed';
