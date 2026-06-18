@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Dumbbell, Sparkles, Play, Pause, RotateCcw, CheckCircle2, ChevronRight, Activity, Clock, Flame, Trophy, Star, Shield, ArrowRight, Target, Plus, Search, X, Trash2 } from 'lucide-react';
+import { Dumbbell, Sparkles, Play, Pause, RotateCcw, CheckCircle2, ChevronRight, Activity, Clock, Flame, Trophy, Star, Shield, ArrowRight, Target, Plus, Search, X, Trash2, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/layout/AuthProvider';
 import { getUserStorageKey, formatLocalDate } from '@/lib/storage';
@@ -788,133 +788,131 @@ export default function AIWorkoutPlanner() {
  if (!user || !isMounted) return null;
 
  const renderWizard = () => (
- <div className="glass rounded-3xl p-6 sm:p-8 shadow-2xl border border-border/20 dark:border-border max-w-2xl mx-auto">
- <div className="flex items-center space-x-3 mb-6">
- <div className="p-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white">
- <Dumbbell className="w-6 h-6" />
- </div>
- <div>
- <h1 className="text-xl sm:text-2xl font-black tracking-wide text-foreground">
- Transformation Journey Engine
+ <div className="relative z-10 glass bg-card/60 backdrop-blur-3xl border border-border/50 dark:border-border rounded-3xl p-6 sm:p-8 shadow-2xl shadow-emerald-500/10 max-w-2xl mx-auto">
+
+ <div className="flex items-center justify-between mb-6 border-b border-border/50 dark:border-border pb-4">
+ <h1 className="text-xl font-black flex items-center gap-2">
+ <Zap className="w-5 h-5 text-emerald-500" />
+ Create Your Workout Plan
  </h1>
- <p className="text-xs text-muted mt-0.5">
- Build a personalized, gamified, multi-phase fitness journey.
- </p>
- </div>
- </div>
-
- <div className="flex items-center space-x-2 mb-8">
- <div className={`h-1.5 flex-1 rounded-full ${step >= 1 ? 'bg-emerald-500' : 'bg-secondary dark:bg-card/10'}`} />
- <div className={`h-1.5 flex-1 rounded-full ${step >= 2 ? 'bg-emerald-500' : 'bg-secondary dark:bg-card/10'}`} />
+ <span className="text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded-md">
+ Takes 30s
+ </span>
  </div>
 
- {step === 1 && (
- <div className="space-y-5 animate-fade-in">
- <span className="text-xs font-black text-muted uppercase tracking-widest block mb-4">Step 1: Focus & Timeline</span>
- 
- <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
- <div className="space-y-1">
- <span className="text-xs font-bold text-muted block ml-1">Transformation Goal</span>
- <select value={goal} onChange={(e) => setGoal(e.target.value as Goal)} className="w-full bg-secondary/50 border border-border/20 dark:border-border rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:border-emerald-500">
- <option value="muscle">Muscle Building</option>
- <option value="fatloss">Fat Loss</option>
- <option value="leanbulk">Lean Bulk</option>
- <option value="strength">Strength</option>
- <option value="recomp">Body Recomposition</option>
- </select>
- </div>
- <div className="space-y-1">
- <span className="text-xs font-bold text-muted block ml-1">Journey Length</span>
- <select value={timelineDays} onChange={(e) => setTimelineDays(parseInt(e.target.value))} className="w-full bg-secondary/50 border border-border/20 dark:border-border rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:border-emerald-500">
- <option value="30">30 Days (Quick Reset)</option>
- <option value="60">60 Days (Transformation)</option>
- <option value="90">90 Days (Complete Rebuild)</option>
- <option value="120">120 Days (Elite Journey)</option>
- </select>
- </div>
- <div className="space-y-1">
- <span className="text-xs font-bold text-muted block ml-1">Duration</span>
- <select value={duration} onChange={(e) => setDuration(parseInt(e.target.value) as any)} className="w-full bg-secondary/50 border border-border/20 dark:border-border rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:border-emerald-500">
- <option value="30">30 min</option>
- <option value="45">45 min</option>
- <option value="60">60 min</option>
- <option value="90">90 min</option>
- </select>
- </div>
+ {/* AI / Custom toggle */}
+ <div className="flex bg-secondary dark:bg-card/5 p-1 rounded-xl mb-6 border border-border/50 dark:border-border">
+ <button onClick={() => setGoal('muscle')} className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${goal !== 'custom plan' ? 'bg-card dark:bg-secondary text-emerald-500 shadow-sm' : 'text-muted hover:text-foreground'}`}>AI Generated</button>
+ <button onClick={() => setGoal('custom plan')} className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${goal === 'custom plan' ? 'bg-card dark:bg-secondary text-emerald-500 shadow-sm' : 'text-muted hover:text-foreground'}`}>Custom Plan</button>
  </div>
 
+ <div className="space-y-5">
+
+ {/* 1. Goal (AI only) */}
  {goal !== 'custom plan' && (
- <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
- <div className="space-y-1">
- <span className="text-xs font-bold text-muted block ml-1">Experience</span>
- <select value={experience} onChange={(e) => setExperience(e.target.value as ExperienceLevel)} className="w-full bg-secondary/50 border border-border/20 dark:border-border rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:border-emerald-500">
- <option value="beginner">Beginner</option>
- <option value="intermediate">Intermediate</option>
- <option value="advanced">Advanced</option>
- </select>
- </div>
- <div className="space-y-1">
- <span className="text-xs font-bold text-muted block ml-1">Days / Week</span>
- <select value={daysPerWeek} onChange={(e) => setDaysPerWeek(parseInt(e.target.value) as any)} className="w-full bg-secondary/50 border border-border/20 dark:border-border rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:border-emerald-500">
- <option value="3">3 Days</option>
- <option value="4">4 Days</option>
- <option value="5">5 Days</option>
- <option value="6">6 Days</option>
- </select>
- </div>
- </div>
- )}
-
- {goal === 'custom plan' ? (
- <button onClick={handleGenerate} disabled={loading} className="w-full mt-6 py-3.5 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center space-x-1 cursor-pointer">
- {loading ? <RotateCcw className="w-4 h-4 animate-spin mr-1" /> : <Sparkles className="w-4 h-4 mr-1 text-amber-300" />}
- <span>Build Custom Journey</span>
+ <div className="space-y-2">
+ <label className="text-xs font-bold text-muted uppercase tracking-wider">1. Primary Goal</label>
+ <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+ {[['muscle', 'Build Muscle'], ['fatloss', 'Fat Loss'], ['leanbulk', 'Lean Bulk'], ['strength', 'Strength'], ['recomp', 'Recomposition']].map(([val, label]) => (
+ <button key={val} onClick={() => setGoal(val as Goal)} className={`py-3 px-3 rounded-xl font-bold text-sm border transition-all ${goal === val ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'bg-background dark:bg-card/5 border-border/30 dark:border-border text-muted hover:bg-secondary dark:hover:bg-card/10'}`}>
+ {label}
  </button>
- ) : (
- <button onClick={() => setStep(2)} className="w-full mt-6 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition-all flex items-center justify-center space-x-1 cursor-pointer">
- <span>Next Phase</span>
- <ChevronRight className="w-4 h-4" />
- </button>
- )}
+ ))}
+ </div>
  </div>
  )}
 
- {step === 2 && (
- <div className="space-y-5 animate-fade-in">
- <span className="text-xs font-black text-muted uppercase tracking-widest block mb-4">Step 2: Environment & Gear</span>
- 
- <div className="grid grid-cols-2 gap-2 p-1 bg-secondary/50 dark:bg-card/5 border border-border/10 rounded-2xl mb-4">
- <button onClick={() => setLocation('gym')} className={`py-2.5 text-xs font-black rounded-xl transition-all cursor-pointer ${location === 'gym' ? 'bg-emerald-500 text-white shadow-md' : 'text-muted'}`}>Commercial Gym</button>
- <button onClick={() => setLocation('home')} className={`py-2.5 text-xs font-black rounded-xl transition-all cursor-pointer ${location === 'home' ? 'bg-emerald-500 text-white shadow-md' : 'text-muted'}`}>Home Setup</button>
+ {/* 2. Location (AI only) */}
+ {goal !== 'custom plan' && (
+ <div className="space-y-2">
+ <label className="text-xs font-bold text-muted uppercase tracking-wider">2. Workout Location</label>
+ <div className="grid grid-cols-2 gap-2">
+ <button onClick={() => setLocation('gym')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${location === 'gym' ? 'bg-cyan-500/10 border-cyan-500 text-cyan-600 dark:text-cyan-400' : 'bg-background dark:bg-card/5 border-border/30 dark:border-border text-muted hover:bg-secondary dark:hover:bg-card/10'}`}>Commercial Gym</button>
+ <button onClick={() => setLocation('home')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${location === 'home' ? 'bg-cyan-500/10 border-cyan-500 text-cyan-600 dark:text-cyan-400' : 'bg-background dark:bg-card/5 border-border/30 dark:border-border text-muted hover:bg-secondary dark:hover:bg-card/10'}`}>Home Workout</button>
  </div>
-
- {location === 'home' ? (
- <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
- {[{id: 'dumbbells', name: 'Dumbbells'}, {id: 'barbell', name: 'Barbell'}, {id: 'cables', name: 'Cables'}, {id: 'bodyweight', name: 'Bodyweight Only'}].map((eq) => (
- <button
- key={eq.id} onClick={() => toggleEquipment(eq.id)}
- className={`py-3 px-4 rounded-xl border text-xs font-bold transition-all flex items-center space-x-2.5 cursor-pointer ${equipment.includes(eq.id) ? 'border-emerald-500 bg-emerald-500/10 text-emerald-500' : 'border-border/10 bg-secondary/50 dark:bg-card/5 text-muted'}`}
- >
- <Dumbbell className="w-4 h-4 shrink-0" />
+ {location === 'home' && (
+ <div className="pt-2">
+ <label className="text-[10px] font-bold text-muted uppercase tracking-wider mb-2 block">Home Equipment</label>
+ <div className="flex flex-wrap gap-2">
+ {[{id: 'dumbbells', name: 'Dumbbells'}, {id: 'barbell', name: 'Barbell'}, {id: 'cables', name: 'Cables'}, {id: 'bodyweight', name: 'Bodyweight'}].map((eq) => (
+ <button key={eq.id} onClick={() => toggleEquipment(eq.id)} className={`py-2 px-3 rounded-xl border text-[10px] font-bold transition-all flex items-center space-x-1 cursor-pointer ${equipment.includes(eq.id) ? 'border-cyan-500 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400' : 'border-border/50 bg-background dark:bg-card/5 text-muted hover:bg-secondary dark:hover:bg-card/10'}`}>
+ <Dumbbell className="w-3 h-3 shrink-0" />
  <span>{eq.name}</span>
  </button>
  ))}
  </div>
- ) : (
- <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center">
- <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Commercial Gym Selected: All equipment unlocked!</span>
+ </div>
+ )}
  </div>
  )}
 
- <div className="flex space-x-3 mt-6">
- <button onClick={() => setStep(1)} className="flex-1 py-3 bg-secondary/50 dark:bg-card/5 text-muted rounded-2xl font-bold transition-all cursor-pointer">Back</button>
- <button onClick={handleGenerate} disabled={loading} className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center space-x-1 cursor-pointer">
- {loading ? <RotateCcw className="w-4 h-4 animate-spin mr-1" /> : <Sparkles className="w-4 h-4 mr-1 text-amber-300" />}
- <span>Build Journey</span>
+ {/* 3. Timeline */}
+ <div className="space-y-2">
+ <label htmlFor="wp-timeline" className="text-xs font-bold text-muted uppercase tracking-wider">
+ {goal !== 'custom plan' ? '3. Timeline' : '1. Transformation Period'}
+ </label>
+ <select id="wp-timeline" value={timelineDays} onChange={(e) => setTimelineDays(parseInt(e.target.value))} className="w-full bg-background dark:bg-card/5 border border-border/50 dark:border-border rounded-xl px-4 py-3 text-sm font-bold text-foreground dark:text-muted focus:outline-none focus:border-emerald-500">
+ <option value={30}>30 Days</option>
+ <option value={60}>60 Days</option>
+ <option value={90}>90 Days</option>
+ <option value={120}>120 Days</option>
+ </select>
+ </div>
+
+ {/* 4. Experience (AI only) */}
+ {goal !== 'custom plan' && (
+ <div className="space-y-2">
+ <label className="text-xs font-bold text-muted uppercase tracking-wider">4. Experience Level</label>
+ <div className="grid grid-cols-3 gap-2">
+ {['beginner', 'intermediate', 'advanced'].map(exp => (
+ <button key={exp} onClick={() => setExperience(exp as ExperienceLevel)} className={`py-2 px-2 rounded-xl font-bold text-xs border transition-all capitalize ${experience === exp ? 'bg-purple-500/10 border-purple-500 text-purple-600 dark:text-purple-400' : 'bg-background dark:bg-card/5 border-transparent text-muted hover:bg-secondary dark:hover:bg-card/10'}`}>
+ {exp}
  </button>
+ ))}
  </div>
  </div>
  )}
+
+ {/* 5+6. Duration & Days (AI only) */}
+ {goal !== 'custom plan' && (
+ <div className="grid grid-cols-2 gap-4">
+ <div className="space-y-2">
+ <label htmlFor="wp-duration" className="text-[10px] font-bold text-muted uppercase tracking-wider">5. Duration</label>
+ <select id="wp-duration" value={duration} onChange={(e) => setDuration(parseInt(e.target.value) as any)} className="w-full bg-background dark:bg-card/5 border border-border/50 dark:border-border rounded-xl px-4 py-3 text-sm font-bold text-foreground dark:text-muted focus:outline-none focus:border-emerald-500">
+ <option value={30}>30 min</option>
+ <option value={45}>45 min</option>
+ <option value={60}>60 min</option>
+ <option value={90}>90 min</option>
+ </select>
+ </div>
+ <div className="space-y-2">
+ <label htmlFor="wp-days" className="text-[10px] font-bold text-muted uppercase tracking-wider">6. Days/Week</label>
+ <select id="wp-days" value={daysPerWeek} onChange={(e) => setDaysPerWeek(parseInt(e.target.value) as any)} className="w-full bg-background dark:bg-card/5 border border-border/50 dark:border-border rounded-xl px-4 py-3 text-sm font-bold text-foreground dark:text-muted focus:outline-none focus:border-emerald-500">
+ <option value={3}>3 Days</option>
+ <option value={4}>4 Days</option>
+ <option value={5}>5 Days</option>
+ <option value={6}>6 Days</option>
+ </select>
+ </div>
+ </div>
+ )}
+
+ <button
+ aria-label={goal !== 'custom plan' ? 'Generate AI Workout Plan' : 'Build Custom Plan'}
+ onClick={handleGenerate}
+ disabled={loading}
+ className="w-full mt-4 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-black text-lg rounded-xl shadow-lg transition-transform active:scale-95 flex justify-center items-center gap-2 disabled:opacity-70"
+ >
+ {loading ? (
+ <><RotateCcw className="w-5 h-5 animate-spin" /> Generating...</>
+ ) : goal !== 'custom plan' ? (
+ <><Sparkles className="w-5 h-5" /> Generate AI Workout Plan</>
+ ) : (
+ <><Dumbbell className="w-5 h-5" /> Build Custom Plan</>
+ )}
+ </button>
+
+ </div>
  </div>
  );
 
