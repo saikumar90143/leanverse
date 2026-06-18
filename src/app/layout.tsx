@@ -6,10 +6,12 @@ import { ThemeProvider } from '@/components/layout/ThemeProvider';
 import { AuthProvider } from '@/components/layout/AuthProvider';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import AIChatbot from '@/components/shared/AIChatbot';
-import PWARegister from '@/components/layout/PWARegister';
-import CookieBanner from '@/components/layout/CookieBanner';
-import ScrollToTop from '@/components/shared/ScrollToTop';
+import dynamic from 'next/dynamic';
+
+const AIChatbot = dynamic(() => import('@/components/shared/AIChatbot'));
+const PWARegister = dynamic(() => import('@/components/layout/PWARegister'));
+const CookieBanner = dynamic(() => import('@/components/layout/CookieBanner'));
+const ScrollToTop = dynamic(() => import('@/components/shared/ScrollToTop'));
 
 const geistSans = Geist({
   variable: '--font-geist-sans',

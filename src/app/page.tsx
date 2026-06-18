@@ -10,7 +10,8 @@ import {
  Flame, TrendingUp, Calendar, Target, Activity, Clock, Shield,
  CheckCircle2, Zap, Trophy, Play, X
 } from 'lucide-react';
-import AdContainer from '@/components/ads/AdContainer';
+import dynamic from 'next/dynamic';
+const AdContainer = dynamic(() => import('@/components/ads/AdContainer'), { ssr: false });
 import { getStreak, getLifetimeVolume, getLevelProgress } from '@/lib/gamification';
 import { useAuth } from '@/components/layout/AuthProvider';
 import { getUserStorageKey } from '@/lib/storage';
