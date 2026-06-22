@@ -48,13 +48,19 @@ export function getUserStats(): UserStatsCache {
   return recalculateAllStats();
 }
 
-/**
- * Updates the O(1) cache.
- */
 export function saveUserStats(stats: UserStatsCache): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(getUserStorageKey('leanverse_user_stats'), JSON.stringify(stats));
+    
+    // Asynchronously sync PRs to the database
+    if (stats.prs && Object.keys(stats.prs).length > 0) {
+      fetch('/api/personal-records', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prs: stats.prs }),
+      }).catch(err => console.error('Failed to sync PRs to DB', err));
+    }
   } catch (e) {
     console.error('Failed to save user stats', e);
   }

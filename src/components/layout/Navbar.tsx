@@ -109,9 +109,9 @@ export default function Navbar() {
 
   const navLinks = [
     { name: 'Home', path: '/' },
+    { name: 'Workout Planner', path: '/workout-planner', icon: Dumbbell },
     { name: 'Diet Planner', path: '/diet-planner', icon: Apple },
     { name: 'Food Scanner', path: '/food-scanner', icon: Camera },
-    { name: 'Streak', path: '/streak', icon: Flame },
     { name: 'Personal Records', path: '/personal-records', icon: Trophy },
     { name: 'Store', path: '/store', icon: ShoppingBag },
     { name: 'Blog', path: '/blog' },

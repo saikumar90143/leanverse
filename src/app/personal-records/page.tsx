@@ -41,47 +41,68 @@ export default function PersonalRecordsPage() {
      .catch(console.error);
  }, [user?.id]);
 
- useEffect(() => {
- setIsMounted(true);
- 
- // We only load data once mounted to avoid hydration mismatch
- if (!user) {
-   setLoading(false);
-   return;
- }
+  useEffect(() => {
+    setIsMounted(true);
+    
+    // We only load data once mounted to avoid hydration mismatch
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
- try {
-  const stats = getUserStats();
-  const calculatedPRs: PRData[] = [];
-  const allExercises = [...transformationExercises, ...dbExercises];
+    const fetchPRs = async () => {
+      try {
+        const res = await fetch('/api/personal-records');
+        const data = await res.json();
+        
+        let prsObj = data.prs;
+        
+        // Fallback to local cache if DB is empty (Migration Step)
+        if (!prsObj || Object.keys(prsObj).length === 0) {
+          const stats = getUserStats();
+          if (stats.prs && Object.keys(stats.prs).length > 0) {
+            prsObj = stats.prs;
+            // Sync locally stored PRs up to the new DB since it's empty on the server
+            fetch('/api/personal-records', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ prs: prsObj }),
+            }).catch(console.error);
+          }
+        }
 
-  Object.entries(stats.prs).forEach(([exerciseId, prStats]: [string, any]) => {
-  const meta = allExercises.find(e => e.id === exerciseId || (e as any)._id === exerciseId);
-  if (meta) {
-  calculatedPRs.push({
-  exerciseId,
-  name: meta.name,
-  muscleGroup: meta.muscleGroup,
-  imageUrl: (meta as any).imageUrl,
-  maxWeight: prStats.maxWeight,
-  maxReps: prStats.maxReps,
-  maxRepsAtMaxWeight: prStats.maxRepsAtMaxWeight,
-  estimated1RM: prStats.estimated1RM,
-  lastPerformed: prStats.lastPerformed
-  });
-  }
-  });
+        const calculatedPRs: PRData[] = [];
+        const allExercises = [...transformationExercises, ...dbExercises];
 
-  // Sort by recently performed
-  calculatedPRs.sort((a, b) => new Date(b.lastPerformed).getTime() - new Date(a.lastPerformed).getTime());
-  
-  setPrList(calculatedPRs);
- } catch (e) {
- console.error('Failed to load PRs', e);
- } finally {
- setLoading(false);
- }
- }, [user, dbExercises]);
+        Object.entries(prsObj || {}).forEach(([exerciseId, prStats]: [string, any]) => {
+          const meta = allExercises.find(e => e.id === exerciseId || (e as any)._id === exerciseId);
+          if (meta) {
+            calculatedPRs.push({
+              exerciseId,
+              name: meta.name,
+              muscleGroup: meta.muscleGroup,
+              imageUrl: (meta as any).imageUrl,
+              maxWeight: prStats.maxWeight,
+              maxReps: prStats.maxReps,
+              maxRepsAtMaxWeight: prStats.maxRepsAtMaxWeight,
+              estimated1RM: prStats.estimated1RM,
+              lastPerformed: prStats.lastPerformed
+            });
+          }
+        });
+
+        // Sort by recently performed
+        calculatedPRs.sort((a, b) => new Date(b.lastPerformed).getTime() - new Date(a.lastPerformed).getTime());
+        setPrList(calculatedPRs);
+      } catch (e) {
+        console.error('Failed to load PRs', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPRs();
+  }, [user, dbExercises]);
 
  const filteredPRs = useMemo(() => {
  return prList.filter(pr => {
