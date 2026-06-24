@@ -14,7 +14,7 @@ import TransformationPrograms from '@/components/home/TransformationPrograms';
 import PremiumComparison from '@/components/home/PremiumComparison';
 import ReviewButton from '@/components/home/ReviewButton';
 import AdContainer from '@/components/ads/AdContainer';
-import AIVoiceNote from '@/components/shared/AIVoiceNote';
+
 
 export default async function HomePage() {
   let formattedBlogs: any[] = [];
@@ -104,9 +104,6 @@ export default async function HomePage() {
  >
  Check Maintenance Calories
  </Link>
- </div>
- <div className="mt-4">
-   <AIVoiceNote />
  </div>
  </div>
 
