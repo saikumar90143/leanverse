@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ShoppingBag, Star, RefreshCw, X, ExternalLink, Sparkles, Check, ChevronRight } from 'lucide-react';
-import confetti from 'canvas-confetti';
+
 
 interface Product {
  name: string;

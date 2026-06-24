@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Check, ShieldCheck, Sparkles, Flame, Apple, Dumbbell, X } from 'lucide-react';
-import confetti from 'canvas-confetti';
+
 
 import { useAuth } from '@/components/layout/AuthProvider';
 import { useRouter } from 'next/navigation';
@@ -38,12 +38,12 @@ export default function PricingPage() {
       
       if (res.ok && data.user) {
         updateUserSession({ tier: 'pro', subscriptionExpiresAt: data.user.subscriptionExpiresAt });
-        confetti({
+        import('canvas-confetti').then((confetti) => confetti.default({
           particleCount: 150,
           spread: 80,
           origin: { y: 0.6 },
           colors: ['#10b981', '#06b6d4', '#f59e0b']
-        });
+        }));
         alert(`Congratulations! You have successfully claimed your 1-Year Free Lean Pro membership!`);
         router.back();
       } else {

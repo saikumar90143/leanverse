@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Plus, Search, Edit2, Trash2, CheckCircle, Clock, FileText, X, Calendar, Image as ImageIcon, Loader2, Sparkles } from 'lucide-react';
 import ImageUploader from '@/components/ui/ImageUploader';
+import Image from 'next/image';
 
 interface BlogPost {
  _id: string;
@@ -317,7 +318,7 @@ export default function BlogSection() {
     <div className="flex items-center gap-4 p-3 bg-background dark:bg-card/5 border border-border/20 dark:border-border rounded-xl">
       {editing.coverImage ? (
         <div className="relative group">
-          <img src={editing.coverImage} alt="Cover Preview" className="w-16 h-16 rounded-lg object-cover bg-card" />
+          <Image src={editing.coverImage} alt="Cover Preview" width={64} height={64} className="w-16 h-16 rounded-lg object-cover bg-card" />
           <button 
             onClick={() => setEditing((p: any) => ({ ...p, coverImage: '' }))}
             className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"

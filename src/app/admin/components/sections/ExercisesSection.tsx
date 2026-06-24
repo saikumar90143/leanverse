@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Plus, Search, Edit2, Trash2, X, Filter } from 'lucide-react';
 import ImageUploader from '@/components/ui/ImageUploader';
+import Image from 'next/image';
 
 interface Exercise {
  _id: string;
@@ -149,7 +150,7 @@ export default function ExercisesSection() {
  <td className="px-4 py-3">
  <div className="flex items-center gap-3">
  {ex.imageUrl ? (
- <img src={ex.imageUrl} alt={ex.name} className="w-8 h-8 rounded-lg object-cover" />
+ <Image src={ex.imageUrl} alt={ex.name} width={32} height={32} className="w-8 h-8 rounded-lg object-cover" />
  ) : (
  <div className="w-8 h-8 rounded-lg bg-secondary dark:bg-card/5 flex items-center justify-center">
  <span className="text-[10px] font-bold text-muted">{ex.name.charAt(0)}</span>
@@ -276,7 +277,7 @@ export default function ExercisesSection() {
  <div className="flex items-center gap-4 p-3 bg-background dark:bg-card/5 border border-border/20 dark:border-border rounded-xl">
  {editing.imageUrl ? (
  <div className="relative group">
- <img src={editing.imageUrl} alt="Preview" className="w-16 h-16 rounded-lg object-cover bg-card" />
+ <Image src={editing.imageUrl} alt="Preview" width={64} height={64} className="w-16 h-16 rounded-lg object-cover bg-card" />
  <button 
  onClick={() => setEditing((p: any) => ({ ...p, imageUrl: '' }))}
  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"

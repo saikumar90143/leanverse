@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/layout/AuthProvider';
 import { Sparkles, Mail, Lock, User, AlertCircle, ArrowRight } from 'lucide-react';
-import confetti from 'canvas-confetti';
+
 
 function GoogleIcon() {
   return (
@@ -79,12 +79,12 @@ function LoginForm() {
   }, [user, router, redirectTo]);
 
   const triggerConfetti = () => {
-    confetti({
+    import('canvas-confetti').then((confetti) => confetti.default({
       particleCount: 100,
       spread: 70,
       origin: { y: 0.6 },
       colors: ['#10b981', '#06b6d4', '#fbbf24'],
-    });
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

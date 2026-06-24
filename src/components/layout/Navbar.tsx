@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useTheme } from './ThemeProvider';
 import { useAuth } from './AuthProvider';
@@ -134,11 +135,14 @@ export default function Navbar() {
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     }
     return () => {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     };
   }, [mobileMenuOpen]);
 
@@ -187,7 +191,7 @@ export default function Navbar() {
               }}
               className="flex items-center space-x-2 shrink-0"
             >
-              <img src="/icon.svg" alt="LeanVerse Logo" width="36" height="36" className="w-8 h-8 sm:w-9 sm:h-9 shrink-0" />
+              <Image src="/icon.svg" alt="LeanVerse Logo" width={36} height={36} className="w-8 h-8 sm:w-9 sm:h-9 shrink-0" priority />
               <span className="text-xl sm:text-2xl font-black tracking-wider bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent leading-none pb-1">
                 LEAN<span className="font-light text-foreground">VERSE</span>
               </span>
@@ -201,6 +205,7 @@ export default function Navbar() {
                 <Link 
                   key={link.path} 
                   href={link.path}
+                  prefetch={!['/', '/workout-planner', '/diet-planner'].includes(link.path) ? false : undefined}
                   className={`relative px-3 py-2 rounded-full text-sm font-semibold tracking-wide transition-all ${
                     isActive(link.path)
                       ? 'text-emerald-500 dark:text-emerald-400 font-bold'
@@ -245,6 +250,7 @@ export default function Navbar() {
                         <Link
                           key={calc.path}
                           href={calc.path}
+                          prefetch={false}
                           className="block px-4 py-2 text-sm text-foreground hover:bg-emerald-500/10 dark:text-muted dark:hover:bg-emerald-400/20 hover:text-emerald-500 dark:hover:text-emerald-400 font-medium transition-all"
                         >
                           {calc.name}
@@ -328,6 +334,7 @@ export default function Navbar() {
                 {user.role === 'admin' && (
                   <Link 
                     href="/admin"
+                    prefetch={false}
                     className="px-3 py-2 rounded-full bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-bold transition-all shadow-md"
                   >
                     Admin
@@ -373,6 +380,8 @@ export default function Navbar() {
         </div>
       </div>
 
+      </header>
+
       {/* Mobile Drawer menu / Bottom Sheet */}
       <AnimatePresence>
         {mobileMenuOpen && (
@@ -388,8 +397,8 @@ export default function Navbar() {
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="lg:hidden fixed bottom-[64px] left-0 right-0 z-[52] bg-card dark:bg-secondary border-t border-border/20 dark:border-border max-h-[80vh] overflow-y-auto shadow-2xl rounded-t-3xl"
+              transition={{ type: 'tween', ease: [0.16, 1, 0.3, 1], duration: 0.4 }}
+              className="lg:hidden fixed bottom-[64px] left-0 right-0 z-[52] bg-card dark:bg-secondary border-t border-border/20 dark:border-border max-h-[80vh] overflow-y-auto shadow-2xl rounded-t-3xl will-change-transform"
             >
               <div className="px-4 pt-4 pb-6 space-y-2 flex flex-col relative">
                 <button 
@@ -407,6 +416,7 @@ export default function Navbar() {
                   <Link
                     key={link.path}
                     href={link.path}
+                    prefetch={false}
                     className={`px-4 py-2.5 rounded-2xl text-base font-semibold transition-all ${
                       isActive(link.path)
                         ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400'
@@ -424,6 +434,7 @@ export default function Navbar() {
                       <Link
                         key={calc.path}
                         href={calc.path}
+                        prefetch={false}
                         className={`px-3 py-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all truncate block ${
                           isActive(calc.path)
                             ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400'
@@ -455,6 +466,7 @@ export default function Navbar() {
                       {user.role === 'admin' && (
                         <Link 
                           href="/admin"
+                          prefetch={false}
                           className="block w-full py-2.5 rounded-2xl bg-cyan-600 text-white font-bold shadow-sm"
                         >
                           Admin Dashboard
@@ -508,7 +520,6 @@ export default function Navbar() {
           </>
         )}
       </AnimatePresence>
-      </header>
 
       {/* Mobile Bottom Navigation Bar */}
       <nav className={`lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-background/95 dark:bg-background/95 backdrop-blur-xl border-t border-border/20 dark:border-border pb-safe transition-all duration-300 ${keyboardOpen ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}>

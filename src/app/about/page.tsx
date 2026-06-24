@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin, Send, HelpCircle, Shield, Award } from 'lucide-react';
-import confetti from 'canvas-confetti';
+
 
 export default function AboutContactPage() {
   const [name, setName] = useState('');
@@ -18,10 +18,10 @@ export default function AboutContactPage() {
       setName('');
       setEmail('');
       setMsg('');
-      confetti({
+      import('canvas-confetti').then((confetti) => confetti.default({
         particleCount: 40,
         spread: 30,
-      });
+      }));
       alert('Your message was successfully compiled and dispatched to our admin support desk!');
     }, 1000);
   };

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Dumbbell, Sparkles, Play, Pause, RotateCcw, CheckCircle2, ChevronRight, Activity, Clock, Flame, Trophy, Star, Shield, ArrowRight, Target, Plus, Search, X, Trash2, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useAuth } from '@/components/layout/AuthProvider';
 import { getUserStorageKey, formatLocalDate } from '@/lib/storage';
 import { TransformationState, UserProfile, Goal, WorkoutLocation, ExperienceLevel, WorkoutExercise } from '@/lib/types/transformation';
@@ -1095,7 +1096,7 @@ export default function AIWorkoutPlanner() {
  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
  <div className={`flex gap-4 items-start ${ex.completed ? 'opacity-60' : ''}`}>
  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden shrink-0 border border-border/10 shadow-inner bg-secondary relative group-hover:scale-105 transition-transform duration-500">
- <img src={getExerciseImage(ex.muscleGroup, ex.pattern, ex.name, ex.imageUrl, ex.exerciseId)} alt={ex.name} className="w-full h-full object-cover" />
+ <Image src={getExerciseImage(ex.muscleGroup, ex.pattern, ex.name, ex.imageUrl, ex.exerciseId)} alt={ex.name} width={48} height={48} className="w-full h-full object-cover" />
  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
  <span className="absolute bottom-2 right-2 text-[10px] font-black tracking-widest uppercase text-background">{ex.muscleGroup || 'Exercise'}</span>
  </div>

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/layout/AuthProvider';
 import { UserSession } from '@/components/layout/AuthProvider';
 import { Sparkles } from 'lucide-react';
-import confetti from 'canvas-confetti';
+
 
 export default function GoogleSuccessPage() {
   const router = useRouter();
@@ -25,12 +25,12 @@ export default function GoogleSuccessPage() {
       const session = decoded as UserSession;
       loginWithSession(session);
 
-      confetti({
+      import('canvas-confetti').then((confetti) => confetti.default({
         particleCount: 120,
         spread: 80,
         origin: { y: 0.6 },
         colors: ['#10b981', '#06b6d4', '#fbbf24'],
-      });
+      }));
 
       setTimeout(() => {
         router.replace('/dashboard');

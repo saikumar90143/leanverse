@@ -7,6 +7,7 @@ import { transformationExercises } from '@/lib/transformationExercises';
 import { getUserStats } from '@/lib/userStats';
 import { useAuth } from '@/components/layout/AuthProvider';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface PRData {
  exerciseId: string;
@@ -217,7 +218,7 @@ export default function PersonalRecordsPage() {
  <div className="flex items-center gap-3">
  {pr.imageUrl ? (
  <div className="w-12 h-12 rounded-xl overflow-hidden bg-card shrink-0 border border-border/50 dark:border-border">
- <img src={pr.imageUrl} alt={pr.name} className="w-full h-full object-cover mix-blend-multiply dark:mix-blend-normal" />
+ <Image src={pr.imageUrl} alt={pr.name} width={48} height={48} className="w-full h-full object-cover mix-blend-multiply dark:mix-blend-normal" />
  </div>
  ) : (
  <div className="w-12 h-12 rounded-xl bg-secondary dark:bg-card/5 flex items-center justify-center shrink-0 border border-border/50 dark:border-border">

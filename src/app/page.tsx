@@ -1,109 +1,47 @@
-'use client';
-
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { motion, useScroll, useTransform } from 'framer-motion';
 import { 
  Sparkles, Dumbbell, ArrowRight, Calculator, Star, ChevronDown, 
  Flame, TrendingUp, Calendar, Target, Activity, Clock, Shield,
  CheckCircle2, Zap, Trophy, Play, X
 } from 'lucide-react';
-import dynamic from 'next/dynamic';
-const AdContainer = dynamic(() => import('@/components/ads/AdContainer'), { ssr: false });
-import { getStreak, getLifetimeVolume, getLevelProgress } from '@/lib/gamification';
-import { useAuth } from '@/components/layout/AuthProvider';
-import { getUserStorageKey } from '@/lib/storage';
+
+import dbConnect from '@/lib/db';
+import BlogPost from '@/lib/models/BlogPost';
+import QuickStartWizard from '@/components/home/QuickStartWizard';
+import TransformationPrograms from '@/components/home/TransformationPrograms';
+import PremiumComparison from '@/components/home/PremiumComparison';
+import ReviewButton from '@/components/home/ReviewButton';
+import AdContainer from '@/components/ads/AdContainer';
 import AIVoiceNote from '@/components/shared/AIVoiceNote';
 
-export default function HomePage() {
- const router = useRouter();
- const { user } = useAuth();
+export default async function HomePage() {
+  let formattedBlogs: any[] = [];
+  try {
+    await dbConnect();
+    const latestBlogs = await BlogPost.find({ status: 'published' })
+      .select('title slug summary category coverImage author publishedAt createdAt')
+      .sort({ publishedAt: -1, createdAt: -1 })
+      .limit(3)
+      .lean();
+      
+    formattedBlogs = latestBlogs.map((p: any) => ({
+      slug: p.slug,
+      title: p.title,
+      summary: p.summary,
+      category: p.category || 'Fitness',
+      coverImage: p.coverImage || 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&q=80',
+      date: p.publishedAt
+        ? new Date(p.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        : new Date(p.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      author: p.author || 'LeanVerse Team',
+    }));
+  } catch (e) {
+    console.error('Failed to fetch blogs', e);
+  }
 
- // Quick Start Wizard State
- const [qsMode, setQsMode] = useState('ai');
- const [qsGoal, setQsGoal] = useState('muscle');
- const [qsLocation, setQsLocation] = useState('gym');
- const [qsExperience, setQsExperience] = useState('beginner');
- const [qsEquipment, setQsEquipment] = useState<string[]>(['dumbbells', 'bodyweight']);
-
- const toggleQsEquipment = (eq: string) => {
-   setQsEquipment((prev) => prev.includes(eq) ? prev.filter((item) => item !== eq) : [...prev, eq]);
- };
- const [qsDuration, setQsDuration] = useState(60);
- const [qsDaysPerWeek, setQsDaysPerWeek] = useState(4);
- const [qsTimelineDays, setQsTimelineDays] = useState(90);
-
- const handleQuickStart = (overrides?: { goal?: string, location?: string, experience?: string, timelineDays?: number, equipment?: string[] }) => {
- try {
- // Check if user already has an active plan
- const storageKey = getUserStorageKey('leanverse_transformation');
- if (localStorage.getItem(storageKey)) {
- if (confirm('You already have an active transformation plan! Please go to the planner to view it or discard it first before creating a new one. Go to Planner now?')) {
- router.push('/workout-planner');
- }
- return;
- }
-
- // Store pending configuration in localStorage to be picked up by the planner after login
- localStorage.setItem('leanverse_pending_wizard', JSON.stringify({
- goal: qsMode === 'custom' ? 'custom plan' : (overrides?.goal || qsGoal),
- location: overrides?.location || qsLocation,
- experience: overrides?.experience || qsExperience,
- timelineDays: overrides?.timelineDays || qsTimelineDays,
- duration: qsDuration,
- daysPerWeek: qsDaysPerWeek,
- equipment: overrides?.equipment || qsEquipment,
- autoGenerate: true
- }));
- } catch {}
- // The workout planner route is protected, so this will ultimately force a login
- // then redirect back to the planner!
- router.push('/workout-planner');
- };
-
- // Gamification Mock Data for Hero Visual
- const [mounted, setMounted] = useState(false);
- const [dynamicStats, setDynamicStats] = useState({ streak: 0, progress: 0 });
- const [latestBlogs, setLatestBlogs] = useState<any[]>([]);
- const [blogsLoading, setBlogsLoading] = useState(true);
- 
- useEffect(() => {
- setMounted(true);
- try {
- const vol = getLifetimeVolume();
- setDynamicStats({
- streak: user?.streak ?? getStreak(),
- progress: Math.round(getLevelProgress(vol) * 100)
- });
- } catch {}
- }, [user]);
-
- useEffect(() => {
- fetch('/api/blogs?limit=3')
- .then(res => res.json())
- .then(data => {
- if (data.success && data.posts) {
- const formatted = data.posts.slice(0, 3).map((p: any) => ({
- slug: p.slug,
- title: p.title,
- summary: p.summary,
- category: p.category || 'Fitness',
- coverImage: p.coverImage || 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&q=80',
- date: p.publishedAt
- ? new Date(p.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
- : new Date(p.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
- author: p.author || 'LeanVerse Team',
- }));
- setLatestBlogs(formatted);
- }
- setBlogsLoading(false);
- })
- .catch(() => setBlogsLoading(false));
- }, []);
-
- return (
+  return (
  <div className="space-y-0 pb-20">
  
  {/* 1. HERO & QUICK START WIZARD */}
@@ -173,138 +111,8 @@ export default function HomePage() {
  </div>
 
  {/* Right: Quick Start Wizard & Dashboard Mock */}
- <div 
- id="quick-start-wizard"
- className="lg:col-span-6 relative"
- >
- {/* The Floating UI Dashboard Mock */}
- <div className="relative z-10 glass bg-card/60 backdrop-blur-3xl border border-border/50 dark:border-border rounded-3xl p-6 shadow-2xl shadow-emerald-500/10">
+ <QuickStartWizard />
  
- <div className="flex items-center justify-between mb-6 border-b border-border/50 dark:border-border pb-4">
- <h2 className="text-xl font-black flex items-center md:text-lg text-xs gap-2">
- <Zap className="w-5 h-5 text-emerald-500" />
- Create Your Workout Plan
- </h2>
- <span className="text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded-md">
- Takes 30s
- </span>
- </div>
-
- <div className="flex bg-secondary dark:bg-card/5 p-1 rounded-xl mb-6 border border-border/50 dark:border-border">
- <button onClick={() => setQsMode('ai')} className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${qsMode === 'ai' ? 'bg-card dark:bg-secondary text-emerald-500 shadow-sm' : 'text-muted hover:text-foreground dark:hover:text-slate-300'}`}>AI Generated</button>
- <button onClick={() => setQsMode('custom')} className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${qsMode === 'custom' ? 'bg-card dark:bg-secondary text-emerald-500 shadow-sm' : 'text-muted hover:text-foreground dark:hover:text-slate-300'}`}>Custom Plan</button>
- </div>
-
- <div className="space-y-5">
- {/* Goal (AI Only) */}
- {qsMode === 'ai' && (
- <div className="space-y-2">
- <label className="text-xs font-bold text-muted uppercase tracking-wider">1. Primary Goal</label>
- <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
- <button onClick={() => setQsGoal('fatloss')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsGoal === 'fatloss' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'bg-background dark:bg-card/5 border-border/30 dark:border-border text-muted hover:bg-secondary dark:hover:bg-card/10'}`}>Fat Loss</button>
- <button onClick={() => setQsGoal('muscle')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsGoal === 'muscle' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'bg-background dark:bg-card/5 border-border/30 dark:border-border text-muted hover:bg-secondary dark:hover:bg-card/10'}`}>Build Muscle</button>
- </div>
- </div>
- )}
-
- {/* Location (AI Only) */}
- {qsMode === 'ai' && (
- <div className="space-y-2">
- <label className="text-xs font-bold text-muted uppercase tracking-wider">2. Workout Location</label>
- <div className="grid grid-cols-2 gap-2">
- <button onClick={() => setQsLocation('gym')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsLocation === 'gym' ? 'bg-cyan-500/10 border-cyan-500 text-cyan-600 dark:text-cyan-400' : 'bg-background dark:bg-card/5 border-border/30 dark:border-border text-muted hover:bg-secondary dark:hover:bg-card/10'}`}>Commercial Gym</button>
- <button onClick={() => setQsLocation('home')} className={`py-3 px-4 rounded-xl font-bold text-sm border transition-all ${qsLocation === 'home' ? 'bg-cyan-500/10 border-cyan-500 text-cyan-600 dark:text-cyan-400' : 'bg-background dark:bg-card/5 border-border/30 dark:border-border text-muted hover:bg-secondary dark:hover:bg-card/10'}`}>Home Workout</button>
- </div>
- {qsLocation === 'home' && (
-   <div className="pt-2">
-     <label className="text-[10px] font-bold text-muted uppercase tracking-wider mb-2 block">Home Equipment</label>
-     <div className="flex flex-wrap gap-2">
-       {[{id: 'dumbbells', name: 'Dumbbells'}, {id: 'barbell', name: 'Barbell'}, {id: 'cables', name: 'Cables'}, {id: 'bodyweight', name: 'Bodyweight'}].map((eq) => (
-         <button
-           key={eq.id} onClick={() => toggleQsEquipment(eq.id)}
-           className={`py-2 px-3 rounded-xl border text-[10px] font-bold transition-all flex items-center space-x-1 cursor-pointer ${qsEquipment.includes(eq.id) ? 'border-cyan-500 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400' : 'border-border/50 bg-background dark:bg-card/5 text-muted hover:bg-secondary dark:hover:bg-card/10'}`}
-         >
-           <Dumbbell className="w-3 h-3 shrink-0" />
-           <span>{eq.name}</span>
-         </button>
-       ))}
-     </div>
-   </div>
- )}
- </div>
- )}
-
- {/* Timeline (Both Modes) */}
- <div className="space-y-2">
- <label htmlFor="qsTimelineDays" className="text-xs font-bold text-muted uppercase tracking-wider">
- {qsMode === 'ai' ? '3. Timeline' : '1. Transformation Period'}
- </label>
- <select id="qsTimelineDays" value={qsTimelineDays} onChange={(e) => setQsTimelineDays(parseInt(e.target.value))} className="w-full bg-background dark:bg-card/5 border border-border/50 dark:border-border rounded-xl px-4 py-3 text-sm font-bold text-black dark:text-muted focus:outline-none focus:border-emerald-500">
- <option value={30}>30 Days</option>
- <option value={60}>60 Days</option>
- <option value={90}>90 Days</option>
- <option value={120}>120 Days</option>
- </select>
- </div>
-
- {/* AI Only Options */}
- {qsMode === 'ai' && (
- <>
- {/* Experience */}
- <div className="space-y-2">
- <label className="text-xs font-bold text-muted uppercase tracking-wider">4. Experience Level</label>
- <div className="grid grid-cols-3 gap-2">
- {['beginner', 'intermediate', 'advanced'].map(exp => (
- <button key={exp} onClick={() => setQsExperience(exp)} className={`py-2 px-2 rounded-xl font-bold text-xs border transition-all capitalize ${qsExperience === exp ? 'bg-purple-500/10 border-purple-500 text-purple-600 dark:text-purple-400' : 'bg-background dark:bg-card/5 border-transparent text-muted hover:bg-secondary dark:hover:bg-card/10'}`}>
- {exp}
- </button>
- ))}
- </div>
- </div>
-
- <div className="grid grid-cols-2 gap-4">
- {/* Duration */}
- <div className="space-y-2">
- <label htmlFor="qsDuration" className="text-[10px] font-bold text-muted uppercase tracking-wider">5. Duration</label>
- <select id="qsDuration" value={qsDuration} onChange={(e) => setQsDuration(parseInt(e.target.value))} className="w-full bg-background dark:bg-card/5 border border-border/50 dark:border-border rounded-xl px-4 py-3 text-sm font-bold text-foreground dark:text-muted focus:outline-none focus:border-emerald-500">
- <option value={30}>30 min</option>
- <option value={45}>45 min</option>
- <option value={60}>60 min</option>
- <option value={90}>90 min</option>
- </select>
- </div>
-
- {/* Days per week */}
- <div className="space-y-2">
- <label htmlFor="qsDaysPerWeek" className="text-[10px] font-bold text-muted uppercase tracking-wider">6. Days/Week</label>
- <select id="qsDaysPerWeek" value={qsDaysPerWeek} onChange={(e) => setQsDaysPerWeek(parseInt(e.target.value))} className="w-full bg-background dark:bg-card/5 border border-border/50 dark:border-border rounded-xl px-4 py-3 text-sm font-bold text-foreground dark:text-muted focus:outline-none focus:border-emerald-500">
- <option value={3}>3 Days</option>
- <option value={4}>4 Days</option>
- <option value={5}>5 Days</option>
- <option value={6}>6 Days</option>
- </select>
- </div>
- </div>
- </>
- )}
-
- <button aria-label={qsMode === 'ai' ? 'Generate AI Transformation' : 'Build Custom Plan'} onClick={() => handleQuickStart()} className="w-full mt-4 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-black text-lg rounded-xl shadow-lg transition-transform active:scale-95 flex justify-center items-center gap-2">
- {qsMode === 'ai' ? (
- <>
- <Sparkles className="w-5 h-5" />
- Generate AI Transformation
- </>
- ) : (
- <>
- <Dumbbell className="w-5 h-5" />
- Build Custom Plan
- </>
- )}
- </button>
- </div>
- </div>
-
- </div>
  </div>
  </section>
 
@@ -848,49 +656,7 @@ export default function HomePage() {
  <h2 className="text-3xl md:text-5xl font-black text-foreground">Complete Transformation Programs</h2>
  </div>
 
- <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
- {[
- { days: 30, title: 'Kickstarter', diff: 'Beginner', success: '94%' },
- { days: 60, title: 'Momentum', diff: 'Intermediate', success: '88%' },
- { days: 90, title: 'Transformation', diff: 'Advanced', success: '91%', highlight: true },
- { days: 120, title: 'Evolution', diff: 'Elite', success: '85%' }
- ].map(prog => (
- <div key={prog.days} className={`relative glass p-6 rounded-3xl border transition-all hover:-translate-y-2 flex flex-col ${prog.highlight ? 'border-emerald-500/50 shadow-2xl shadow-emerald-500/10' : 'border-border/50 dark:border-border'}`}>
- {prog.highlight && (
- <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
- Most Popular
- </span>
- )}
- <div className="text-center mb-6 pt-2">
- <h3 className="text-4xl font-black text-foreground">{prog.days} <span className="text-lg text-muted">Days</span></h3>
- <p className="text-sm font-bold text-muted mt-1">{prog.title}</p>
- </div>
- 
- <div className="space-y-3 mb-8 flex-1">
- <div className="flex justify-between items-center text-sm">
- <span className="text-muted font-medium">Difficulty</span>
- <span className="font-bold text-foreground">{prog.diff}</span>
- </div>
- <div className="flex justify-between items-center text-sm">
- <span className="text-muted font-medium">Success Rate</span>
- <span className="font-bold text-emerald-500">{prog.success}</span>
- </div>
- <div className="flex justify-between items-center text-sm">
- <span className="text-muted font-medium">Structure</span>
- <span className="font-bold text-foreground">Phased</span>
- </div>
- </div>
-
- <button aria-label={`Start ${prog.days} day ${prog.title} program`} onClick={() => handleQuickStart({ 
- timelineDays: prog.days, 
- goal: 'muscle', 
- experience: prog.diff === 'Beginner' ? 'beginner' : prog.diff === 'Elite' ? 'advanced' : 'intermediate' 
- })} className={`w-full py-3 border border-border/20 dark:border-border rounded-xl font-bold text-sm transition-all ${prog.highlight ? 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg border-emerald-400/50 dark:border-emerald-500/50' : 'bg-secondary dark:bg-card/10 hover:bg-slate-300 dark:hover:bg-card/20 text-foreground'}`}>
- Start Program
- </button>
- </div>
- ))}
- </div>
+ <TransformationPrograms />
  </div>
  </section>
 
@@ -969,9 +735,7 @@ export default function HomePage() {
  <p className="text-xs font-black text-foreground">— {review.name}</p>
  </div>
  ))}
- <button onClick={() => alert('Review system coming soon! Thanks for wanting to share your journey.')} className="w-full py-3.5 border-2 border-dashed border-emerald-500/30 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold rounded-2xl hover:bg-emerald-500/5 transition-all text-sm mt-4">
- + Share Your Journey
- </button>
+ <ReviewButton />
  </div>
  </div>
  </section>
@@ -989,22 +753,7 @@ export default function HomePage() {
  </Link>
  </div>
 
- {blogsLoading ? (
- <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
- {[1, 2, 3].map(i => (
- <div key={i} className="glass rounded-3xl overflow-hidden border border-border/50 dark:border-border animate-pulse">
- <div className="h-56 bg-secondary dark:bg-card/10" />
- <div className="p-6 space-y-3">
- <div className="h-3 bg-secondary dark:bg-card/10 rounded-full w-1/3" />
- <div className="h-5 bg-secondary dark:bg-card/10 rounded-full w-full" />
- <div className="h-5 bg-secondary dark:bg-card/10 rounded-full w-4/5" />
- <div className="h-3 bg-secondary dark:bg-card/10 rounded-full w-full" />
- <div className="h-3 bg-secondary dark:bg-card/10 rounded-full w-3/4" />
- </div>
- </div>
- ))}
- </div>
- ) : latestBlogs.length === 0 ? (
+ {formattedBlogs.length === 0 ? (
  <div className="text-center py-16 border-2 border-dashed border-border/50 rounded-3xl">
  <p className="text-muted font-bold text-sm">No articles published yet. Check back soon!</p>
  <Link href="/blog" className="mt-4 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500 text-white font-bold text-sm hover:bg-emerald-400 transition-colors">
@@ -1013,7 +762,7 @@ export default function HomePage() {
  </div>
  ) : (
  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
- {latestBlogs.map((blog) => (
+ {formattedBlogs.map((blog) => (
  <Link key={blog.slug} href={`/blog/${blog.slug}`} className="group flex flex-col rounded-3xl overflow-hidden glass border border-border/50 dark:border-border hover:border-emerald-500/30 transition-all hover:shadow-xl hover:-translate-y-2">
  <div className="h-56 w-full relative overflow-hidden bg-secondary">
  <Image src={blog.coverImage} alt={blog.title} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 400px" className="object-cover transition-transform duration-700 group-hover:scale-105 opacity-80 group-hover:opacity-100" />
@@ -1039,36 +788,7 @@ export default function HomePage() {
  <h2 className="text-3xl md:text-5xl font-black text-foreground">Choose Your Path</h2>
  </div>
 
- <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
- <div className="glass p-8 rounded-3xl border border-border/50 dark:border-border text-center flex flex-col">
- <h3 className="text-2xl font-black text-foreground mb-2">Free Plan</h3>
- <p className="text-muted font-medium mb-8">Everything you need to get started.</p>
- <ul className="space-y-4 mb-8 flex-1 text-left">
- <li className="flex items-center gap-3 text-sm font-bold text-foreground dark:text-muted"><CheckCircle2 className="w-5 h-5 text-emerald-500" /> Basic AI Workout Planner</li>
- <li className="flex items-center gap-3 text-sm font-bold text-foreground dark:text-muted"><CheckCircle2 className="w-5 h-5 text-emerald-500" /> Free Fitness Calculators</li>
- <li className="flex items-center gap-3 text-sm font-bold text-foreground dark:text-muted"><CheckCircle2 className="w-5 h-5 text-emerald-500" /> Single Diet Generation</li>
- <li className="flex items-center gap-3 text-sm font-bold text-muted"><X className="w-5 h-5" /> Detailed Analytics</li>
- <li className="flex items-center gap-3 text-sm font-bold text-muted"><X className="w-5 h-5" /> Priority AI Coach</li>
- </ul>
- <button onClick={() => handleQuickStart()} className="w-full py-4 rounded-xl font-bold bg-foreground text-background cursor-pointer border border-foreground/20 hover:bg-foreground/10">Start Free</button>
- </div>
-
- <div className="glass p-8 rounded-3xl border-2 border-emerald-500 shadow-2xl shadow-emerald-500/20 text-center flex flex-col relative overflow-hidden">
- <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 rounded-bl-full blur-[30px]" />
- <span className="bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full absolute top-4 left-1/2 -translate-x-1/2">Recommended</span>
- 
- <h3 className="text-2xl font-black text-emerald-500 mt-4 mb-2">Pro Access</h3>
- <p className="text-muted font-medium mb-8">Unlock maximum results.</p>
- <ul className="space-y-4 mb-8 flex-1 text-left">
- <li className="flex items-center gap-3 text-sm font-bold text-foreground dark:text-muted"><CheckCircle2 className="w-5 h-5 text-emerald-500" /> Advanced Phased AI Plans</li>
- <li className="flex items-center gap-3 text-sm font-bold text-foreground dark:text-muted"><CheckCircle2 className="w-5 h-5 text-emerald-500" /> Unlimited Regenerations</li>
- <li className="flex items-center gap-3 text-sm font-bold text-foreground dark:text-muted"><CheckCircle2 className="w-5 h-5 text-emerald-500" /> Interactive Progress Graphs</li>
- <li className="flex items-center gap-3 text-sm font-bold text-foreground dark:text-muted"><CheckCircle2 className="w-5 h-5 text-emerald-500" /> Detailed Exercise Analytics</li>
- <li className="flex items-center gap-3 text-sm font-bold text-foreground dark:text-muted"><CheckCircle2 className="w-5 h-5 text-emerald-500" /> Priority 24/7 AI Coach Access</li>
- </ul>
- <Link href="/pricing" className="w-full py-4 rounded-xl font-black bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white shadow-lg shadow-emerald-500/25 inline-block">Upgrade to Pro</Link>
- </div>
- </div>
+ <PremiumComparison />
  </section>
 
 
