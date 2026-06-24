@@ -15,6 +15,7 @@ const AdContainer = dynamic(() => import('@/components/ads/AdContainer'), { ssr:
 import { getStreak, getLifetimeVolume, getLevelProgress } from '@/lib/gamification';
 import { useAuth } from '@/components/layout/AuthProvider';
 import { getUserStorageKey } from '@/lib/storage';
+import AIVoiceNote from '@/components/shared/AIVoiceNote';
 
 export default function HomePage() {
  const router = useRouter();
@@ -165,6 +166,9 @@ export default function HomePage() {
  >
  Check Maintenance Calories
  </Link>
+ </div>
+ <div className="mt-4">
+   <AIVoiceNote />
  </div>
  </div>
 
