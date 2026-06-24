@@ -374,16 +374,16 @@ export default function Navbar() {
           <>
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              animate={{ opacity: 1, pointerEvents: 'auto' }}
+              exit={{ opacity: 0, pointerEvents: 'none' }}
               onClick={() => setMobileMenuOpen(false)}
-              className="lg:hidden fixed inset-0 z-[51] bg-background/80 backdrop-blur-sm"
+              className="lg:hidden fixed inset-0 z-[51] bg-background/90"
             />
             <motion.div
               initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'tween', ease: [0.16, 1, 0.3, 1], duration: 0.4 }}
+              animate={{ y: 0, pointerEvents: 'auto' }}
+              exit={{ y: '100%', pointerEvents: 'none' }}
+              transition={{ type: 'tween', ease: [0.16, 1, 0.3, 1], duration: 0.3 }}
               className="lg:hidden fixed bottom-[64px] left-0 right-0 z-[52] bg-card dark:bg-secondary border-t border-border/20 dark:border-border max-h-[80vh] overflow-y-auto shadow-2xl rounded-t-3xl will-change-transform"
             >
               <div className="px-4 pt-4 pb-6 space-y-2 flex flex-col relative">
