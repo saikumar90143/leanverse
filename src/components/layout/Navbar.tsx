@@ -131,20 +131,6 @@ export default function Navbar() {
     setCalcDropdownOpen(false);
   }, [pathname]);
 
-  // Lock body scroll when mobile menu is open
-  useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-      document.documentElement.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-    };
-  }, [mobileMenuOpen]);
 
   const navLinks = [
     { name: 'Home', path: '/' },
@@ -524,35 +510,35 @@ export default function Navbar() {
       {/* Mobile Bottom Navigation Bar */}
       <nav className={`lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-background/95 dark:bg-background/95 backdrop-blur-xl border-t border-border/20 dark:border-border pb-safe transition-all duration-300 ${keyboardOpen ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}>
         <div className="flex items-center justify-between px-1 sm:px-2 h-16">
-          <Link href="/" className="relative flex flex-col items-center justify-center w-full h-full space-y-1 group">
+          <Link href="/" onClick={() => setMobileMenuOpen(false)} className="relative flex flex-col items-center justify-center w-full h-full space-y-1 group">
             {isActive('/') && (
               <motion.div layoutId="bottomNavIndicator" className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-emerald-500 rounded-b-full shadow-[0_2px_8px_rgba(16,185,129,0.5)]" />
             )}
             <Home className={`w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] transition-all duration-300 ${isActive('/') ? 'text-emerald-500 dark:text-emerald-400 scale-110' : 'text-foreground/60 dark:text-muted group-hover:text-emerald-500'}`} />
             <span className={`text-[9px] sm:text-[10px] font-semibold truncate w-full text-center transition-all ${isActive('/') ? 'text-emerald-500 dark:text-emerald-400' : 'text-foreground/60 dark:text-muted'}`}>Home</span>
           </Link>
-          <Link href="/workout-planner" className="relative flex flex-col items-center justify-center w-full h-full space-y-1 group">
+          <Link href="/workout-planner" onClick={() => setMobileMenuOpen(false)} className="relative flex flex-col items-center justify-center w-full h-full space-y-1 group">
             {isActive('/workout-planner') && (
               <motion.div layoutId="bottomNavIndicator" className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-emerald-500 rounded-b-full shadow-[0_2px_8px_rgba(16,185,129,0.5)]" />
             )}
             <Dumbbell className={`w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] transition-all duration-300 ${isActive('/workout-planner') ? 'text-emerald-500 dark:text-emerald-400 scale-110' : 'text-foreground/60 dark:text-muted group-hover:text-emerald-500'}`} />
             <span className={`text-[9px] sm:text-[10px] font-semibold truncate w-full text-center transition-all ${isActive('/workout-planner') ? 'text-emerald-500 dark:text-emerald-400' : 'text-foreground/60 dark:text-muted'}`}>Workout</span>
           </Link>
-          <Link href="/diet-planner" className="relative flex flex-col items-center justify-center w-full h-full space-y-1 group">
+          <Link href="/diet-planner" onClick={() => setMobileMenuOpen(false)} className="relative flex flex-col items-center justify-center w-full h-full space-y-1 group">
             {isActive('/diet-planner') && (
               <motion.div layoutId="bottomNavIndicator" className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-emerald-500 rounded-b-full shadow-[0_2px_8px_rgba(16,185,129,0.5)]" />
             )}
             <Apple className={`w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] transition-all duration-300 ${isActive('/diet-planner') ? 'text-emerald-500 dark:text-emerald-400 scale-110' : 'text-foreground/60 dark:text-muted group-hover:text-emerald-500'}`} />
             <span className={`text-[9px] sm:text-[10px] font-semibold truncate w-full text-center transition-all ${isActive('/diet-planner') ? 'text-emerald-500 dark:text-emerald-400' : 'text-foreground/60 dark:text-muted'}`}>Diet</span>
           </Link>
-          <Link href="/food-scanner" className="relative flex flex-col items-center justify-center w-full h-full space-y-1 group">
+          <Link href="/food-scanner" onClick={() => setMobileMenuOpen(false)} className="relative flex flex-col items-center justify-center w-full h-full space-y-1 group">
             {isActive('/food-scanner') && (
               <motion.div layoutId="bottomNavIndicator" className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-emerald-500 rounded-b-full shadow-[0_2px_8px_rgba(16,185,129,0.5)]" />
             )}
             <Camera className={`w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] transition-all duration-300 ${isActive('/food-scanner') ? 'text-emerald-500 dark:text-emerald-400 scale-110' : 'text-foreground/60 dark:text-muted group-hover:text-emerald-500'}`} />
             <span className={`text-[9px] sm:text-[10px] font-semibold truncate w-full text-center transition-all ${isActive('/food-scanner') ? 'text-emerald-500 dark:text-emerald-400' : 'text-foreground/60 dark:text-muted'}`}>Scanner</span>
           </Link>
-          <Link href="/personal-records" className="relative flex flex-col items-center justify-center w-full h-full space-y-1 group">
+          <Link href="/personal-records" onClick={() => setMobileMenuOpen(false)} className="relative flex flex-col items-center justify-center w-full h-full space-y-1 group">
             {isActive('/personal-records') && (
               <motion.div layoutId="bottomNavIndicator" className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-emerald-500 rounded-b-full shadow-[0_2px_8px_rgba(16,185,129,0.5)]" />
             )}
