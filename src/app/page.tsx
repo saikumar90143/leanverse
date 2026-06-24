@@ -9,7 +9,7 @@ import {
 
 import dbConnect from '@/lib/db';
 import BlogPost from '@/lib/models/BlogPost';
-import QuickStartWizard from '@/components/home/QuickStartWizard';
+import QuickStartWizardWrapper from '@/components/home/QuickStartWizardWrapper';
 import TransformationPrograms from '@/components/home/TransformationPrograms';
 import PremiumComparison from '@/components/home/PremiumComparison';
 import ReviewButton from '@/components/home/ReviewButton';
@@ -108,7 +108,7 @@ export default async function HomePage() {
  </div>
 
  {/* Right: Quick Start Wizard & Dashboard Mock */}
- <QuickStartWizard />
+ <QuickStartWizardWrapper />
  
  </div>
  </section>
