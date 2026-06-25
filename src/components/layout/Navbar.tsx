@@ -378,7 +378,7 @@ export default function Navbar() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
             onClick={() => setMobileMenuOpen(false)}
-            className="lg:hidden fixed inset-0 z-[51] bg-background/90"
+            className={`lg:hidden fixed inset-0 z-[51] bg-background/90 ${mobileMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
           />
         )}
       </AnimatePresence>
@@ -390,7 +390,7 @@ export default function Navbar() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'tween', ease: [0.16, 1, 0.3, 1], duration: 0.3 }}
-            className="lg:hidden fixed top-0 right-0 bottom-[calc(64px+env(safe-area-inset-bottom))] w-[80vw] sm:w-[350px] z-[52] bg-card dark:bg-secondary border-l border-border/20 dark:border-border overflow-y-auto shadow-2xl rounded-l-3xl will-change-transform"
+            className={`lg:hidden fixed top-0 right-0 bottom-[calc(64px+env(safe-area-inset-bottom))] w-[80vw] sm:w-[350px] z-[52] bg-card dark:bg-secondary border-l border-border/20 dark:border-border overflow-y-auto shadow-2xl rounded-l-3xl will-change-transform ${mobileMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
           >
               <div className="px-4 pt-4 pb-6 space-y-2 flex flex-col relative">
                 <button 
