@@ -8,7 +8,7 @@ import { useTheme } from './ThemeProvider';
 import { useAuth } from './AuthProvider';
 import { 
   Sun, Moon, Menu, X, Flame, User, Calculator, 
-  Dumbbell, Apple, Trophy, ShoppingBag, LayoutDashboard, LogOut, Download, Bell, Camera, Home
+  Dumbbell, Apple, Trophy, ShoppingBag, LayoutDashboard, LogOut, Download, Bell, Camera, Home, Settings, ShieldCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getUserStorageKey } from '@/lib/storage';
@@ -23,6 +23,7 @@ export default function Navbar() {
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const lastScrollY = useRef(0);
   const [calcDropdownOpen, setCalcDropdownOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [hasActiveWorkout, setHasActiveWorkout] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -127,6 +128,7 @@ export default function Navbar() {
   // Close menus on path changes
   useEffect(() => {
     setCalcDropdownOpen(false);
+    setProfileDropdownOpen(false);
   }, [pathname]);
 
 
@@ -153,6 +155,58 @@ export default function Navbar() {
 
   // Hide on admin routes
   if (pathname?.startsWith('/admin')) return null;
+
+  const UserProfileDropdown = () => (
+    <div className="relative z-50">
+      <button 
+        onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+        onBlur={() => setTimeout(() => setProfileDropdownOpen(false), 200)}
+        className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-emerald-500/30 hover:border-emerald-500 overflow-hidden transition-all focus:outline-none bg-secondary/50 flex items-center justify-center text-emerald-500 shrink-0"
+      >
+        {user?.avatar ? (
+          <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
+        ) : (
+          <User className="w-5 h-5" />
+        )}
+      </button>
+      
+      <AnimatePresence>
+        {profileDropdownOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            className="absolute right-0 mt-2 w-48 rounded-2xl py-2 shadow-2xl border border-border/20 dark:border-border bg-background/98 dark:bg-background/98 backdrop-blur-xl z-[70]"
+          >
+            <div className="px-4 py-2 border-b border-border/10 mb-1">
+              <p className="text-sm font-bold text-foreground truncate">{user?.name}</p>
+              <p className="text-xs text-muted truncate">{user?.email}</p>
+            </div>
+            
+            {user?.role === 'admin' && (
+              <Link href="/admin" className="flex items-center px-4 py-2 text-sm text-foreground hover:bg-emerald-500/10 dark:hover:bg-emerald-400/20 hover:text-emerald-500 font-medium transition-all">
+                <ShieldCheck className="w-4 h-4 mr-2" />
+                Admin Dashboard
+              </Link>
+            )}
+            
+            <Link href="/settings" className="flex items-center px-4 py-2 text-sm text-foreground hover:bg-emerald-500/10 dark:hover:bg-emerald-400/20 hover:text-emerald-500 font-medium transition-all">
+              <Settings className="w-4 h-4 mr-2" />
+              Settings
+            </Link>
+            
+            <button 
+              onClick={logout}
+              className="w-full flex items-center px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 font-medium transition-all text-left"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Log out
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 
   return (
     <>
@@ -307,31 +361,7 @@ export default function Navbar() {
                   <LayoutDashboard className="w-4 h-4" />
                   <span className="hidden sm:inline">Dashboard</span>
                 </Link>
-                <Link 
-                  href="/settings/notifications"
-                  className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full glass text-muted hover:text-emerald-500 hover:bg-emerald-500/10 dark:text-muted dark:hover:text-emerald-400 dark:hover:bg-emerald-500/20 transition-all cursor-pointer"
-                  title="Notification Settings"
-                  aria-label="Notification Settings"
-                >
-                  <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
-                </Link>
-                {user.role === 'admin' && (
-                  <Link 
-                    href="/admin"
-                    prefetch={false}
-                    className="px-3 py-2 rounded-full bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-bold transition-all shadow-md"
-                  >
-                    Admin
-                  </Link>
-                )}
-                <button 
-                  onClick={logout}
-                  className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full glass text-muted hover:text-red-500 hover:bg-red-500/10 dark:text-muted dark:hover:text-red-400 dark:hover:bg-red-500/20 transition-all cursor-pointer"
-                  title="Sign Out"
-                  aria-label="Sign Out"
-                >
-                  <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
+                <UserProfileDropdown />
               </div>
             ) : (
               <Link 
@@ -345,25 +375,27 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Menu Buttons */}
-          <div className="flex lg:hidden flex-1 items-center justify-end space-x-1.5 sm:space-x-3 shrink-0">
+          <div className="flex lg:hidden flex-1 items-center justify-end space-x-1.5 sm:space-x-2 shrink-0">
             {isMounted && user && (
-              <div className="flex items-center space-x-0.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-500 text-xs font-black">
-                <Flame className="w-3.5 h-3.5 fill-current" />
+              <div className="flex items-center space-x-0.5 px-2 py-1 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-black">
+                <Flame className="w-3 h-3 fill-current" />
                 <span>{user.streak}d</span>
               </div>
             )}
             <button
               onClick={toggleTheme}
-              className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full glass text-foreground dark:text-muted"
+              className="p-1.5 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-full glass text-foreground dark:text-muted"
               aria-label="Toggle Theme"
             >
-              {isMounted ? (theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-foreground" />) : <div className="w-5 h-5" />}
+              {isMounted ? (theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-foreground" />) : <div className="w-4 h-4" />}
             </button>
+            {isMounted && user && (
+              <UserProfileDropdown />
+            )}
           </div>
 
         </div>
       </div>
-
       </header>
 
       {/* Mobile Bottom Navigation Bar */}

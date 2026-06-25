@@ -12,6 +12,7 @@ export interface UserSession {
   badges: string[];
   avatar?: string | null;
   subscriptionExpiresAt?: string | null;
+  authProvider?: 'local' | 'google';
 }
 
 interface AuthContextType {

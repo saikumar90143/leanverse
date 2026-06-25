@@ -129,13 +129,17 @@ export default function NotificationSettings() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
-      <div>
-        <h1 className="text-3xl font-black text-foreground tracking-tight">Notification Settings</h1>
-        <p className="text-muted text-sm mt-1">Control how and when LeanVerse reaches out to you.</p>
-      </div>
-
-      <div className="glass rounded-3xl p-6 border border-border/10 space-y-6 relative overflow-hidden">
+    <div className="space-y-6">
+      <div className="glass rounded-3xl p-6 md:p-8 border border-border/10 space-y-6 relative overflow-hidden">
+        <div className="flex items-center space-x-3 mb-2 border-b border-border/10 pb-6">
+          <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-500 shrink-0">
+            <Bell className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl font-extrabold text-foreground">Notification Preferences</h2>
+            <p className="text-sm text-muted">Control how and when LeanVerse reaches out to you.</p>
+          </div>
+        </div>
         {saving && (
           <div className="absolute top-4 right-6 text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded flex items-center space-x-1 animate-pulse">
             <span className="w-2 h-2 rounded-full bg-emerald-500 block"></span>

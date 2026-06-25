@@ -131,6 +131,7 @@ export async function GET(req: NextRequest) {
       streak: user.streak,
       badges: user.badges,
       avatar: user.avatar || null,
+      authProvider: 'google',
     };
 
     const token = jwt.sign(

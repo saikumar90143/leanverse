@@ -25,7 +25,8 @@ export async function POST(req: Request) {
         tier: 'pro',
         streak: 15,
         badges: ['Elite Creator', 'AdSense Guru', 'Streak Champion'],
-        avatar: undefined
+        avatar: undefined,
+        authProvider: 'local'
       };
 
       if (!process.env.JWT_SECRET) {
@@ -109,7 +110,8 @@ export async function POST(req: Request) {
       tier: user.tier,
       streak: user.streak,
       badges: user.badges,
-      avatar: user.avatar
+      avatar: user.avatar,
+      authProvider: 'local'
     };
 
     if (!process.env.JWT_SECRET) {

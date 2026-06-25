@@ -41,7 +41,8 @@ export async function POST(req: Request) {
       tier: newUser.tier,
       streak: newUser.streak,
       badges: newUser.badges,
-      avatar: newUser.avatar
+      avatar: newUser.avatar,
+      authProvider: 'local'
     };
 
     if (!process.env.JWT_SECRET) {
