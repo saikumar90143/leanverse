@@ -506,8 +506,6 @@ export default function Navbar() {
                 )}
               </div>
             </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Mobile Bottom Navigation Bar */}
       <nav className={`lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-background/95 dark:bg-background/95 backdrop-blur-xl border-t border-border/20 dark:border-border pb-safe transition-all duration-300 touch-manipulation select-none ${keyboardOpen ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}>
