@@ -381,6 +381,8 @@ export default function Navbar() {
             className="lg:hidden fixed inset-0 z-[51] bg-background/90"
           />
         )}
+      </AnimatePresence>
+      <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
             key="mobile-menu"
