@@ -22,7 +22,6 @@ export default function Navbar() {
   const [hiddenTopNav, setHiddenTopNav] = useState(false);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const lastScrollY = useRef(0);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [calcDropdownOpen, setCalcDropdownOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [hasActiveWorkout, setHasActiveWorkout] = useState(false);
@@ -127,7 +126,6 @@ export default function Navbar() {
 
   // Close menus on path changes
   useEffect(() => {
-    setMobileMenuOpen(false);
     setCalcDropdownOpen(false);
   }, [pathname]);
 
@@ -368,145 +366,6 @@ export default function Navbar() {
 
       </header>
 
-      {/* Mobile Drawer menu / Bottom Sheet */}
-      <motion.div
-        initial={false}
-        animate={mobileMenuOpen ? { opacity: 1, display: 'block' } : { opacity: 0, transitionEnd: { display: 'none' } }}
-        transition={{ duration: 0.3 }}
-        onClick={() => setMobileMenuOpen(false)}
-        className="lg:hidden fixed inset-0 z-[51] bg-background/90"
-      />
-
-      <motion.div
-        initial={false}
-        animate={mobileMenuOpen ? { x: 0, display: 'block' } : { x: '100%', transitionEnd: { display: 'none' } }}
-        transition={{ type: 'tween', ease: [0.16, 1, 0.3, 1], duration: 0.3 }}
-        className="lg:hidden fixed top-0 right-0 bottom-[calc(64px+env(safe-area-inset-bottom))] w-[80vw] sm:w-[350px] z-[52] bg-card dark:bg-secondary border-l border-border/20 dark:border-border overflow-y-auto shadow-2xl rounded-l-3xl will-change-transform"
-      >
-              <div className="px-4 pt-4 pb-6 space-y-2 flex flex-col relative">
-                <button 
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="absolute top-4 right-4 p-2 rounded-full bg-secondary/50 dark:bg-card/50 text-foreground hover:bg-secondary dark:hover:bg-card transition-all"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-                <div className="mb-2">
-                  <span className="px-4 text-sm font-bold text-foreground block mt-2">More Options</span>
-                </div>
-                {navLinks
-                  .filter(link => !['/', '/workout-planner', '/diet-planner', '/food-scanner', '/personal-records'].includes(link.path))
-                  .map((link) => (
-                  <Link
-                    key={link.path}
-                    href={link.path}
-                    prefetch={false}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`px-4 py-2.5 rounded-2xl text-base font-semibold transition-all ${
-                      isActive(link.path)
-                        ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400'
-                        : 'text-foreground hover:bg-secondary/20 dark:hover:bg-card/5'
-                    }`}
-                  >
-                    {link.name}
-                  </Link>
-                ))}
-
-                <div className="border-t border-border/10 dark:border-border my-2 pt-2">
-                  <span className="px-4 text-xs font-extrabold text-muted uppercase tracking-widest block mb-2">Calculators</span>
-                  <div className="grid grid-cols-2 gap-1.5 px-2">
-                    {calculators.map((calc) => (
-                      <Link
-                        key={calc.path}
-                        href={calc.path}
-                        prefetch={false}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={`px-3 py-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all truncate block ${
-                          isActive(calc.path)
-                            ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400'
-                            : 'text-foreground hover:text-emerald-500 dark:text-muted dark:hover:text-emerald-400 hover:bg-secondary/10 dark:hover:bg-card/5'
-                        }`}
-                        title={calc.name.replace(' Calculator', '')}
-                      >
-                        {calc.name.replace(' Calculator', '')}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="border-t border-border/10 dark:border-border my-2 pt-4 flex flex-col items-center">
-                  {user ? (
-                    <div className="w-full space-y-2 text-center">
-                      <Link 
-                        href="/dashboard"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="block w-full py-3 rounded-2xl bg-emerald-500 text-white font-bold shadow-md"
-                      >
-                        My Dashboard
-                      </Link>
-                      <Link 
-                        href="/settings/notifications"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="block w-full py-2.5 rounded-2xl bg-secondary dark:bg-card/20 text-foreground font-bold shadow-sm"
-                      >
-                        Notification Settings
-                      </Link>
-                      {user.role === 'admin' && (
-                        <Link 
-                          href="/admin"
-                          prefetch={false}
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="block w-full py-2.5 rounded-2xl bg-cyan-600 text-white font-bold shadow-sm"
-                        >
-                          Admin Dashboard
-                        </Link>
-                      )}
-                      <button 
-                        onClick={logout}
-                        className="block w-full text-sm font-semibold text-muted hover:text-red-500 py-2"
-                      >
-                        Sign Out
-                      </button>
-                    </div>
-                  ) : (
-                    <Link 
-                      href={`/login?redirect=${encodeURIComponent(pathname)}`}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="block w-full text-center py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold shadow-lg"
-                    >
-                      Get Started / Login
-                    </Link>
-                  )}
-                </div>
-
-                {/* Install App in mobile menu */}
-                {!isInstalled && (
-                  <div className="border-t border-border/10 dark:border-border pt-3">
-                    <button
-                      onClick={async () => {
-                        if (installPrompt) {
-                          try {
-                            await installPrompt.prompt();
-                            const choice = await installPrompt.userChoice;
-                            if (choice.outcome === 'accepted') {
-                              setIsInstalled(true);
-                              setInstallPrompt(null);
-                              localStorage.setItem('lv_app_installed', 'true');
-                            }
-                          } catch {}
-                        } else {
-                          alert('To install: tap your browser menu (3-dot menu or Share) then tap "Add to Home Screen"');
-                        }
-                      }}
-                      className="w-full flex items-center justify-center space-x-2 py-3 rounded-2xl border-2 border-dashed border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-bold text-sm hover:bg-emerald-500/5 transition-all"
-                    >
-                      <Download className="w-4 h-4" />
-                      <span>Install LeanVerse App</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-
       {/* Mobile Bottom Navigation Bar */}
       <nav className={`lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-background/95 dark:bg-background/95 backdrop-blur-xl border-t border-border/20 dark:border-border pb-safe transition-all duration-300 touch-manipulation select-none ${keyboardOpen ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}>
         <div className="flex items-center justify-between px-1 sm:px-2 h-16">
@@ -538,24 +397,20 @@ export default function Navbar() {
             <Camera className={`w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] transition-all duration-300 ${isActive('/food-scanner') ? 'text-emerald-500 dark:text-emerald-400 scale-110' : 'text-foreground/60 dark:text-muted'}`} />
             <span className={`text-[9px] sm:text-[10px] font-semibold truncate w-full text-center transition-all ${isActive('/food-scanner') ? 'text-emerald-500 dark:text-emerald-400' : 'text-foreground/60 dark:text-muted'}`}>Scanner</span>
           </Link>
-          <Link href="/personal-records" className="relative flex flex-col items-center justify-center w-full h-full space-y-1 touch-manipulation">
-            {isActive('/personal-records') && (
+          <Link href="/store" className="relative flex flex-col items-center justify-center w-full h-full space-y-1 touch-manipulation">
+            {isActive('/store') && (
               <motion.div layoutId="bottomNavIndicator" className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-emerald-500 rounded-b-full shadow-[0_2px_8px_rgba(16,185,129,0.5)]" />
             )}
-            <Trophy className={`w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] transition-all duration-300 ${isActive('/personal-records') ? 'text-emerald-500 dark:text-emerald-400 scale-110' : 'text-foreground/60 dark:text-muted'}`} />
-            <span className={`text-[9px] sm:text-[10px] font-semibold truncate w-full text-center transition-all ${isActive('/personal-records') ? 'text-emerald-500 dark:text-emerald-400' : 'text-foreground/60 dark:text-muted'}`}>PR</span>
+            <ShoppingBag className={`w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] transition-all duration-300 ${isActive('/store') ? 'text-emerald-500 dark:text-emerald-400 scale-110' : 'text-foreground/60 dark:text-muted'}`} />
+            <span className={`text-[9px] sm:text-[10px] font-semibold truncate w-full text-center transition-all ${isActive('/store') ? 'text-emerald-500 dark:text-emerald-400' : 'text-foreground/60 dark:text-muted'}`}>Store</span>
           </Link>
-          <button 
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="relative flex flex-col items-center justify-center w-full h-full space-y-1 touch-manipulation"
-          >
-            {mobileMenuOpen ? (
-              <X className="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] text-emerald-500 dark:text-emerald-400 scale-110 transition-all duration-300" />
-            ) : (
-              <Menu className="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] text-foreground/60 dark:text-muted transition-all duration-300" />
+          <Link href="/dashboard" className="relative flex flex-col items-center justify-center w-full h-full space-y-1 touch-manipulation">
+            {isActive('/dashboard') && (
+              <motion.div layoutId="bottomNavIndicator" className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-emerald-500 rounded-b-full shadow-[0_2px_8px_rgba(16,185,129,0.5)]" />
             )}
-            <span className={`text-[9px] sm:text-[10px] font-semibold truncate w-full text-center transition-all ${mobileMenuOpen ? 'text-emerald-500 dark:text-emerald-400' : 'text-foreground/60 dark:text-muted'}`}>Menu</span>
-          </button>
+            <LayoutDashboard className={`w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] transition-all duration-300 ${isActive('/dashboard') ? 'text-emerald-500 dark:text-emerald-400 scale-110' : 'text-foreground/60 dark:text-muted'}`} />
+            <span className={`text-[9px] sm:text-[10px] font-semibold truncate w-full text-center transition-all ${isActive('/dashboard') ? 'text-emerald-500 dark:text-emerald-400' : 'text-foreground/60 dark:text-muted'}`}>Dashboard</span>
+          </Link>
         </div>
       </nav>
     </>

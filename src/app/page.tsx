@@ -59,50 +59,50 @@ export default async function HomePage() {
  <div className="lg:col-span-6 space-y-8">
  <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-foreground/50 dark:bg-card/5 border border-slate-700/50 dark:border-border backdrop-blur-md">
  <Sparkles className="w-4 h-4 text-emerald-400" />
- <span className="text-xs font-bold text-muted tracking-wider uppercase">AI-Powered Fitness Engine</span>
+ <span className="text-xs font-bold text-muted tracking-wider uppercase">The Ultimate Workout Tracker</span>
  </div>
 
  <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground leading-[1.1] tracking-tight">
- Transform Your Body With <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500">AI Plans</span>
+ Stop Forgetting Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500">Weights</span>
  </h1>
 
  <p className="text-lg text-muted font-medium max-w-xl leading-relaxed">
- Get personalized workout plans, diet plans, calorie tracking, and transformation programs designed specifically for your goals, experience level, available equipment, and timeline.
+ Tired of getting to the gym and guessing what you lifted last week? LeanVerse automatically tracks your previous weights, reps, and PRs so you can focus purely on progressive overload without the mental tension.
  </p>
 
  {/* Quick Trust Stats */}
  <div className="grid grid-cols-2 gap-4 py-4 max-w-lg">
  <div className="flex items-center space-x-2">
  <CheckCircle2 className="w-5 h-5 text-emerald-500" />
- <span className="text-sm font-bold text-foreground dark:text-muted">1000+ Exercises</span>
+ <span className="text-sm font-bold text-foreground dark:text-muted">Auto Weight Memory</span>
  </div>
  <div className="flex items-center space-x-2">
  <CheckCircle2 className="w-5 h-5 text-emerald-500" />
- <span className="text-sm font-bold text-foreground dark:text-muted">AI Personalized</span>
+ <span className="text-sm font-bold text-foreground dark:text-muted">Never Guess Again</span>
  </div>
  <div className="flex items-center space-x-2">
  <CheckCircle2 className="w-5 h-5 text-emerald-500" />
- <span className="text-sm font-bold text-foreground dark:text-muted">Home & Gym Workouts</span>
+ <span className="text-sm font-bold text-foreground dark:text-muted">Progressive Overload</span>
  </div>
  <div className="flex items-center space-x-2">
  <CheckCircle2 className="w-5 h-5 text-emerald-500" />
- <span className="text-sm font-bold text-foreground dark:text-muted">Custom Diet Plans</span>
+ <span className="text-sm font-bold text-foreground dark:text-muted">AI Powered Plans</span>
  </div>
  </div>
 
  <div className="flex flex-col sm:flex-row gap-4 pt-2">
  <Link 
- href="/diet-planner"
+ href="/workout-planner"
  className="px-8 py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-black text-lg transition-all shadow-xl shadow-emerald-500/25 flex items-center justify-center space-x-2"
  >
- <span>Generate Diet Plan</span>
+ <span>Track Your Workout</span>
  <ArrowRight className="w-5 h-5" />
  </Link>
  <Link 
- href="/calculators/maintenance"
+ href="/diet-planner"
  className="px-8 py-4 rounded-2xl bg-transparent text-foreground font-bold text-lg transition-all border-2 border-foreground/30 hover:border-emerald-500 hover:text-emerald-500 text-center flex items-center justify-center"
  >
- Check Maintenance Calories
+ Generate Diet Plans
  </Link>
  </div>
  </div>

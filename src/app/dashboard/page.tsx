@@ -5,7 +5,8 @@ import dynamic from 'next/dynamic';
 import { useAuth } from '@/components/layout/AuthProvider';
 import { 
  Flame, Trophy, Apple, Dumbbell, Droplet, Scale, Sparkles, 
- Plus, CheckCircle2, ChevronRight, LayoutDashboard, Bookmark, Target, Search
+ Plus, CheckCircle2, ChevronRight, LayoutDashboard, Bookmark, Target, Search,
+ Newspaper, Gem
 } from 'lucide-react';
 import Link from 'next/link';
 import { getTodayWorkoutSummary } from '@/lib/gamification';
@@ -514,67 +515,41 @@ export default function UserDashboard() {
  </div>
 
 
-  {/* Saved Blueprints & Badges section */}
+ {/* Personal Records Section */}
+ <div className="glass rounded-3xl p-6 md:p-8 border border-border/10">
+ <div className="flex items-center justify-between border-b border-border/10 pb-4 mb-6">
+ <div className="flex items-center space-x-2">
+ <Target className="w-5 h-5 text-rose-500" />
+ <h3 className="font-extrabold text-foreground text-base">Personal Records</h3>
+ </div>
+ <Link href="/personal-records" className="text-xs font-bold text-muted hover:text-rose-500 transition-colors flex items-center">
+ View All <ChevronRight className="w-4 h-4 ml-1" />
+ </Link>
+ </div>
+ <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+ {[
+ { exercise: 'Bench Press', weight: '100 kg', date: '2 days ago', improvement: '+2.5kg' },
+ { exercise: 'Squat', weight: '140 kg', date: '1 week ago', improvement: '+5kg' },
+ { exercise: 'Deadlift', weight: '160 kg', date: '3 weeks ago', improvement: '+10kg' },
+ { exercise: 'Overhead Press', weight: '65 kg', date: '1 month ago', improvement: '+2.5kg' },
+ ].map((pr) => (
+ <div key={pr.exercise} className="bg-secondary/30 dark:bg-card/5 border border-border/50 dark:border-border rounded-2xl p-4 flex flex-col hover:bg-secondary/50 dark:hover:bg-card/10 transition-all cursor-default">
+ <span className="text-xs font-bold text-muted mb-1">{pr.exercise}</span>
+ <div className="flex items-end justify-between mt-auto">
+ <span className="text-lg font-black text-foreground">{pr.weight}</span>
+ <div className="flex flex-col items-end">
+ <span className="text-[10px] font-black text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded-md mb-1">{pr.improvement}</span>
+ <span className="text-[9px] text-muted font-semibold">{pr.date}</span>
+ </div>
+ </div>
+ </div>
+ ))}
+ </div>
+ </div>
+
+ {/* Saved Blueprints & Badges section */}
  <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
- {/* Saved blueprints list */}
- <div className="md:col-span-7 glass rounded-3xl p-6 border border-border/10 space-y-6">
- <div className="flex items-center space-x-2 border-b border-border/10 pb-4">
- <Bookmark className="w-5 h-5 text-emerald-500" />
- <h3 className="font-extrabold text-slate-850 dark:text-foreground text-base">Active Saved Blueprints</h3>
- </div>
 
- <div className="space-y-4">
- {hasDietPlan ? (
- <div className="p-4 bg-secondary/40 dark:bg-card/5 border border-border/5 rounded-2xl flex items-center justify-between group hover:bg-secondary dark:hover:bg-card/10 transition-colors">
- <div className="flex items-center space-x-3">
- <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-500">
- <Apple className="w-6 h-6" />
- </div>
- <div>
- <span className="font-black text-foreground text-sm block">{dietPlanTitle}</span>
- <span className="text-xs font-bold text-muted block mt-0.5">{dietPlanDetails}</span>
- </div>
- </div>
- <Link href="/diet-planner" className="p-2 bg-secondary/50 dark:bg-card/5 group-hover:bg-emerald-500/10 rounded-xl group-hover:text-emerald-500 transition-all text-muted">
- <ChevronRight className="w-5 h-5" />
- </Link>
- </div>
- ) : (
- <Link href="/diet-planner" className="p-6 bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/20 rounded-3xl flex flex-col items-center justify-center text-center transition-all group cursor-pointer shadow-sm">
- <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-500 mb-3 group-hover:scale-110 transition-transform">
- <Apple className="w-6 h-6" />
- </div>
- <span className="font-black text-emerald-600 dark:text-emerald-400 text-sm">Generate Diet Blueprint</span>
- <span className="text-xs font-bold text-muted mt-1">Setup your personalized meal splits</span>
- </Link>
- )}
-
- {hasWorkout ? (
- <div className="p-4 bg-secondary/40 dark:bg-card/5 border border-border/5 rounded-2xl flex items-center justify-between group hover:bg-secondary dark:hover:bg-card/10 transition-colors">
- <div className="flex items-center space-x-3">
- <div className="p-3 rounded-2xl bg-cyan-500/10 text-cyan-500">
- <Dumbbell className="w-6 h-6" />
- </div>
- <div>
- <span className="font-black text-foreground text-sm block">{lastWorkoutName}</span>
- <span className="text-xs font-bold text-muted block mt-0.5">{lastWorkoutDetails}</span>
- </div>
- </div>
- <Link href="/workout-planner" className="p-2 bg-secondary/50 dark:bg-card/5 group-hover:bg-cyan-500/10 rounded-xl group-hover:text-cyan-500 transition-all text-muted">
- <ChevronRight className="w-5 h-5" />
- </Link>
- </div>
- ) : (
- <Link href="/workout-planner" className="p-6 bg-cyan-500/5 hover:bg-cyan-500/10 border border-cyan-500/20 rounded-3xl flex flex-col items-center justify-center text-center transition-all group cursor-pointer shadow-sm">
- <div className="w-12 h-12 bg-cyan-500/10 rounded-full flex items-center justify-center text-cyan-500 mb-3 group-hover:scale-110 transition-transform">
- <Dumbbell className="w-6 h-6" />
- </div>
- <span className="font-black text-cyan-600 dark:text-cyan-400 text-sm">Create Workout Split</span>
- <span className="text-xs font-bold text-muted mt-1">Design your structural muscle plan</span>
- </Link>
- )}
- </div>
- </div>
 
  {/* Achievements list */}
  <div className="md:col-span-5 glass rounded-3xl p-6 border border-border/10 space-y-6">
@@ -602,7 +577,46 @@ export default function UserDashboard() {
  </div>
  </div>
 
- 
+
+ {/* Discover & Upgrade Section */}
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+ {/* Blog Section */}
+ <div className="glass rounded-3xl p-6 md:p-8 border border-border/10 flex flex-col justify-between group hover:border-emerald-500/20 transition-all shadow-sm relative overflow-hidden bg-gradient-to-br from-emerald-500/5 to-cyan-500/5 dark:from-emerald-500/10 dark:to-cyan-500/10">
+ <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all" />
+ <div className="flex items-center space-x-4 mb-4 relative z-10">
+ <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+ <Newspaper className="w-6 h-6" />
+ </div>
+ <div>
+ <h3 className="font-black text-foreground text-lg">Fitness Insights & Blog</h3>
+ <span className="text-xs font-bold text-muted block mt-0.5">Learn, grow, adapt</span>
+ </div>
+ </div>
+ <p className="text-sm font-medium text-muted mb-6 relative z-10">Dive into evidence-based articles, workout strategies, and nutrition tips to accelerate your lean journey.</p>
+ <Link href="/blog" className="mt-auto block w-full py-3 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 dark:text-emerald-400 hover:text-white text-center font-bold transition-all shadow-sm border border-emerald-500/20">
+ Read the Blog
+ </Link>
+ </div>
+
+ {/* Pricing Section */}
+ <div className="glass rounded-3xl p-6 md:p-8 border border-border/10 flex flex-col justify-between group hover:border-amber-500/20 transition-all shadow-sm relative overflow-hidden bg-gradient-to-br from-amber-500/5 to-orange-500/5 dark:from-amber-500/10 dark:to-orange-500/10">
+ <div className="absolute -right-4 -top-4 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all" />
+ <div className="flex items-center space-x-4 mb-4 relative z-10">
+ <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-lg shadow-amber-500/20">
+ <Gem className="w-6 h-6" />
+ </div>
+ <div>
+ <h3 className="font-black text-foreground text-lg">Unlock Premium Features</h3>
+ <span className="text-xs font-bold text-muted block mt-0.5">Take your training to the max</span>
+ </div>
+ </div>
+ <p className="text-sm font-medium text-muted mb-6 relative z-10">Get VIP access to personalized AI blueprints, unlimited diet generation, and advanced analytics tracking.</p>
+ <Link href="/pricing" className="mt-auto block w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white text-center font-bold transition-all shadow-lg shadow-amber-500/20 scale-100 hover:scale-[1.02] active:scale-[0.98]">
+ View Plans
+ </Link>
+ </div>
+ </div>
+
  </div>
  );
 }
