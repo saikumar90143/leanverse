@@ -371,21 +371,24 @@ export default function Navbar() {
       {/* Mobile Drawer menu / Bottom Sheet */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1, pointerEvents: 'auto' }}
-              exit={{ opacity: 0, pointerEvents: 'none' }}
-              onClick={() => setMobileMenuOpen(false)}
-              className="lg:hidden fixed inset-0 z-[51] bg-background/90"
-            />
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0, pointerEvents: 'auto' }}
-              exit={{ y: '100%', pointerEvents: 'none' }}
-              transition={{ type: 'tween', ease: [0.16, 1, 0.3, 1], duration: 0.3 }}
-              className="lg:hidden fixed bottom-[64px] left-0 right-0 z-[52] bg-card dark:bg-secondary border-t border-border/20 dark:border-border max-h-[80vh] overflow-y-auto shadow-2xl rounded-t-3xl will-change-transform"
-            >
+          <motion.div
+            key="mobile-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, pointerEvents: 'auto' }}
+            exit={{ opacity: 0, pointerEvents: 'none' }}
+            onClick={() => setMobileMenuOpen(false)}
+            className="lg:hidden fixed inset-0 z-[51] bg-background/90"
+          />
+        )}
+        {mobileMenuOpen && (
+          <motion.div
+            key="mobile-menu"
+            initial={{ y: '100%' }}
+            animate={{ y: 0, pointerEvents: 'auto' }}
+            exit={{ y: '100%', pointerEvents: 'none' }}
+            transition={{ type: 'tween', ease: [0.16, 1, 0.3, 1], duration: 0.3 }}
+            className="lg:hidden fixed bottom-[64px] left-0 right-0 z-[52] bg-card dark:bg-secondary border-t border-border/20 dark:border-border max-h-[80vh] overflow-y-auto shadow-2xl rounded-t-3xl will-change-transform"
+          >
               <div className="px-4 pt-4 pb-6 space-y-2 flex flex-col relative">
                 <button 
                   onClick={() => setMobileMenuOpen(false)}
@@ -403,6 +406,7 @@ export default function Navbar() {
                     key={link.path}
                     href={link.path}
                     prefetch={false}
+                    onClick={() => setMobileMenuOpen(false)}
                     className={`px-4 py-2.5 rounded-2xl text-base font-semibold transition-all ${
                       isActive(link.path)
                         ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400'
@@ -421,6 +425,7 @@ export default function Navbar() {
                         key={calc.path}
                         href={calc.path}
                         prefetch={false}
+                        onClick={() => setMobileMenuOpen(false)}
                         className={`px-3 py-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all truncate block ${
                           isActive(calc.path)
                             ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400'
@@ -439,12 +444,14 @@ export default function Navbar() {
                     <div className="w-full space-y-2 text-center">
                       <Link 
                         href="/dashboard"
+                        onClick={() => setMobileMenuOpen(false)}
                         className="block w-full py-3 rounded-2xl bg-emerald-500 text-white font-bold shadow-md"
                       >
                         My Dashboard
                       </Link>
                       <Link 
                         href="/settings/notifications"
+                        onClick={() => setMobileMenuOpen(false)}
                         className="block w-full py-2.5 rounded-2xl bg-secondary dark:bg-card/20 text-foreground font-bold shadow-sm"
                       >
                         Notification Settings
@@ -453,6 +460,7 @@ export default function Navbar() {
                         <Link 
                           href="/admin"
                           prefetch={false}
+                          onClick={() => setMobileMenuOpen(false)}
                           className="block w-full py-2.5 rounded-2xl bg-cyan-600 text-white font-bold shadow-sm"
                         >
                           Admin Dashboard
@@ -468,6 +476,7 @@ export default function Navbar() {
                   ) : (
                     <Link 
                       href={`/login?redirect=${encodeURIComponent(pathname)}`}
+                      onClick={() => setMobileMenuOpen(false)}
                       className="block w-full text-center py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold shadow-lg"
                     >
                       Get Started / Login
@@ -503,7 +512,6 @@ export default function Navbar() {
                 )}
               </div>
             </motion.div>
-          </>
         )}
       </AnimatePresence>
 
