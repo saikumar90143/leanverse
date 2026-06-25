@@ -88,16 +88,16 @@ export default function AIChatbot() {
  };
 
  return (
- <div className="fixed bottom-24 md:bottom-6 right-6 z-[60] no-print">
+ <div className="fixed bottom-24 md:bottom-6 right-0 z-[60] no-print flex flex-col items-end">
  {/* Floating Action Button */}
  <motion.button
  onClick={() => setIsOpen(!isOpen)}
  whileHover={{ scale: 1.05 }}
  whileTap={{ scale: 0.95 }}
  aria-label={isOpen ? "Close AI Chatbot" : "Open AI Chatbot"}
- className="w-14 h-14 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 text-white flex items-center justify-center shadow-2xl hover:shadow-emerald-500/30 cursor-pointer border border-white/20 focus:outline-none"
+ className="w-14 h-14 mr-4 md:mr-6 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 text-white flex items-center justify-center shadow-2xl hover:shadow-emerald-500/30 cursor-pointer border border-white/20 focus:outline-none"
  >
- {isOpen ? <X className="w-6 h-6" /> : <MessageSquare className="w-6 h-6 animate-pulse" />}
+ {isOpen ? <X className="w-6 h-6" /> : <Bot className="w-6 h-6 animate-pulse" />}
  </motion.button>
 
  {/* Chat Window */}

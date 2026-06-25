@@ -45,7 +45,7 @@ export default async function HomePage() {
  <div className="space-y-0 pb-20">
  
  {/* 1. HERO & QUICK START WIZARD */}
- <section className="relative min-h-[90vh] flex items-center justify-center pt-24 pb-16 overflow-hidden px-4 sm:px-6 lg:px-8">
+ <section className="relative min-h-[90vh] flex items-center justify-center pt-8 pb-16 overflow-hidden px-4 sm:px-6 lg:px-8">
  {/* Background Gradients */}
  <div className="absolute inset-0 z-0 pointer-events-none">
  <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/20 rounded-full blur-[120px] mix-blend-screen" />
@@ -577,73 +577,6 @@ export default async function HomePage() {
 
  
 
- {/* 2. HOW IT WORKS SECTION */}
- <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-border/50 dark:border-border">
- <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
- <span className="text-xs font-black text-emerald-500 uppercase tracking-widest block">How It Works</span>
- <h2 className="text-3xl md:text-5xl font-black text-foreground">Your Journey To A Better Physique</h2>
- </div>
-
- <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
- {/* Connector Line (Desktop) */}
- <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-emerald-500/0 via-emerald-500/20 to-cyan-500/0 -z-10 -translate-y-1/2" />
-
- <div className="glass p-8 rounded-3xl border border-border/50 dark:border-border text-center space-y-4 hover:-translate-y-2 transition-transform">
- <div className="w-16 h-16 mx-auto bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 mb-6">
- <span className="text-2xl font-black">1</span>
- </div>
- <h3 className="text-xl font-black text-foreground">Tell Us About Yourself</h3>
- <p className="text-muted text-sm font-medium leading-relaxed">
- Share your specific goal, experience level, workout location, and timeline. The more we know, the better the plan.
- </p>
- </div>
-
- <div className="glass p-8 rounded-3xl border border-border/50 dark:border-border text-center space-y-4 hover:-translate-y-2 transition-transform shadow-xl shadow-emerald-500/5">
- <div className="w-16 h-16 mx-auto bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg shadow-emerald-500/20">
- <Sparkles className="w-8 h-8" />
- </div>
- <h3 className="text-xl font-black text-foreground">AI Creates Your Plan</h3>
- <p className="text-muted text-sm font-medium leading-relaxed">
- Our advanced engine instantly generates personalized workouts, comprehensive diet plans, and daily calorie targets.
- </p>
- </div>
-
- <div className="glass p-8 rounded-3xl border border-border/50 dark:border-border text-center space-y-4 hover:-translate-y-2 transition-transform">
- <div className="w-16 h-16 mx-auto bg-cyan-500/10 rounded-2xl flex items-center justify-center text-cyan-500 mb-6">
- <span className="text-2xl font-black">3</span>
- </div>
- <h3 className="text-xl font-black text-foreground">Track Progress Daily</h3>
- <p className="text-muted text-sm font-medium leading-relaxed">
- Complete your daily missions, log weights for progressive overload, earn streaks, and watch your body transform.
- </p>
- </div>
- </div>
- </section>
-
- {/* 3. GOAL SELECTION SECTION */}
- <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
- <div className="text-center max-w-2xl mx-auto mb-12 space-y-4">
- <h2 className="text-3xl md:text-5xl font-black text-foreground">What's Your Primary Goal?</h2>
- <p className="text-muted font-medium">Select your objective to see what LeanVerse can do for you.</p>
- </div>
-
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
- {[
- { id: 'fat', title: 'Lose Fat', desc: 'Burn stubborn fat, lower body fat percentage, and reveal muscle definition with calorie-deficit diets.', icon: <Flame className="w-6 h-6 text-orange-500" /> },
- { id: 'muscle', title: 'Build Muscle', desc: 'Pack on solid mass with hypertrophy-focused progressive overload and high-protein nutrition plans.', icon: <Dumbbell className="w-6 h-6 text-emerald-500" /> },
- { id: 'bulk', title: 'Lean Bulk', desc: 'Gain size without excessive fat gain by utilizing precise surplus calculations and heavy lifting.', icon: <TrendingUp className="w-6 h-6 text-cyan-500" /> },
- { id: 'strength', title: 'Get Stronger', desc: 'Focus on low-rep, heavy compound movements to maximize central nervous system adaptation.', icon: <Shield className="w-6 h-6 text-purple-500" /> }
- ].map(g => (
- <div key={g.id} className="group glass p-6 rounded-3xl border border-border/50 dark:border-border hover:border-emerald-500/30 transition-all hover:shadow-xl hover:-translate-y-1 cursor-pointer">
- <div className="w-12 h-12 bg-secondary rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
- {g.icon}
- </div>
- <h3 className="text-lg font-black text-foreground mb-2">{g.title}</h3>
- <p className="text-sm text-muted font-medium leading-relaxed group-hover:text-foreground dark:group-hover:text-slate-200 transition-colors">{g.desc}</p>
- </div>
- ))}
- </div>
- </section>
 
  {/* 4. TRANSFORMATION PROGRAMS SECTION */}
  <section className="bg-background py-24 border-y border-border/50 dark:border-border">
@@ -659,32 +592,6 @@ export default async function HomePage() {
 
  
  {/* 6. CALCULATORS HUB */}
- <section className="bg-foreground py-24 text-background">
- <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
- <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
- <span className="text-xs font-black text-cyan-500 uppercase tracking-widest block">Free Resources</span>
- <h2 className="text-3xl md:text-5xl font-black">Fitness Calculators Hub</h2>
- <p className="text-muted font-medium leading-relaxed">Calculate your body metrics instantly. No signup required.</p>
- </div>
-
- <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
- {[
- { name: 'BMI Calculator', icon: <Activity className="w-5 h-5" />, path: '/calculators/bmi' },
- { name: 'TDEE Calories', icon: <Flame className="w-5 h-5" />, path: '/calculators/maintenance' },
- { name: 'Macro Splitter', icon: <Calculator className="w-5 h-5" />, path: '/calculators/macro' },
- { name: 'Body Fat', icon: <Target className="w-5 h-5" />, path: '/calculators/body-fat' },
- { name: 'Water Intake', icon: <Clock className="w-5 h-5" />, path: '/calculators/water' },
- ].map(calc => (
- <Link key={calc.name} href={calc.path} className="group bg-card/5 backdrop-blur-md border border-border p-6 rounded-2xl text-center hover:bg-card/10 hover:border-cyan-500/50 transition-all cursor-pointer shadow-lg">
- <div className="w-12 h-12 bg-cyan-500/20 text-cyan-400 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
- {calc.icon}
- </div>
- <h3 className="font-bold text-sm text-background">{calc.name}</h3>
- </Link>
- ))}
- </div>
- </div>
- </section>
 
  {/* 7. MOTIVATION & SOCIAL PROOF */}
  <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 space-y-20">

@@ -49,23 +49,7 @@ export default function DietPlanViewer({ p }: { p: any }) {
 
   {/* Macro Rings + Macro Breakdown cards Side by Side */}
   <div className="flex flex-row gap-2 sm:gap-4 print-card mt-4">
-  <div className="w-[38%] sm:w-1/3 md:w-1/4 glass rounded-2xl sm:rounded-3xl border border-border/10 flex flex-col items-center justify-center py-4 px-1 shadow-sm shrink-0">
-  <span className="text-[10px] font-black text-muted uppercase tracking-widest block mb-2 text-center">Today's Eaten</span>
-  <div className="scale-[0.55] sm:scale-75 md:scale-90 origin-top -mb-16 sm:-mb-10 md:-mb-4">
-  <MacroRings
-  protein={eatenProtein}
-  carbs={eatenCarbs}
-  fats={eatenFats}
-  calories={eatenCals}
-  proteinTarget={actualProtein}
-  carbsTarget={actualCarbs}
-  fatsTarget={actualFats}
-  calsTarget={actualCals}
-  />
-  </div>
-  </div>
-
-  <div className="flex-1 grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-4">
+    <div className="flex-1 grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-4">
   <div className={`glass p-3 sm:p-5 rounded-2xl border transition-colors duration-300 flex flex-col justify-center ${isOver(actualCals, calsTarget) ? 'border-red-500/50 bg-red-500/5' : 'border-border/10'}`}>
   <span className="text-[9px] sm:text-[10px] text-muted font-extrabold uppercase tracking-widest block mb-0.5 sm:mb-1 truncate">Calories</span>
   <span className={`text-lg sm:text-2xl md:text-3xl font-black block leading-none ${isOver(actualCals, calsTarget) ? 'text-red-500' : 'text-foreground'}`}>
@@ -94,6 +78,23 @@ export default function DietPlanViewer({ p }: { p: any }) {
   </span>
   </div>
   </div>
+  <div className="w-[38%] sm:w-1/3 md:w-1/4 glass rounded-2xl sm:rounded-3xl border border-border/10 flex flex-col items-center justify-center py-4 px-1 shadow-sm shrink-0">
+  <span className="text-[10px] font-black text-muted uppercase tracking-widest block mb-2 text-center">Today's Eaten</span>
+  <div className="scale-[0.55] sm:scale-75 md:scale-90 origin-top -mb-16 sm:-mb-10 md:-mb-4">
+  <MacroRings
+  protein={eatenProtein}
+  carbs={eatenCarbs}
+  fats={eatenFats}
+  calories={eatenCals}
+  proteinTarget={actualProtein}
+  carbsTarget={actualCarbs}
+  fatsTarget={actualFats}
+  calsTarget={actualCals}
+  />
+  </div>
+  </div>
+
+  
   </div>
 
   {/* Premium Plan Warning */}
